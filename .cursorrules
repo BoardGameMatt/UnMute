@@ -1,0 +1,153 @@
+# Unmute Labs — Project Rules for Cursor
+
+## Project Overview
+Unmute Labs is a team engagement platform that delivers structured, game-based protocols to build trust and collaboration in workplace teams. The platform has two parts in this monorepo:
+- `/` — Static marketing site (index.html, images/)
+- `/app-platform/` — Next.js 14 application (the product)
+
+All app development happens inside `/app-platform/`. Do not modify files outside this folder unless explicitly asked.
+
+## Tech Stack
+- **Framework:** Next.js 14+ (App Router, NOT Pages Router)
+- **Language:** TypeScript (strict mode, no `any` types)
+- **Styling:** Tailwind CSS
+- **Database:** Supabase (PostgreSQL)
+- **Real-time:** Supabase Realtime (WebSocket channels)
+- **Auth:** Supabase Auth (Google + Microsoft SSO providers)
+- **Animation:** Framer Motion (declarative, subtle transitions only)
+- **Hosting:** Vercel
+- **Package manager:** npm
+
+## Design System — NEVER HARDCODE VALUES
+
+### Colors (use Tailwind config tokens)
+All colors must be referenced via Tailwind classes using these token names. NEVER use raw hex values in components.
+
+```
+unmute-navy: #1B3A5C        — Headlines, icon base, CTAs on light backgrounds
+deep-navy: #0F2440          — Dark backgrounds, footer, high-contrast contexts
+steel-blue: #4A6080         — Secondary text on dark backgrounds
+signal-amber: #F5A623       — PRIMARY accent. CTA buttons on dark, highlights, key moments
+sunrise-gold: #FFCC33       — Hover states, gradient partner to amber, success states
+warm-white: #FAF8F5         — Primary background (use instead of pure white)
+slate: #6B7B8D              — Body text alternative, captions, metadata
+charcoal: #2D3436           — Primary body text
+cloud-grey: #E8ECEF         — Dividers, borders, card backgrounds, inactive states
+signal-red: #E85D4A         — Error/alert only. Never decorative.
+```
+
+### Color Ratio: 60/30/10
+- 60% warm-white / cloud-grey (background, breathing room)
+- 30% unmute-navy / charcoal (structure, text, authority)
+- 10% signal-amber / sunrise-gold (accent, energy, CTAs)
+Amber should feel like a "flash of gold" — not a flood.
+
+### Typography (use Tailwind config tokens)
+All font families must be referenced via Tailwind classes. NEVER hardcode font-family strings in components.
+
+```
+font-display: 'Outfit', sans-serif       — Headlines, H1, H2, buttons
+font-mono: 'DM Mono', monospace          — Protocol labels, data, code, DM Mono Light for LABS wordmark
+font-body: 'Inter', sans-serif           — Body text, UI elements, long-form
+```
+
+### Type Scale
+- Display/H1: Outfit Bold, 40-48px
+- H2: Outfit SemiBold, 28-32px
+- H3/Subhead: Outfit Medium, 20-24px
+- H4/Label: DM Mono Regular, CAPS, wide tracking, 14-16px
+- Body: Inter Regular, 16-18px
+- Caption: Inter Regular, 12-14px
+- Data/Code: DM Mono Light, 14px
+
+### Spacing
+Use Tailwind's spacing scale consistently. Prefer generous padding — the UI should breathe. Cards get p-6 or p-7 minimum. Sections get py-12 minimum.
+
+### Border Radius
+Use rounded-lg (8px) for cards and containers. Use rounded-md (6px) for buttons and inputs. Use rounded-full for avatars and badges.
+
+### Shadows
+Subtle only. Use shadow-sm as default for cards. On hover, transition to shadow-md. Never use shadow-lg or shadow-xl.
+
+## Animation Philosophy — "A well-run workshop in a beautiful room"
+- Motion communicates state changes, NEVER decorates
+- Use Framer Motion for React components
+- Allowed: fade, slide (translateY 4-8px), scale (0.97-1.0), opacity transitions
+- FORBIDDEN: bounce, spring overshoot, confetti, shake, pulse (except for live indicators), any animation that could be described as "game show energy"
+- Timing: 200-400ms for micro-interactions, 400-600ms for phase transitions
+- Easing: cubic-bezier(0.4, 0, 0.2, 1) for most transitions
+- Stagger children by 100-150ms for list reveals
+
+## Component Patterns
+
+### Buttons
+- Primary (amber): signal-amber background, deep-navy text. Hover: sunrise-gold. Reserved for THE one action.
+- Secondary (navy): unmute-navy background, white text.
+- Ghost: transparent with cloud-grey border. Hover: cloud-grey background.
+- Disabled: opacity-40, cursor-not-allowed.
+- Submit flow: grey (disabled) → steel-blue (active) → signal-amber (confirmed)
+
+### Cards
+- warm-white background, cloud-grey border (1px), rounded-lg
+- On hover: translateY(-2px), shadow transition
+- Generous internal padding (p-6 minimum)
+
+### Protocol Labels
+- DM Mono, uppercase, wide letter-spacing (tracking-widest), 10-11px
+- Color: steel-blue or signal-amber depending on context
+
+### Timers
+- Time-timer style: circular arc that diminishes clockwise
+- Navy fill on warm-white background
+- NO numeric countdown display
+- Visual metaphor: Time Timer (physical red-disc classroom timer)
+
+### Session Progress Bar
+- Thin horizontal bar (3-4px) at top of screen
+- Navy fill on cloud-grey track
+- No numeric labels
+- Environmental — always visible, never competing for attention
+
+## Data Architecture
+- **Person** = real human (email-based identity, persists across teams)
+- **Participant** = Person's membership on a specific Team (nullable person_id for guests)
+- **Team** = group with one Lead and N Members, has require_auth toggle
+- **Season** = 10-week engagement cycle
+- **Protocol** = game/activity template
+- **Session** = one instance of a Protocol being played
+- **SessionState** = real-time game state (state_json holds protocol-specific data)
+
+## File Organization (inside /app-platform/)
+```
+/app                    — Next.js routes
+/app/api                — API routes
+/components             — Shared React components
+/components/providers   — Context providers (SessionProvider, etc.)
+/components/ui          — Reusable UI primitives (buttons, cards, timers)
+/lib                    — Utilities, Supabase client, types
+/lib/supabase           — Supabase client setup
+/lib/types              — TypeScript interfaces
+/lib/protocols          — Protocol registry and individual protocol modules
+/lib/protocols/[slug]/  — Each protocol: index.ts, component, engine, types, components/
+/hooks                  — Custom React hooks
+/public                 — Static assets
+/scripts                — Seed scripts, utilities
+/supabase/migrations    — SQL migration files
+```
+
+## Code Style
+- Use named exports (not default) for utilities and hooks
+- Use default exports for page components and protocol main components
+- Prefer `const` arrow functions for components
+- Always type props explicitly — no implicit `any`
+- Use early returns for guard clauses
+- Colocate protocol-specific code inside its module folder
+- Keep components focused — if it's doing more than one thing, split it
+
+## Key Constraints
+- All state transitions in protocols go through sendAction() API — never mutate state client-side
+- Timers display client-side but are server-authoritative for phase transitions
+- Images in "Draw It By Ear" must NEVER be sent to Drawer clients — role-check before serving
+- Join codes are 6 characters, uppercase alphanumeric
+- Mobile-first for all participant-facing screens
+- Desktop-optimized for admin screens only
