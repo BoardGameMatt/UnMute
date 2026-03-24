@@ -1,12 +1,11 @@
 /**
- * Protocol registry and base protocol interface.
+ * Protocol registry — individual protocols import this and call registerProtocol()
+ * from their own index files so the Map is populated at module load time.
  */
 
-export interface BaseProtocol {
-  id: string;
-  name: string;
-  version: string;
-}
-
-// Registry placeholder — extend as needed
-export const protocolRegistry: Record<string, BaseProtocol> = {};
+export {
+  getProtocol,
+  protocolRegistry,
+  registerProtocol,
+  type ProtocolDefinition,
+} from "./registry";
