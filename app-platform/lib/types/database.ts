@@ -250,57 +250,69 @@ export type Database = {
         Row: Person;
         Insert: PersonInsert;
         Update: PersonUpdate;
+        Relationships: [];
       };
       protocols: {
         Row: Protocol;
         Insert: ProtocolInsert;
         Update: ProtocolUpdate;
+        Relationships: [];
       };
       teams: {
         Row: Team;
         Insert: TeamInsert;
         Update: TeamUpdate;
+        Relationships: [];
       };
       team_roster: {
         Row: TeamRoster;
         Insert: TeamRosterInsert;
         Update: TeamRosterUpdate;
+        Relationships: [];
       };
       participants: {
         Row: Participant;
         Insert: ParticipantInsert;
         Update: ParticipantUpdate;
+        Relationships: [];
       };
       seasons: {
         Row: Season;
         Insert: SeasonInsert;
         Update: SeasonUpdate;
+        Relationships: [];
       };
       protocol_slots: {
         Row: ProtocolSlot;
         Insert: ProtocolSlotInsert;
         Update: ProtocolSlotUpdate;
+        Relationships: [];
       };
       sessions: {
         Row: Session;
         Insert: SessionInsert;
         Update: SessionUpdate;
+        Relationships: [];
       };
       session_participants: {
         Row: SessionParticipant;
         Insert: SessionParticipantInsert;
         Update: SessionParticipantUpdate;
+        Relationships: [];
       };
       session_state: {
         Row: SessionState;
         Insert: SessionStateInsert;
         Update: SessionStateUpdate;
+        Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      [_ in never]: never;
+    };
     Functions: {
       generate_join_code: {
-        Args: Record<PropertyKey, never>;
+        Args: Record<string, never>;
         Returns: string;
       };
       link_participant_to_person: {
@@ -308,10 +320,8 @@ export type Database = {
           participant_uuid: string;
           person_uuid: string;
         };
-        Returns: undefined;
+        Returns: null;
       };
     };
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
   };
 };

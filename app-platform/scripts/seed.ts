@@ -27,7 +27,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const supabase = createClient<Database>(url, key);
+  const supabase = createClient(url, key);
 
   const protocols: Database["public"]["Tables"]["protocols"]["Insert"][] = [
     {
