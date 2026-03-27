@@ -56,13 +56,25 @@ export async function joinSessionAsGuest(
     return { ok: false, error: "This team requires sign-in to join." };
   }
 
+  const { count: existingCount, error: countErr } = await supabase
+    .from("session_participants")
+    .select("*", { count: "exact", head: true })
+    .eq("session_id", sessionId);
+
+  if (countErr) {
+    return { ok: false, error: countErr.message };
+  }
+
+  const isFirstJoin = (existingCount ?? 0) === 0;
+  const sessionRole = isFirstJoin ? "lead" : "member";
+
   const { data: participant, error: pErr } = await supabase
     .from("participants")
     .insert({
       team_id: teamId,
       person_id: null,
       display_name: displayName,
-      role: "member",
+      role: sessionRole,
     })
     .select("id")
     .single();
@@ -80,7 +92,7 @@ export async function joinSessionAsGuest(
   const { error: spErr } = await supabase.from("session_participants").insert({
     session_id: sessionId,
     participant_id: participant.id,
-    role_in_session: "member",
+    role_in_session: sessionRole,
   });
 
   if (spErr) {

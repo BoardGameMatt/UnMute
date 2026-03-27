@@ -1026,7 +1026,7 @@ function ButtonSection() {
             ))}
           </div>
           <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: COLORS.slate, textAlign: "center" }}>
-            Go to <span style={{ fontFamily: "'DM Mono', monospace", color: COLORS.navy }}>unmute.team/join</span> and enter this code
+            Go to <span style={{ fontFamily: "'DM Mono', monospace", color: COLORS.navy }}>unmutelabs.com/join</span> and enter this code
           </p>
         </div>
       </div>
