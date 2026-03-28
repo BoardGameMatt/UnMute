@@ -1,5 +1,13 @@
 import type { ComponentType } from "react";
-import type { Json, ProtocolType } from "@/lib/types/database";
+import type { Json, ProtocolType, SessionParticipantRole } from "@/lib/types/database";
+
+/** Props passed to every registered protocol shell component. */
+export interface SessionProtocolProps {
+  sessionId: string;
+  participantId: string;
+  role: SessionParticipantRole;
+  teamId: string;
+}
 
 /**
  * Runtime protocol module metadata + UI entry.
@@ -12,7 +20,7 @@ export interface ProtocolDefinition {
   type: ProtocolType;
   minPlayers: number;
   maxPlayers: number;
-  component: ComponentType<object>;
+  component: ComponentType<SessionProtocolProps>;
   /** Optional JSON-schema-shaped or app-specific config metadata */
   configSchema?: Json;
 }

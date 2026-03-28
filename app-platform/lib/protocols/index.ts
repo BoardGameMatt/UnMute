@@ -3,9 +3,12 @@
  * from their own index files so the Map is populated at module load time.
  */
 
+import "./placeholder";
+
 export {
   getProtocol,
   protocolRegistry,
   registerProtocol,
   type ProtocolDefinition,
+  type SessionProtocolProps,
 } from "./registry";
