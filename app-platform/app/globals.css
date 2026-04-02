@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .truth-is-reveal-glow {
+    animation: truth-is-amber-reveal 0.55s ease-in-out 2 forwards;
+  }
+}
+
+@keyframes truth-is-amber-reveal {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(245 166 35 / 0);
+  }
+  50% {
+    box-shadow: 0 0 36px 14px rgb(245 166 35 / 0.4);
+  }
+}

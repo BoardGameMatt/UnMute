@@ -123,6 +123,15 @@ export interface SessionState {
   updated_at: string;
 }
 
+export interface SessionFeedback {
+  id: string;
+  session_id: string;
+  participant_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
 /** Insert / Update payloads aligned with Postgres defaults & nullability */
 
 export type PersonInsert = {

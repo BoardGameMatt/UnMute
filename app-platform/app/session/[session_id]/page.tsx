@@ -1,10 +1,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { BackToLobbyLink } from "@/components/session/back-to-lobby-link";
+import { SessionCompletedRedirect } from "@/components/session/session-completed-redirect";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import { getProtocol } from "@/lib/protocols";
 import { createClient } from "@/lib/supabase/server";
-import type { Session } from "@/lib/types/database";
+import type { Session, SessionStatus } from "@/lib/types/database";
 
 type SessionPageProps = {
   params: { session_id: string };
@@ -71,9 +73,12 @@ export default async function SessionPage({ params }: SessionPageProps) {
   if (linkErr) {
     return (
       <main className="min-h-screen bg-warm-white px-5 py-12">
-        <p className="text-center text-signal-red" role="alert">
-          Could not load your place in this session.
-        </p>
+        <div className="mx-auto max-w-md text-center">
+          <p className="text-signal-red" role="alert">
+            Could not load your place in this session.
+          </p>
+          <BackToLobbyLink sessionId={sessionId} />
+        </div>
       </main>
     );
   }
@@ -88,6 +93,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
           <p className="mt-3 font-body text-slate">
             Join with the session code first, then open this link again.
           </p>
+          <BackToLobbyLink sessionId={sessionId} />
         </div>
       </main>
     );
@@ -104,9 +110,34 @@ export default async function SessionPage({ params }: SessionPageProps) {
   if (participantErr || !participant) {
     return (
       <main className="min-h-screen bg-warm-white px-5 py-12">
-        <p className="text-center text-signal-red" role="alert">
-          Could not load participant profile.
-        </p>
+        <div className="mx-auto max-w-md text-center">
+          <p className="text-signal-red" role="alert">
+            Could not load participant profile.
+          </p>
+          <BackToLobbyLink sessionId={sessionId} />
+        </div>
+      </main>
+    );
+  }
+
+  const sessionStatus = sessionRow.status as SessionStatus;
+  if (sessionStatus === "completed") {
+    redirect(`/session/${sessionId}/feedback`);
+  }
+
+  if (sessionStatus === "lobby") {
+    return (
+      <main className="min-h-screen bg-warm-white px-5 py-12">
+        <div className="mx-auto max-w-md text-center">
+          <h1 className="font-display text-2xl font-bold text-unmute-navy">
+            Session not started yet
+          </h1>
+          <p className="mt-3 font-body text-slate">
+            This session is still in the lobby. When everyone is ready, the lead
+            can start from the lobby screen.
+          </p>
+          <BackToLobbyLink sessionId={sessionId} />
+        </div>
       </main>
     );
   }
@@ -122,6 +153,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
         roleInSession={role}
         protocolName={protocolName}
       >
+        <SessionCompletedRedirect sessionId={sessionId} />
         {definition ? (
           <definition.component
             sessionId={sessionId}

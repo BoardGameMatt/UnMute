@@ -4,6 +4,7 @@
  */
 
 import "./placeholder";
+import "./the-truth-is";
 
 export {
   getProtocol,
