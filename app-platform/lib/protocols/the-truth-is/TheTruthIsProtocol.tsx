@@ -161,6 +161,7 @@ const PhaseBody = ({ state, participantId, role, send }: PhaseBodyProps) => {
         />
       );
     case "READING_ASSIGNMENT":
+    case "BLUFF_RULES":
     case "DISCUSSION":
       return (
         <ReadingView state={state} participantId={participantId} sendAction={send} />

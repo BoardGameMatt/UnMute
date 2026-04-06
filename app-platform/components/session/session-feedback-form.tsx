@@ -60,7 +60,7 @@ export const SessionFeedbackForm = ({ sessionId }: SessionFeedbackFormProps) => 
           How likely would you recommend this activity for helping your team build trust?
         </p>
         <div
-          className="mt-4 flex flex-wrap justify-center gap-2"
+          className="mx-auto mt-4 grid w-full max-w-[360px] grid-cols-10 gap-1"
           role="radiogroup"
           aria-label="Rating from 1 to 10"
         >
@@ -73,7 +73,7 @@ export const SessionFeedbackForm = ({ sessionId }: SessionFeedbackFormProps) => 
                 aria-pressed={rating === n}
                 aria-label={`${n} of 10`}
                 onClick={() => setRating(n)}
-                className={`flex h-11 w-11 items-center justify-center rounded-md border font-mono text-sm font-medium shadow-sm transition-colors ${
+                className={`flex min-h-[36px] min-w-0 items-center justify-center rounded-md border font-mono text-xs font-medium shadow-sm transition-colors sm:text-sm ${
                   filled
                     ? "border-signal-amber bg-signal-amber text-deep-navy"
                     : "border-cloud-grey bg-cloud-grey text-slate hover:border-steel-blue"

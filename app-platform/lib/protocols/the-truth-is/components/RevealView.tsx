@@ -241,6 +241,55 @@ type SlotMachineRevealProps = {
   onSettled: () => void;
 };
 
+/** Fills reel slots with no two identical names adjacent; landing index shows `targetName`. */
+function buildReelRowsNoAdjacentDuplicates(
+  displayNames: string[],
+  targetName: string,
+  total: number,
+  endIndex: number
+): string[] {
+  const pool = displayNames.length > 0 ? displayNames : [targetName];
+  const unique = Array.from(new Set(pool));
+  const out: string[] = new Array(total);
+
+  for (let i = 0; i < total; i++) {
+    if (i === endIndex) {
+      out[i] = targetName;
+      continue;
+    }
+
+    const prev = i === 0 ? "" : out[i - 1]!;
+    const slotBeforeLand = i === endIndex - 1;
+
+    const forbidden = new Set<string>();
+    if (prev) forbidden.add(prev);
+    if (slotBeforeLand) forbidden.add(targetName);
+
+    let choices = unique.filter((n) => !forbidden.has(n));
+    if (choices.length === 0) {
+      choices = unique.filter((n) => n !== prev);
+    }
+    if (choices.length === 0) {
+      choices = unique.filter((n) => n !== targetName);
+    }
+    if (choices.length === 0) {
+      choices = unique.slice();
+    }
+
+    out[i] = choices[Math.floor(Math.random() * choices.length)]!;
+  }
+
+  out[endIndex] = targetName;
+  if (endIndex > 0 && out[endIndex - 1] === targetName) {
+    const twoBack = endIndex >= 2 ? out[endIndex - 2] : "";
+    const swap =
+      unique.find((n) => n !== targetName && n !== twoBack) ?? unique[0];
+    out[endIndex - 1] = swap;
+  }
+
+  return out;
+}
+
 const SlotMachineReveal = ({
   names,
   targetName,
@@ -249,14 +298,10 @@ const SlotMachineReveal = ({
   const settledRef = useRef(false);
 
   const reel = useMemo(() => {
-    const pool = names.length > 0 ? names : [targetName];
-    const out: string[] = [];
-    for (let i = 0; i < 52; i++) {
-      out.push(pool[i % pool.length]);
-    }
     const endIdx = 44;
-    out[endIdx] = targetName;
-    return { rows: out, endIndex: endIdx };
+    const total = 52;
+    const rows = buildReelRowsNoAdjacentDuplicates(names, targetName, total, endIdx);
+    return { rows, endIndex: endIdx };
   }, [names, targetName]);
 
   const rowH = 48;

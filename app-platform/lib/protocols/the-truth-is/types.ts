@@ -7,6 +7,7 @@ export type TruthIsPhase =
   | "SUBMISSION_1"
   | "SUBMISSION_2"
   | "READING_ASSIGNMENT"
+  | "BLUFF_RULES"
   | "DISCUSSION"
   | "VOTING"
   | "REVEAL"

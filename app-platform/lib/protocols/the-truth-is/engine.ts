@@ -306,14 +306,29 @@ export function assignReader(state: TruthIsState): TruthIsState {
     return transitionWhenNoEntries(state);
   }
 
+  const isBluffRound = chosenReader === entry.author_id;
+
   return {
     ...state,
-    phase: "DISCUSSION",
+    phase: isBluffRound ? "BLUFF_RULES" : "DISCUSSION",
     current_round: state.current_round + 1,
     current_entry_id: entry.id,
     current_reader_id: chosenReader,
     current_author_id: entry.author_id,
     votes_this_round: {},
+    timer_started_at: isBluffRound ? null : nowIso(),
+    timer_duration_seconds: isBluffRound ? 0 : 30,
+  };
+}
+
+/** After reader dismisses bluff rules card — same round, discussion timer starts. */
+export function dismissBluffRules(state: TruthIsState): TruthIsState {
+  if (state.phase !== "BLUFF_RULES") {
+    return state;
+  }
+  return {
+    ...state,
+    phase: "DISCUSSION",
     timer_started_at: nowIso(),
     timer_duration_seconds: 30,
   };
@@ -656,6 +671,7 @@ export type TruthIsEngineAction =
   | { type: "finalizeSubmission2" }
   | { type: "assignReader" }
   | { type: "startDiscussion" }
+  | { type: "dismissBluffRules" }
   | { type: "discussionTimerExpired" }
   | { type: "votingTimerExpired" }
   | { type: "submitVote"; voterId: string; guessedAuthorId: string }
@@ -697,6 +713,9 @@ export function reduceTruthIsState(
     case "startDiscussion":
       if (!state) throw new Error("Truth Is state not initialized");
       return startDiscussion(state);
+    case "dismissBluffRules":
+      if (!state) throw new Error("Truth Is state not initialized");
+      return dismissBluffRules(state);
     case "discussionTimerExpired":
       if (!state) throw new Error("Truth Is state not initialized");
       return onDiscussionTimerExpired(state);
@@ -787,6 +806,8 @@ export function clientPayloadToEngineAction(
       return { type: "assignReader" };
     case "startDiscussion":
       return { type: "startDiscussion" };
+    case "dismissBluffRules":
+      return { type: "dismissBluffRules" };
     case "discussionTimerExpired":
       return { type: "discussionTimerExpired" };
     case "votingTimerExpired":
