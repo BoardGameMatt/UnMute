@@ -76,6 +76,18 @@ export const RevealView = ({ state, sendAction }: RevealViewProps) => {
     });
   }, [roundScores.caughtVoterIds, state.participants]);
 
+  const allCaughtNoFool = useMemo(
+    () =>
+      readerIsAuthor &&
+      roundScores.fooledVoterIds.length === 0 &&
+      roundScores.caughtVoterIds.length > 0,
+    [
+      readerIsAuthor,
+      roundScores.fooledVoterIds.length,
+      roundScores.caughtVoterIds.length,
+    ]
+  );
+
   useEffect(() => {
     if (step !== "votes") return;
     const t = window.setTimeout(() => setStep("slot"), 2800);
@@ -140,9 +152,6 @@ export const RevealView = ({ state, sendAction }: RevealViewProps) => {
 
   if (step === "correct") {
     if (readerIsAuthor) {
-      const allCaughtNoFool =
-        roundScores.fooledVoterIds.length === 0 && roundScores.caughtVoterIds.length > 0;
-
       return (
         <motion.div
           className="min-h-[50vh] px-5 py-10"
@@ -170,27 +179,27 @@ export const RevealView = ({ state, sendAction }: RevealViewProps) => {
                 </p>
               ) : null}
 
-          {fooledDisplay.length > 0 ? (
-            <ul className="mt-6 space-y-2 text-center font-body text-base">
-              {fooledDisplay.map((f) => (
-                <li key={f.id}>
-                  <span className="font-medium text-charcoal">{f.displayName}</span>
-                  <span className="font-mono text-signal-amber"> +1</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+              {fooledDisplay.length > 0 ? (
+                <ul className="mt-6 space-y-2 text-center font-body text-base">
+                  {fooledDisplay.map((f) => (
+                    <li key={f.id}>
+                      <span className="font-medium text-charcoal">{f.displayName}</span>
+                      <span className="font-mono text-signal-amber"> +1</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
 
-          {caughtDisplay.length > 0 ? (
-            <ul className="mt-6 space-y-2 text-center font-body text-sm">
-              {caughtDisplay.map((c) => (
-                <li key={c.id} className="text-slate">
-                  <span>{c.displayName}</span>{" "}
-                  <span className="text-slate/90">caught you</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+              {caughtDisplay.length > 0 ? (
+                <ul className="mt-6 space-y-2 text-center font-body text-sm">
+                  {caughtDisplay.map((c) => (
+                    <li key={c.id} className="text-slate">
+                      <span>{c.displayName}</span>{" "}
+                      <span className="text-slate/90">caught you</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </>
           )}
         </motion.div>
