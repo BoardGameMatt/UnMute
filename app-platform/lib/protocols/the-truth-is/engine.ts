@@ -5,6 +5,7 @@
 import type {
   TruthIsEntry,
   TruthIsParticipant,
+  TruthIsRoundScores,
   TruthIsState,
 } from "./types";
 import { TRUTH_IS_PROTOCOL_VERSION } from "./types";
@@ -75,6 +76,8 @@ export function initializeGame(participants: TruthIsParticipant[]): TruthIsState
     most_surprising_entry_id: null,
     session_complete: false,
     skipped_rounds: {},
+    last_round_author_bluffed: false,
+    last_round_author_points_earned: 0,
   };
 }
 
@@ -274,11 +277,12 @@ export function assignReader(state: TruthIsState): TruthIsState {
 
   const orderedIds = state.play_order.filter((id) => unused.some((u) => u.id === id));
 
+  /** Reader may read their own entry (bluff round). */
   const tryReader = (r: string): TruthIsEntry | undefined => {
     for (const entryId of orderedIds) {
       const e = state.entries.find((x) => x.id === entryId);
       if (!e || e.used) continue;
-      if (e.author_id !== r) return e;
+      return e;
     }
     return undefined;
   };
@@ -377,16 +381,13 @@ export function onVotingTimerExpired(state: TruthIsState): TruthIsState {
   };
 }
 
-/** Record a guess; author cannot vote on their own entry. */
+/** Record a guess; any participant may vote, including for themselves (bluffing). */
 export function submitVote(
   state: TruthIsState,
   voterId: string,
   guessedAuthorId: string
 ): TruthIsState {
   if (state.phase !== "VOTING") {
-    return state;
-  }
-  if (state.current_author_id && voterId === state.current_author_id) {
     return state;
   }
   return {
@@ -398,17 +399,91 @@ export function submitVote(
   };
 }
 
-/** After all non-authors have voted, advance early to reveal. */
+/** After every participant has voted, advance early to reveal. */
 export function tryCompleteVotingEarly(state: TruthIsState): TruthIsState {
   if (state.phase !== "VOTING" || !state.current_author_id) {
     return state;
   }
-  const voters = state.participants.filter((p) => p.id !== state.current_author_id);
-  const allIn = voters.every((p) => state.votes_this_round[p.id] !== undefined);
+  const allIn = state.participants.every(
+    (p) => state.votes_this_round[p.id] !== undefined
+  );
   if (!allIn) {
     return state;
   }
   return onVotingTimerExpired(state);
+}
+
+/**
+ * Server-only scoring for the current round (call from processReveal).
+ * Non–bluff round: +1 for each correct guess (vote target === author).
+ * Bluff round (reader === author): author gains +1 per fooled non-author; +1 bonus if no vote targets the author;
+ * non-authors who guess the author get +1 each.
+ */
+export function computeRoundScores(state: TruthIsState): TruthIsRoundScores {
+  const authorId = state.current_author_id;
+  const readerId = state.current_reader_id;
+  const votes = state.votes_this_round;
+
+  const empty: TruthIsRoundScores = {
+    scoreDeltas: {},
+    authorBluffed: false,
+    authorPointsEarned: 0,
+    fooledVoterIds: [],
+    caughtVoterIds: [],
+  };
+
+  if (!authorId) {
+    return empty;
+  }
+
+  const isBluffRound = readerId !== null && readerId === authorId;
+
+  if (!isBluffRound) {
+    const scoreDeltas: Record<string, number> = {};
+    for (const [voterId, guessed] of Object.entries(votes)) {
+      if (guessed === authorId) {
+        scoreDeltas[voterId] = (scoreDeltas[voterId] ?? 0) + 1;
+      }
+    }
+    return {
+      scoreDeltas,
+      authorBluffed: false,
+      authorPointsEarned: 0,
+      fooledVoterIds: [],
+      caughtVoterIds: [],
+    };
+  }
+
+  const fooledVoterIds: string[] = [];
+  const caughtVoterIds: string[] = [];
+  let fooledTally = 0;
+  const scoreDeltas: Record<string, number> = {};
+
+  for (const [voterId, guessed] of Object.entries(votes)) {
+    if (voterId === authorId) {
+      continue;
+    }
+    if (guessed === authorId) {
+      caughtVoterIds.push(voterId);
+      scoreDeltas[voterId] = (scoreDeltas[voterId] ?? 0) + 1;
+    } else {
+      fooledVoterIds.push(voterId);
+      fooledTally += 1;
+    }
+  }
+
+  const anyVoteForAuthor = Object.values(votes).some((g) => g === authorId);
+  const perfectBluffBonus = anyVoteForAuthor ? 0 : 1;
+  const authorPointsEarned = fooledTally + perfectBluffBonus;
+  scoreDeltas[authorId] = (scoreDeltas[authorId] ?? 0) + authorPointsEarned;
+
+  return {
+    scoreDeltas,
+    authorBluffed: !anyVoteForAuthor,
+    authorPointsEarned,
+    fooledVoterIds,
+    caughtVoterIds,
+  };
 }
 
 /**
@@ -422,6 +497,8 @@ export function processReveal(state: TruthIsState): TruthIsState {
 
   const entryId = state.current_entry_id;
   const authorId = state.current_author_id;
+
+  const roundScores = computeRoundScores(state);
 
   const entries = state.entries.map((e) => {
     if (e.id !== entryId) return e;
@@ -439,10 +516,8 @@ export function processReveal(state: TruthIsState): TruthIsState {
   });
 
   const scores = { ...state.scores };
-  for (const [voterId, guessed] of Object.entries(state.votes_this_round)) {
-    if (guessed === authorId) {
-      scores[voterId] = (scores[voterId] ?? 0) + 1;
-    }
+  for (const [pid, delta] of Object.entries(roundScores.scoreDeltas)) {
+    scores[pid] = (scores[pid] ?? 0) + delta;
   }
 
   const total_rounds_played = state.total_rounds_played + 1;
@@ -458,6 +533,8 @@ export function processReveal(state: TruthIsState): TruthIsState {
     current_entry_id: null,
     current_reader_id: null,
     current_author_id: null,
+    last_round_author_bluffed: roundScores.authorBluffed,
+    last_round_author_points_earned: roundScores.authorPointsEarned,
   };
 
   if (

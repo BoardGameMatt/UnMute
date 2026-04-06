@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { computeRoundScores } from "../engine";
 import type { TruthIsState } from "../types";
 
 type RevealViewProps = {
@@ -19,6 +20,15 @@ export const RevealView = ({ state, sendAction }: RevealViewProps) => {
     () => state.participants.find((p) => p.id === state.current_author_id),
     [state.participants, state.current_author_id]
   );
+
+  const readerIsAuthor = useMemo(
+    () =>
+      state.current_reader_id !== null &&
+      state.current_reader_id === state.current_author_id,
+    [state.current_reader_id, state.current_author_id]
+  );
+
+  const roundScores = useMemo(() => computeRoundScores(state), [state]);
 
   const voteRows = useMemo(() => {
     const rows: { voter: string; guess: string }[] = [];
@@ -39,7 +49,7 @@ export const RevealView = ({ state, sendAction }: RevealViewProps) => {
 
   const authorName = author?.display_name ?? "";
 
-  const correctGuessers = useMemo(() => {
+  const correctGuessersNonBluff = useMemo(() => {
     const aid = state.current_author_id;
     if (!aid) return [] as { id: string; displayName: string }[];
     const out: { id: string; displayName: string }[] = [];
@@ -51,6 +61,20 @@ export const RevealView = ({ state, sendAction }: RevealViewProps) => {
     }
     return out;
   }, [state.votes_this_round, state.current_author_id, state.participants]);
+
+  const fooledDisplay = useMemo(() => {
+    return roundScores.fooledVoterIds.map((id) => {
+      const p = state.participants.find((x) => x.id === id);
+      return { id, displayName: p?.display_name ?? "?" };
+    });
+  }, [roundScores.fooledVoterIds, state.participants]);
+
+  const caughtDisplay = useMemo(() => {
+    return roundScores.caughtVoterIds.map((id) => {
+      const p = state.participants.find((x) => x.id === id);
+      return { id, displayName: p?.display_name ?? "?" };
+    });
+  }, [roundScores.caughtVoterIds, state.participants]);
 
   useEffect(() => {
     if (step !== "votes") return;
@@ -115,6 +139,64 @@ export const RevealView = ({ state, sendAction }: RevealViewProps) => {
   }
 
   if (step === "correct") {
+    if (readerIsAuthor) {
+      const allCaughtNoFool =
+        roundScores.fooledVoterIds.length === 0 && roundScores.caughtVoterIds.length > 0;
+
+      return (
+        <motion.div
+          className="min-h-[50vh] px-5 py-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+        >
+          <p className="text-center font-mono text-[10px] font-normal uppercase tracking-widest text-steel-blue">
+            POINTS THIS ROUND
+          </p>
+
+          <div className="mx-auto mt-6 max-w-md rounded-md bg-deep-navy px-4 py-3 text-center font-mono text-xs font-normal leading-relaxed text-warm-white">
+            That was {authorName}&apos;s own statement.
+          </div>
+
+          {allCaughtNoFool ? (
+            <p className="mt-8 text-center font-body text-base text-slate">
+              They saw right through it.
+            </p>
+          ) : (
+            <>
+              {roundScores.authorBluffed ? (
+                <p className="mt-6 text-center font-mono text-sm font-medium text-signal-amber">
+                  Perfect bluff. +1 bonus.
+                </p>
+              ) : null}
+
+          {fooledDisplay.length > 0 ? (
+            <ul className="mt-6 space-y-2 text-center font-body text-base">
+              {fooledDisplay.map((f) => (
+                <li key={f.id}>
+                  <span className="font-medium text-charcoal">{f.displayName}</span>
+                  <span className="font-mono text-signal-amber"> +1</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {caughtDisplay.length > 0 ? (
+            <ul className="mt-6 space-y-2 text-center font-body text-sm">
+              {caughtDisplay.map((c) => (
+                <li key={c.id} className="text-slate">
+                  <span>{c.displayName}</span>{" "}
+                  <span className="text-slate/90">caught you</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+            </>
+          )}
+        </motion.div>
+      );
+    }
+
     return (
       <motion.div
         className="min-h-[50vh] px-5 py-10"
@@ -126,10 +208,10 @@ export const RevealView = ({ state, sendAction }: RevealViewProps) => {
           POINTS THIS ROUND
         </p>
         <div className="mt-8 space-y-3 text-center font-body text-base text-charcoal">
-          {correctGuessers.length === 0 ? (
+          {correctGuessersNonBluff.length === 0 ? (
             <p className="text-slate">No one guessed the author this round.</p>
           ) : (
-            correctGuessers.map((g) => (
+            correctGuessersNonBluff.map((g) => (
               <p key={g.id}>
                 <span className="font-medium">{g.displayName}</span> guessed right!{" "}
                 <span className="font-mono text-signal-amber">+1</span>
@@ -219,7 +301,6 @@ type LandedAuthorProps = {
 
 const LandedAuthor = ({ authorName, onPauseComplete }: LandedAuthorProps) => {
   useEffect(() => {
-    /** After name scale + CSS glow (~1.1s), pause 1s, then show correct guesses. */
     const t = window.setTimeout(() => onPauseComplete(), 2100);
     return () => clearTimeout(t);
   }, [onPauseComplete]);

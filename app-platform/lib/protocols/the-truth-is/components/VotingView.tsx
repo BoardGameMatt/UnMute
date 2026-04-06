@@ -14,22 +14,16 @@ export const VotingView = ({ state, participantId, sendAction }: VotingViewProps
   const [selected, setSelected] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
 
-  const authorId = state.current_author_id;
-  const isAuthor = authorId === participantId;
-
-  const others = useMemo(
-    () => state.participants.filter((p) => p.id !== authorId),
-    [state.participants, authorId]
-  );
+  const guessOptions = useMemo(() => state.participants, [state.participants]);
 
   const handleConfirm = useCallback(async () => {
-    if (!selected || isAuthor || confirmed) return;
+    if (!selected || confirmed) return;
     setConfirmed(true);
     await sendAction("submitVote", {
       voterId: participantId,
       guessedAuthorId: selected,
     });
-  }, [selected, isAuthor, confirmed, sendAction, participantId]);
+  }, [selected, confirmed, sendAction, participantId]);
 
   const handleTimerComplete = useCallback(async () => {
     await sendAction("votingTimerExpired", {});
@@ -45,16 +39,6 @@ export const VotingView = ({ state, participantId, sendAction }: VotingViewProps
     submitClass += " cursor-not-allowed bg-cloud-grey text-slate opacity-40";
   }
 
-  if (isAuthor) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 text-center">
-        <p className="font-body text-lg leading-relaxed text-charcoal">
-          This one&apos;s yours — sit tight while they guess.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-[70vh] flex-col px-5 pb-10 pt-6">
       <p className="text-center font-mono text-[10px] font-normal uppercase tracking-widest text-steel-blue">
@@ -68,7 +52,7 @@ export const VotingView = ({ state, participantId, sendAction }: VotingViewProps
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {others.map((p) => {
+        {guessOptions.map((p) => {
           const isSel = selected === p.id;
           return (
             <button

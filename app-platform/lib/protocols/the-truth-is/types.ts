@@ -69,6 +69,23 @@ export interface TruthIsState {
   session_complete: boolean;
   /** Tracks skips when a player submits nothing for a prompt (timer or explicit). */
   skipped_rounds: Record<string, { r1?: boolean; r2?: boolean }>;
+  /** Populated after processReveal (omitted in v1 persisted state). */
+  last_round_author_bluffed?: boolean;
+  last_round_author_points_earned?: number;
+}
+
+/** Server-computed scoring for one reveal (VOTING/REVEAL). */
+export interface TruthIsRoundScores {
+  /** Points to add per participant this round. */
+  scoreDeltas: Record<string, number>;
+  /** True if no vote targeted the author (nobody “caught” them). */
+  authorBluffed: boolean;
+  /** Author’s total from bluff rules this round (0 if not a bluff round). */
+  authorPointsEarned: number;
+  /** Non-author voters who guessed someone other than the author (bluff round). */
+  fooledVoterIds: string[];
+  /** Non-author voters who guessed the author (bluff round). */
+  caughtVoterIds: string[];
 }
 
 export function isTruthIsState(json: unknown): json is TruthIsState {
