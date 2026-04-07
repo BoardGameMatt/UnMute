@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { TimerArc } from "@/components/ui/TimerArc";
 import type { TruthIsState } from "../types";
+import { BluffRulesBanner } from "./BluffRulesBanner";
 
 type VotingViewProps = {
   state: TruthIsState;
@@ -29,6 +30,13 @@ export const VotingView = ({ state, participantId, sendAction }: VotingViewProps
     await sendAction("votingTimerExpired", {});
   }, [sendAction]);
 
+  const isBluffRound =
+    state.current_reader_id !== null &&
+    state.current_author_id !== null &&
+    state.current_reader_id === state.current_author_id;
+  const showBluffBanner =
+    isBluffRound && state.current_reader_id === participantId;
+
   let submitClass =
     "mt-8 w-full rounded-md px-5 py-4 font-display text-base font-semibold transition-colors duration-200";
   if (confirmed) {
@@ -44,6 +52,7 @@ export const VotingView = ({ state, participantId, sendAction }: VotingViewProps
       <p className="text-center font-mono text-[10px] font-normal uppercase tracking-widest text-steel-blue">
         WHO WROTE IT?
       </p>
+      {showBluffBanner ? <BluffRulesBanner /> : null}
       <p className="mt-4 text-center font-display text-lg font-semibold text-charcoal">
         Who do you think said this?
       </p>
