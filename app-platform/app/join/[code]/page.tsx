@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { ActiveSessionRejoin } from "@/components/join/active-session-rejoin";
@@ -10,7 +11,10 @@ type JoinCodePageProps = {
   params: { code: string };
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function JoinCodePage({ params }: JoinCodePageProps) {
+  noStore();
   const raw = params.code ?? "";
   const code = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
 
@@ -145,6 +149,7 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
             <LobbyGuestJoinForm
               sessionId={session.id}
               teamId={session.team_id}
+              joinCode={code}
             />
           </div>
         ) : null}

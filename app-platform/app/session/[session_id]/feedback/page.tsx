@@ -5,11 +5,25 @@ import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
 type FeedbackPageProps = {
-  params: { session_id: string };
+  params: { session_id: string } | Promise<{ session_id: string }>;
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function SessionFeedbackPage({ params }: FeedbackPageProps) {
-  const sessionId = params.session_id;
+  const { session_id: rawSessionId } = await Promise.resolve(params);
+  const sessionId = typeof rawSessionId === "string" ? rawSessionId.trim() : "";
+  if (!sessionId) {
+    redirect("/join");
+  }
+
+  const cookieStore = await cookies();
+  const participantId = cookieStore.get(PARTICIPANT_COOKIE)?.value ?? null;
+
+  if (!participantId) {
+    redirect("/join");
+  }
+
   const supabase = createClient();
 
   const { data: session, error: sessionErr } = await supabase
@@ -26,30 +40,31 @@ export default async function SessionFeedbackPage({ params }: FeedbackPageProps)
     redirect(`/session/${sessionId}`);
   }
 
-  const cookieStore = cookies();
-  const participantId = cookieStore.get(PARTICIPANT_COOKIE)?.value ?? null;
-
-  if (!participantId) {
-    redirect("/join");
-  }
-
-  const { data: link } = await supabase
+  const { data: link, error: linkErr } = await supabase
     .from("session_participants")
     .select("id")
     .eq("session_id", sessionId)
     .eq("participant_id", participantId)
     .maybeSingle();
 
+  if (linkErr) {
+    redirect("/join");
+  }
+
   if (!link) {
     redirect("/join");
   }
 
-  const { data: existing } = await supabase
+  const { data: existing, error: existingErr } = await supabase
     .from("session_feedback")
     .select("id")
     .eq("session_id", sessionId)
     .eq("participant_id", participantId)
     .maybeSingle();
+
+  if (existingErr) {
+    redirect("/join");
+  }
 
   return (
     <main className="min-h-screen bg-warm-white px-5 py-14">

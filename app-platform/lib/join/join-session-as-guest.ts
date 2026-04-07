@@ -1,18 +1,19 @@
-"use server";
-
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { PARTICIPANT_COOKIE, type JoinGuestResult } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
-export async function joinSessionAsGuest(
-  _prevState: JoinGuestResult | null,
-  formData: FormData
-): Promise<JoinGuestResult> {
-  const sessionId = String(formData.get("sessionId") ?? "").trim();
-  const teamId = String(formData.get("teamId") ?? "").trim();
-  const raw = formData.get("displayName");
-  const displayName = typeof raw === "string" ? raw.trim() : "";
+export type GuestJoinCoreResult =
+  | { ok: true; participantId: string; sessionId: string }
+  | { ok: false; error: string };
+
+/**
+ * Inserts guest participant + session link. Caller sets cookie and redirects.
+ * Used by API route (preferred) so POST does not target /join/[code] RSC page.
+ */
+export async function joinSessionAsGuestCore(input: {
+  sessionId: string;
+  teamId: string;
+  displayName: string;
+}): Promise<GuestJoinCoreResult> {
+  const { sessionId, teamId, displayName } = input;
 
   if (!sessionId || !teamId) {
     return { ok: false, error: "Missing session context. Refresh and try again." };
@@ -100,14 +101,9 @@ export async function joinSessionAsGuest(
     return { ok: false, error: spErr.message };
   }
 
-  const cookieStore = cookies();
-  cookieStore.set(PARTICIPANT_COOKIE, participant.id, {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-    sameSite: "lax",
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-  });
-
-  redirect(`/session/${sessionId}/lobby`);
+  return {
+    ok: true,
+    participantId: participant.id,
+    sessionId,
+  };
 }
