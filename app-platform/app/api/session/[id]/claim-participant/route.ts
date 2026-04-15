@@ -28,19 +28,11 @@ export async function GET(request: Request, context: RouteContext) {
     sessionId = sessionIdFromPathname(url.pathname) ?? "";
   }
 
-  console.log("[claim-participant] incoming", {
-    session_id: sessionId,
-    pid: participantId,
-    pathname: url.pathname,
-  });
-
   if (!sessionId || !UUID_RE.test(sessionId)) {
-    console.log("[claim-participant] bad session_id", { sessionId });
     return NextResponse.json({ error: "Invalid session." }, { status: 400 });
   }
 
   if (!UUID_RE.test(participantId)) {
-    console.log("[claim-participant] bad pid", { participantId });
     return NextResponse.json({ error: "Invalid participant." }, { status: 400 });
   }
 
@@ -53,12 +45,6 @@ export async function GET(request: Request, context: RouteContext) {
     .maybeSingle();
 
   if (error || !row) {
-    console.log("[claim-participant] lookup failed", {
-      sessionId,
-      participantId,
-      supabaseError: error?.message,
-      row: row ?? null,
-    });
     return NextResponse.json(
       { error: "You are not part of this session." },
       { status: 404 }
