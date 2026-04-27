@@ -2,4 +2,4 @@
 export const PARTICIPANT_COOKIE = "unmute_participant_id";
 
 /** Production join URL path shown on lobby projector (host only, no protocol). */
-export const JOIN_URL_DISPLAY = "unmutelabs.com/join";
+export const JOIN_URL_DISPLAY = "app.unmutelabs.com/join";
