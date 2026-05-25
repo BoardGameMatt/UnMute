@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 import {
+  clientPayloadToEngineAction as dibeClientPayloadToEngineAction,
+  reduceDrawItByEarState,
+} from "@/lib/protocols/draw-it-by-ear/engine";
+import {
+  drawItByEarStateToJson,
+  isDrawItByEarState,
+} from "@/lib/protocols/draw-it-by-ear/types";
+import {
   clientPayloadToEngineAction,
   reduceTruthIsState,
 } from "@/lib/protocols/the-truth-is/engine";
@@ -101,6 +109,71 @@ export async function POST(
 
   if (!row) {
     return NextResponse.json({ error: "session_state not found" }, { status: 404 });
+  }
+
+  if (protocolSlug === "draw-it-by-ear") {
+    try {
+      if (actionType === "initializeGame" && isDrawItByEarState(row.state_json)) {
+        return NextResponse.json({ ok: true, skipped: true });
+      }
+
+      const engineAction = dibeClientPayloadToEngineAction(actionType, payloadRecord);
+      const prior = isDrawItByEarState(row.state_json) ? row.state_json : null;
+      const nextState = reduceDrawItByEarState(prior, engineAction);
+
+      const { error: updateError } = await supabase
+        .from("session_state")
+        .update({
+          state_json: drawItByEarStateToJson(nextState),
+          phase: nextState.phase,
+          current_round: nextState.total_rounds_played,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id);
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
+      }
+
+      if (actionType === "lockTeams" && nextState.teams_locked) {
+        await supabase.from("dibe_teams").delete().eq("session_id", sessionId);
+        const teamRows = nextState.teams.map((team) => ({
+          session_id: sessionId,
+          name: team.name,
+          color: team.color,
+          member_ids: team.member_ids,
+          describer_rotation: team.describer_rotation,
+          current_describer_index: team.current_describer_index,
+          cumulative_score: team.cumulative_score,
+        }));
+        if (teamRows.length > 0) {
+          const { error: teamsErr } = await supabase.from("dibe_teams").insert(teamRows);
+          if (teamsErr) {
+            return NextResponse.json({ error: teamsErr.message }, { status: 500 });
+          }
+        }
+      }
+
+      if (actionType === "endSession") {
+        const completedAt = new Date().toISOString();
+        const { error: sessionUpdateErr } = await supabase
+          .from("sessions")
+          .update({
+            status: "completed",
+            completed_at: completedAt,
+          })
+          .eq("id", sessionId);
+
+        if (sessionUpdateErr) {
+          return NextResponse.json({ error: sessionUpdateErr.message }, { status: 500 });
+        }
+      }
+
+      return NextResponse.json({ ok: true });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Engine error";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
   }
 
   if (protocolSlug === "the-truth-is") {
