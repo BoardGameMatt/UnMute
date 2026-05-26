@@ -116,8 +116,8 @@ function findRoboDoc(catalog: DibeImageCatalogEntry[]): DibeImageCatalogEntry {
 
 /** Max 4 per team; even sizes; prefer larger groups; min 2 per team when multiple teams. */
 export function computeTeamSizes(participantCount: number): number[] {
-  if (participantCount < 5) {
-    throw new Error("Draw It By Ear needs at least 5 players.");
+  if (participantCount < 3) {
+    throw new Error("Draw It By Ear needs at least 3 players.");
   }
 
   if (participantCount <= 4) {
@@ -298,8 +298,8 @@ export function initializeGame(
   participants: DibeParticipant[],
   imageCatalog: DibeImageCatalogEntry[]
 ): DibeState {
-  if (participants.length < 5 || participants.length > 20) {
-    throw new Error("Player count must be between 5 and 20.");
+  if (participants.length < 3 || participants.length > 20) {
+    throw new Error("Player count must be between 3 and 20.");
   }
   if (imageCatalog.length === 0) {
     throw new Error("Image catalog is required.");
