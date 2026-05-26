@@ -9,7 +9,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
-const STORAGE_BUCKET = "protocol-images";
+const STORAGE_BUCKET = "DrawItByEarImages";
 const SIGNED_URL_TTL_SEC = 600;
 
 type RouteContext = {

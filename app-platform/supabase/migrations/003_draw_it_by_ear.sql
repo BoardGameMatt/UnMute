@@ -34,7 +34,7 @@ ALTER TABLE public.dibe_teams ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all for now" ON public.dibe_teams FOR ALL USING (true) WITH CHECK (true);
 
 INSERT INTO public.protocol_images (protocol_slug, name, image_path, criteria) VALUES
-('draw-it-by-ear', 'RoboDoc', 'draw-it-by-ear/RoboDoc.png', '[
+('draw-it-by-ear', 'RoboDoc', 'RoboDoc.png', '[
   {"text": "The robot doctor has a headband", "points": 1},
   {"text": "Neither of the man''s feet are visible", "points": 1},
   {"text": "The robot dog has four wheels", "points": 1},
@@ -46,7 +46,7 @@ INSERT INTO public.protocol_images (protocol_slug, name, image_path, criteria) V
   {"text": "One of the robot doctor''s eyes is bigger than the other", "points": 3},
   {"text": "Exactly one of the patient''s arms is visible", "points": 3}
 ]'),
-('draw-it-by-ear', 'HatMan', 'draw-it-by-ear/HatMan.png', '[
+('draw-it-by-ear', 'HatMan', 'HatMan.png', '[
   {"text": "Hat man has exactly 5 hats", "points": 1},
   {"text": "Hat man is wearing a bow tie", "points": 1},
   {"text": "Hat man is smiling", "points": 1},
@@ -58,7 +58,7 @@ INSERT INTO public.protocol_images (protocol_slug, name, image_path, criteria) V
   {"text": "There is spiral or circular wood grain on the tree stump", "points": 3},
   {"text": "The hats on his hands are higher than the hat on his head", "points": 3}
 ]'),
-('draw-it-by-ear', 'Working Out', 'draw-it-by-ear/Working_Out.png', '[
+('draw-it-by-ear', 'Working Out', 'Working_Out.png', '[
   {"text": "All people are wearing shoes that have no laces", "points": 1},
   {"text": "There are two winged insects in the scene", "points": 1},
   {"text": "No more than 1 person has hair on their head", "points": 1},
@@ -70,7 +70,7 @@ INSERT INTO public.protocol_images (protocol_slug, name, image_path, criteria) V
   {"text": "One person is holding a barbell with weights that are below his waist", "points": 3},
   {"text": "There are exactly two drops of sweat next to but not touching one of the people''s heads", "points": 3}
 ]'),
-('draw-it-by-ear', 'Dropping In For Lunch', 'draw-it-by-ear/Dropping_In_For_Lunch.png', '[
+('draw-it-by-ear', 'Dropping In For Lunch', 'Dropping_In_For_Lunch.png', '[
   {"text": "The bird is holding exactly 2 balloons", "points": 1},
   {"text": "The alligator is wearing sunglasses", "points": 1},
   {"text": "There is a straw in the cup", "points": 1},
@@ -82,7 +82,7 @@ INSERT INTO public.protocol_images (protocol_slug, name, image_path, criteria) V
   {"text": "There are stripes on the cup next to the alligator", "points": 3},
   {"text": "There are at least six rays emanating from the sun", "points": 3}
 ]'),
-('draw-it-by-ear', 'Mountain Hike', 'draw-it-by-ear/Mountain_Hike.png', '[
+('draw-it-by-ear', 'Mountain Hike', 'Mountain_Hike.png', '[
   {"text": "The man has a hat on his head", "points": 1},
   {"text": "The man is facing to the left side of the drawing", "points": 1},
   {"text": "The man''s travel pack has a wheel visible on it", "points": 1},
@@ -94,7 +94,7 @@ INSERT INTO public.protocol_images (protocol_slug, name, image_path, criteria) V
   {"text": "The wheel on the travel pack is larger than the sun", "points": 3},
   {"text": "There are exactly five clouds in the sky", "points": 3}
 ]'),
-('draw-it-by-ear', 'PastaToGo', 'draw-it-by-ear/PastaToGo.png', '[
+('draw-it-by-ear', 'PastaToGo', 'PastaToGo.png', '[
   {"text": "The man''s pupils are not visible", "points": 1},
   {"text": "The man is wearing a bow tie", "points": 1},
   {"text": "Exactly one of the man''s ears is visible", "points": 1},
