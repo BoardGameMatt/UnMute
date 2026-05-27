@@ -283,6 +283,23 @@ export type DibeTeamRowInsert = Omit<DibeTeamRow, "id" | "created_at"> & {
   created_at?: string;
 };
 
+export interface IkwymResponse {
+  id: string;
+  session_id: string;
+  participant_id: string;
+  gif_url: string;
+  open_response: string;
+  stimulus_response: string;
+  search_query: string;
+  round: number;
+  created_at: string;
+}
+
+export type IkwymResponseInsert = Omit<IkwymResponse, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -356,6 +373,12 @@ export type Database = {
         Row: DibeTeamRow;
         Insert: DibeTeamRowInsert;
         Update: Partial<DibeTeamRowInsert>;
+        Relationships: [];
+      };
+      ikwym_responses: {
+        Row: IkwymResponse;
+        Insert: IkwymResponseInsert;
+        Update: Partial<IkwymResponseInsert>;
         Relationships: [];
       };
     };

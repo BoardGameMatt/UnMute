@@ -6,15 +6,102 @@
 import { config } from "dotenv";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../lib/types/database";
+import type { Database, Json, SessionStatus } from "../lib/types/database";
 
 config({ path: resolve(process.cwd(), ".env.local") });
 
 const SEED_TEAM_JOIN_CODE = "DEMOTM";
-const SEED_SESSION_JOIN_CODE = "TRUTH1";
+const TRUTH_SESSION_JOIN_CODE = "TRUTH1";
+const DIBE_SESSION_JOIN_CODE = "DIBE01";
+const MEME_SESSION_JOIN_CODE = "MEME01";
 
 const ADMIN_EMAIL = "matt@unmutelabs.com";
 const ADMIN_DISPLAY_NAME = "Matt Hendricks";
+
+type SeedSessionSpec = {
+  joinCode: string;
+  protocolSlug: "the-truth-is" | "draw-it-by-ear" | "i-know-what-you-meme";
+  status: SessionStatus;
+  sessionLength?: "FULL" | "SHORT";
+};
+
+const SEED_SESSIONS: SeedSessionSpec[] = [
+  {
+    joinCode: TRUTH_SESSION_JOIN_CODE,
+    protocolSlug: "the-truth-is",
+    status: "lobby",
+  },
+  {
+    joinCode: DIBE_SESSION_JOIN_CODE,
+    protocolSlug: "draw-it-by-ear",
+    status: "lobby",
+    sessionLength: "FULL",
+  },
+  {
+    joinCode: MEME_SESSION_JOIN_CODE,
+    protocolSlug: "i-know-what-you-meme",
+    status: "lobby",
+  },
+];
+
+type SeededSession = {
+  joinCode: string;
+  protocolSlug: string;
+  sessionId: string;
+  sessionLength?: string;
+};
+
+async function seedSession(
+  supabase: ReturnType<typeof createClient<Database>>,
+  spec: SeedSessionSpec,
+  protocolId: string,
+  teamId: string
+): Promise<SeededSession> {
+  const stateJson: Json =
+    spec.sessionLength !== undefined
+      ? { session_length: spec.sessionLength }
+      : {};
+
+  const { data: sessionRow, error: sessionError } = await supabase
+    .from("sessions")
+    .upsert(
+      {
+        protocol_id: protocolId,
+        protocol_slot_id: null,
+        team_id: teamId,
+        status: spec.status,
+        join_code: spec.joinCode,
+      },
+      { onConflict: "join_code" }
+    )
+    .select("id, join_code")
+    .single();
+
+  if (sessionError || !sessionRow) {
+    throw new Error(`sessions upsert (${spec.joinCode}): ${sessionError?.message}`);
+  }
+
+  const { error: stateError } = await supabase.from("session_state").upsert(
+    {
+      session_id: sessionRow.id,
+      current_round: 0,
+      phase: "waiting",
+      state_json: stateJson,
+    },
+    { onConflict: "session_id" }
+  );
+
+  if (stateError) {
+    throw new Error(`session_state upsert (${spec.joinCode}): ${stateError.message}`);
+  }
+
+  return {
+    joinCode: sessionRow.join_code,
+    protocolSlug: spec.protocolSlug,
+    sessionId: sessionRow.id,
+    sessionLength: spec.sessionLength,
+  };
+}
 
 async function main(): Promise<void> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -27,7 +114,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const supabase = createClient(url, key);
+  const supabase = createClient<Database>(url, key);
 
   const protocols: Database["public"]["Tables"]["protocols"]["Insert"][] = [
     {
@@ -50,6 +137,16 @@ async function main(): Promise<void> {
       max_players: 20,
       config_schema: {},
     },
+    {
+      slug: "i-know-what-you-meme",
+      name: "I Know What You Meme",
+      description:
+        "Respond with GIFs, then guess who picked what — meme energy for teams.",
+      type: "turnbased",
+      min_players: 3,
+      max_players: 20,
+      config_schema: {},
+    },
   ];
 
   const { error: protocolsError } = await supabase
@@ -61,16 +158,19 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const { data: truthProtocol, error: truthProtoErr } = await supabase
+  const { data: protocolRows, error: protocolLoadErr } = await supabase
     .from("protocols")
-    .select("id")
-    .eq("slug", "the-truth-is")
-    .single();
+    .select("id, slug")
+    .in("slug", ["the-truth-is", "draw-it-by-ear", "i-know-what-you-meme"]);
 
-  if (truthProtoErr || !truthProtocol) {
-    console.error("load the-truth-is protocol:", truthProtoErr?.message);
+  if (protocolLoadErr || !protocolRows?.length) {
+    console.error("load protocols:", protocolLoadErr?.message);
     process.exit(1);
   }
+
+  const protocolIdBySlug = Object.fromEntries(
+    protocolRows.map((p) => [p.slug, p.id])
+  ) as Record<string, string>;
 
   const { data: adminPerson, error: personError } = await supabase
     .from("persons")
@@ -193,45 +293,35 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const { data: sessionRow, error: sessionError } = await supabase
-    .from("sessions")
-    .upsert(
-      {
-        protocol_id: truthProtocol.id,
-        protocol_slot_id: null,
-        team_id: demoTeam.id,
-        status: "lobby",
-        join_code: SEED_SESSION_JOIN_CODE,
-      },
-      { onConflict: "join_code" }
-    )
-    .select("id, join_code")
-    .single();
+  const seededSessions: SeededSession[] = [];
 
-  if (sessionError || !sessionRow) {
-    console.error("sessions upsert:", sessionError?.message);
-    process.exit(1);
-  }
-
-  const { error: stateError } = await supabase.from("session_state").upsert(
-    {
-      session_id: sessionRow.id,
-      current_round: 0,
-      phase: "waiting",
-      state_json: {},
-    },
-    { onConflict: "session_id" }
-  );
-
-  if (stateError) {
-    console.error("session_state upsert:", stateError.message);
+  try {
+    for (const spec of SEED_SESSIONS) {
+      const protocolId = protocolIdBySlug[spec.protocolSlug];
+      if (!protocolId) {
+        throw new Error(`Protocol not found: ${spec.protocolSlug}`);
+      }
+      const session = await seedSession(supabase, spec, protocolId, demoTeam.id);
+      seededSessions.push(session);
+    }
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
     process.exit(1);
   }
 
   console.log("Seed complete.");
-  console.log("  join_code:", sessionRow.join_code);
-  console.log("  session_id:", sessionRow.id);
   console.log("  team_id:", demoTeam.id);
+  console.log("  team_join_code:", SEED_TEAM_JOIN_CODE);
+  console.log("");
+  for (const session of seededSessions) {
+    console.log(`  [${session.protocolSlug}]`);
+    console.log("    join_code:", session.joinCode);
+    console.log("    session_id:", session.sessionId);
+    if (session.sessionLength) {
+      console.log("    session_length:", session.sessionLength);
+    }
+    console.log("");
+  }
 }
 
 main().catch((err: unknown) => {

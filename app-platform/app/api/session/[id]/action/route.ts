@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 import {
+  clientPayloadToEngineAction as ikwymClientPayloadToEngineAction,
+  reduceIKWYMState,
+} from "@/lib/protocols/i-know-what-you-meme/engine";
+import {
+  ikwymStateToJson,
+  isIKWYMState,
+} from "@/lib/protocols/i-know-what-you-meme/types";
+import {
   clientPayloadToEngineAction as dibeClientPayloadToEngineAction,
   reduceDrawItByEarState,
 } from "@/lib/protocols/draw-it-by-ear/engine";
@@ -109,6 +117,96 @@ export async function POST(
 
   if (!row) {
     return NextResponse.json({ error: "session_state not found" }, { status: 404 });
+  }
+
+  if (protocolSlug === "i-know-what-you-meme") {
+    try {
+      if (actionType === "initializeGame" && isIKWYMState(row.state_json)) {
+        return NextResponse.json({ ok: true, skipped: true });
+      }
+
+      const leadOnlyActions = new Set([
+        "ikwym/broadcast_round1",
+        "ikwym/broadcast_round2",
+        "ikwym/resolve_round",
+        "ikwym/next_reveal",
+      ]);
+      if (leadOnlyActions.has(actionType) && payloadRecord.role !== "lead") {
+        return NextResponse.json({ error: "Lead only." }, { status: 403 });
+      }
+
+      const engineAction = ikwymClientPayloadToEngineAction(actionType, payloadRecord);
+      const prior = isIKWYMState(row.state_json) ? row.state_json : null;
+      const nextState = reduceIKWYMState(prior, engineAction);
+
+      const { error: updateError } = await supabase
+        .from("session_state")
+        .update({
+          state_json: ikwymStateToJson(nextState),
+          phase: nextState.phase,
+          current_round: nextState.revealIndex,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id);
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
+      }
+
+      if (
+        actionType === "ikwym/submit_round1_gif" ||
+        actionType === "ikwym/submit_round2_gif"
+      ) {
+        const participantId = payloadRecord.participantId;
+        const round = actionType === "ikwym/submit_round1_gif" ? 1 : 2;
+        if (typeof participantId === "string") {
+          const { data: spRow } = await supabase
+            .from("session_participants")
+            .select("id")
+            .eq("session_id", sessionId)
+            .eq("participant_id", participantId)
+            .maybeSingle();
+
+          if (spRow) {
+            const { error: responseErr } = await supabase.from("ikwym_responses").upsert(
+              {
+                session_id: sessionId,
+                participant_id: spRow.id,
+                gif_url: String(payloadRecord.gifUrl ?? ""),
+                open_response: String(payloadRecord.openResponse ?? ""),
+                stimulus_response: String(payloadRecord.stimulusResponse ?? ""),
+                search_query: String(payloadRecord.searchQuery ?? ""),
+                round,
+              },
+              { onConflict: "session_id,participant_id,round" }
+            );
+            if (responseErr) {
+              return NextResponse.json({ error: responseErr.message }, { status: 500 });
+            }
+          }
+        }
+      }
+
+      if (actionType === "endSession") {
+        const completedAt = new Date().toISOString();
+        const { error: sessionUpdateErr } = await supabase
+          .from("sessions")
+          .update({
+            status: "completed",
+            completed_at: completedAt,
+          })
+          .eq("id", sessionId);
+
+        if (sessionUpdateErr) {
+          return NextResponse.json({ error: sessionUpdateErr.message }, { status: 500 });
+        }
+      }
+
+      return NextResponse.json({ ok: true });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Engine error";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
   }
 
   if (protocolSlug === "draw-it-by-ear") {

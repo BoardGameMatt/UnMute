@@ -6,6 +6,7 @@
 import "./placeholder";
 import "./the-truth-is";
 import "./draw-it-by-ear";
+import "./i-know-what-you-meme";
 
 export {
   getProtocol,
