@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { EvaluoiSurvey } from "@/components/EvaluoiSurvey";
 
 export default function SurveyPage() {
@@ -14,6 +15,15 @@ export default function SurveyPage() {
         </header>
 
         <EvaluoiSurvey />
+
+        <p className="pt-2 text-center">
+          <Link
+            href="/privacy"
+            className="font-mono text-xs text-slate transition hover:text-unmute-navy"
+          >
+            Privacy Notice
+          </Link>
+        </p>
       </div>
     </main>
   );
