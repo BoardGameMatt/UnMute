@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { startSessionAction } from "@/app/session/[session_id]/lobby/actions";
+import { startSessionAction } from "@/app/(site)/session/[session_id]/lobby/actions";
 import { JOIN_URL_DISPLAY } from "@/lib/constants";
 import { useSessionParticipants } from "@/hooks/useSessionParticipants";
 import { createClient } from "@/lib/supabase/client";
