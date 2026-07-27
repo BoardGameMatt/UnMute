@@ -58,7 +58,7 @@ INSERT INTO public.protocol_images (protocol_slug, name, image_path, criteria) V
   {"text": "There is spiral or circular wood grain on the tree stump", "points": 3},
   {"text": "The hats on his hands are higher than the hat on his head", "points": 3}
 ]'),
-('draw-it-by-ear', 'Working Out', 'Working_Out.png', '[
+('draw-it-by-ear', 'Working Out', 'Working Out.png', '[
   {"text": "All people are wearing shoes that have no laces", "points": 1},
   {"text": "There are two winged insects in the scene", "points": 1},
   {"text": "No more than 1 person has hair on their head", "points": 1},
@@ -70,7 +70,7 @@ INSERT INTO public.protocol_images (protocol_slug, name, image_path, criteria) V
   {"text": "One person is holding a barbell with weights that are below his waist", "points": 3},
   {"text": "There are exactly two drops of sweat next to but not touching one of the people''s heads", "points": 3}
 ]'),
-('draw-it-by-ear', 'Dropping In For Lunch', 'Dropping_In_For_Lunch.png', '[
+('draw-it-by-ear', 'Dropping In For Lunch', 'Dropping In For Lunch.png', '[
   {"text": "The bird is holding exactly 2 balloons", "points": 1},
   {"text": "The alligator is wearing sunglasses", "points": 1},
   {"text": "There is a straw in the cup", "points": 1},
@@ -82,7 +82,7 @@ INSERT INTO public.protocol_images (protocol_slug, name, image_path, criteria) V
   {"text": "There are stripes on the cup next to the alligator", "points": 3},
   {"text": "There are at least six rays emanating from the sun", "points": 3}
 ]'),
-('draw-it-by-ear', 'Mountain Hike', 'Mountain_Hike.png', '[
+('draw-it-by-ear', 'Mountain Hike', 'Mountain Hike.png', '[
   {"text": "The man has a hat on his head", "points": 1},
   {"text": "The man is facing to the left side of the drawing", "points": 1},
   {"text": "The man''s travel pack has a wheel visible on it", "points": 1},

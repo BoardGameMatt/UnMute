@@ -93,6 +93,8 @@ export interface DibeState {
   /** Per-describer best single-round team score (for MVP award) */
   describer_best_round_scores: Record<string, number>;
   timer_started_at: string | null;
+  /** timer_started_at value already consumed by scoringTimerExpired for the current window */
+  last_expired_timer_at: string | null;
   timer_duration_seconds: number;
   session_complete: boolean;
   formation_error: string | null;

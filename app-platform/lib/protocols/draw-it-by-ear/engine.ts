@@ -235,7 +235,29 @@ function allParticipantsSubmitted(
   criteria: DibeCriterion[]
 ): boolean {
   const keys = criteria.map((c) => c.text);
+  const describerIds = new Set<string>();
+
+  if (state.phase === "TUTORIAL_SCORING_1PT") {
+    if (state.tutorial_describer_id) {
+      describerIds.add(state.tutorial_describer_id);
+    }
+  } else if (
+    state.phase === "ROUND_SCORING_1PT" ||
+    state.phase === "ROUND_SCORING_2PT" ||
+    state.phase === "ROUND_SCORING_3PT"
+  ) {
+    for (const team of state.teams) {
+      const describerId = getCurrentDescriberId(team);
+      if (describerId) {
+        describerIds.add(describerId);
+      }
+    }
+  }
+
   return state.participants.every((p) => {
+    if (describerIds.has(p.id)) {
+      return true;
+    }
     const sub = state.scoring_submissions[p.id];
     if (!sub) return false;
     return keys.every((k) => typeof sub[k] === "boolean");
@@ -330,6 +352,7 @@ export function initializeGame(
     participant_cumulative_scores: emptyScores(ids),
     describer_best_round_scores: emptyScores(ids),
     timer_started_at: null,
+    last_expired_timer_at: null,
     timer_duration_seconds: 0,
     session_complete: false,
     formation_error: null,
@@ -465,7 +488,16 @@ export function onScoringTimerExpired(state: DibeState): DibeState {
     "ROUND_SCORING_3PT",
   ];
   if (!scoringPhases.includes(state.phase)) return state;
-  return advanceScoringPhase(state);
+  if (
+    !state.timer_started_at ||
+    state.timer_started_at === state.last_expired_timer_at
+  ) {
+    return state;
+  }
+  return advanceScoringPhase({
+    ...state,
+    last_expired_timer_at: state.timer_started_at,
+  });
 }
 
 function advanceScoringPhase(state: DibeState): DibeState {

@@ -53,7 +53,7 @@ const IMAGES: { name: string; image_path: string; criteria: Json }[] = [
   },
   {
     name: "Working Out",
-    image_path: "Working_Out.png",
+    image_path: "Working Out.png",
     criteria: [
       { text: "All people are wearing shoes that have no laces", points: 1 },
       { text: "There are two winged insects in the scene", points: 1 },
@@ -81,7 +81,7 @@ const IMAGES: { name: string; image_path: string; criteria: Json }[] = [
   },
   {
     name: "Dropping In For Lunch",
-    image_path: "Dropping_In_For_Lunch.png",
+    image_path: "Dropping In For Lunch.png",
     criteria: [
       { text: "The bird is holding exactly 2 balloons", points: 1 },
       { text: "The alligator is wearing sunglasses", points: 1 },
@@ -97,7 +97,7 @@ const IMAGES: { name: string; image_path: string; criteria: Json }[] = [
   },
   {
     name: "Mountain Hike",
-    image_path: "Mountain_Hike.png",
+    image_path: "Mountain Hike.png",
     criteria: [
       { text: "The man has a hat on his head", points: 1 },
       { text: "The man is facing to the left side of the drawing", points: 1 },

@@ -51,9 +51,10 @@ export const ScoringCriteriaForm = ({
   }, [allAnswered, submitted, sendAction, participantId, answers]);
 
   const handleTimerComplete = useCallback(async () => {
-    if (submitted) return;
-    setSubmitted(true);
-    await sendAction("submitScoring", { participantId, answers });
+    if (!submitted) {
+      setSubmitted(true);
+      await sendAction("submitScoring", { participantId, answers });
+    }
     await sendAction("scoringTimerExpired", {});
   }, [submitted, sendAction, participantId, answers]);
 
