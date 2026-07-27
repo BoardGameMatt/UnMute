@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import {
-  canRevealImageToEveryone,
+  canViewRoundImageReference,
   isDescriberForActiveRound,
 } from "@/lib/protocols/draw-it-by-ear/engine";
 import { isDrawItByEarState } from "@/lib/protocols/draw-it-by-ear/types";
@@ -61,7 +61,7 @@ export async function GET(request: Request, context: RouteContext) {
 
   const state = stateRow.state_json;
   const mayView =
-    canRevealImageToEveryone(state) ||
+    canViewRoundImageReference(state) ||
     isDescriberForActiveRound(state, participantId);
 
   if (!mayView || !state.active_image_id) {

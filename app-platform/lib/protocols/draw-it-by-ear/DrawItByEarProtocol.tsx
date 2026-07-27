@@ -203,13 +203,14 @@ const PhaseBody = ({ state, sessionId, participantId, role, send }: PhaseBodyPro
           sessionId={sessionId}
           participantId={participantId}
           sendAction={send}
-          heading="Here's the tutorial image"
+          heading="And here's the actual picture the describer was using."
         />
       );
     case "TUTORIAL_SCORING_1PT":
       return (
         <TutorialScoringView
           state={state}
+          sessionId={sessionId}
           participantId={participantId}
           sendAction={send}
         />
@@ -252,7 +253,7 @@ const PhaseBody = ({ state, sessionId, participantId, role, send }: PhaseBodyPro
           sessionId={sessionId}
           participantId={participantId}
           sendAction={send}
-          heading="Here's what it actually was"
+          heading="And here's the actual picture the describer was using."
         />
       );
     case "ROUND_SCORING_1PT":
@@ -261,6 +262,7 @@ const PhaseBody = ({ state, sessionId, participantId, role, send }: PhaseBodyPro
       return (
         <RoundScoringView
           state={state}
+          sessionId={sessionId}
           participantId={participantId}
           sendAction={send}
         />

@@ -16,10 +16,10 @@ export const SessionIdentityBanner = ({
   if (!SHOW_SESSION_IDENTITY_BANNER) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 bg-deep-navy px-4 py-2 text-center font-mono text-[11px] font-normal text-warm-white">
-      <span>{displayName}</span>
+    <div className="flex flex-wrap items-center justify-center gap-2 bg-deep-navy px-5 py-4 text-center font-body text-base text-warm-white">
+      <span className="font-semibold">{displayName}</span>
       {roleInSession === "lead" ? (
-        <span className="rounded-full border border-warm-white/40 px-2 py-0.5 text-[10px] text-warm-white/95">
+        <span className="rounded-full border border-warm-white/40 px-2.5 py-0.5 text-sm text-warm-white/95">
           (Lead)
         </span>
       ) : null}

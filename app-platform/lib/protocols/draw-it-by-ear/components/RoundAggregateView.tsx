@@ -23,7 +23,7 @@ export const RoundAggregateView = ({
         ROUND {state.total_rounds_played} AGGREGATE
       </p>
       <h1 className="mt-4 text-center font-display text-2xl font-bold text-unmute-navy">
-        How precise was the room?
+        How accurate was the room?
       </h1>
       <div className="mt-8">
         <CriterionBarChart

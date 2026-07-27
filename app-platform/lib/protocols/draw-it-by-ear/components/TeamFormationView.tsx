@@ -43,7 +43,7 @@ export const TeamFormationView = ({
             onClick={() => void sendAction("autoAssignTeams", {})}
             className="w-full rounded-md bg-unmute-navy px-5 py-4 font-display text-base font-semibold text-warm-white hover:bg-deep-navy"
           >
-            Auto-Assign Teams
+            Choose teams randomly
           </button>
           <button
             type="button"

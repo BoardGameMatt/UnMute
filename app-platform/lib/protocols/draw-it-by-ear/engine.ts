@@ -200,6 +200,42 @@ export function canRevealImageToEveryone(state: DibeState): boolean {
   );
 }
 
+export function canViewRoundImageReference(state: DibeState): boolean {
+  if (canRevealImageToEveryone(state)) return true;
+  const scoringPhases = [
+    "TUTORIAL_SCORING_1PT",
+    "ROUND_SCORING_1PT",
+    "ROUND_SCORING_2PT",
+    "ROUND_SCORING_3PT",
+  ] as const;
+  return scoringPhases.includes(state.phase as (typeof scoringPhases)[number]);
+}
+
+export function getActiveDescriberId(
+  state: DibeState,
+  participantId: string
+): string | null {
+  if (state.phase === "TUTORIAL_DESCRIBE") {
+    return state.tutorial_describer_id;
+  }
+  if (state.phase === "ROUND_DESCRIBE" || state.phase === "BREAKOUT_SETUP") {
+    const team = getParticipantTeam(state, participantId);
+    if (!team) return null;
+    return getCurrentDescriberId(team);
+  }
+  return null;
+}
+
+export function getActiveDescriberDisplayName(
+  state: DibeState,
+  participantId: string
+): string | null {
+  const describerId = getActiveDescriberId(state, participantId);
+  if (!describerId) return null;
+  const participant = state.participants.find((p) => p.id === describerId);
+  return participant?.display_name ?? null;
+}
+
 function pickRoundImage(
   catalog: DibeImageCatalogEntry[],
   used: string[],
@@ -438,7 +474,7 @@ export function advanceFromImageReveal(state: DibeState): DibeState {
         scoring_submissions: {},
         round_criterion_hits: {},
       },
-      40,
+      35,
       true
     );
   }
@@ -535,9 +571,9 @@ function advanceScoringPhase(state: DibeState): DibeState {
         phase: "ROUND_SCORING_2PT",
         round_criterion_hits: hits,
         active_criteria: nextCriteria,
-        scoring_submissions: state.scoring_submissions,
+        scoring_submissions: {},
       },
-      25
+      35
     );
   }
 
@@ -555,9 +591,9 @@ function advanceScoringPhase(state: DibeState): DibeState {
         phase: "ROUND_SCORING_3PT",
         round_criterion_hits: hits,
         active_criteria: nextCriteria,
-        scoring_submissions: state.scoring_submissions,
+        scoring_submissions: {},
       },
-      20
+      35
     );
   }
 

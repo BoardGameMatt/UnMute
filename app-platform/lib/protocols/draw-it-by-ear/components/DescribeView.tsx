@@ -2,7 +2,10 @@
 
 import { useCallback, useRef } from "react";
 import { TimerArc } from "@/components/ui/TimerArc";
-import { isDescriberForActiveRound } from "../engine";
+import {
+  getActiveDescriberDisplayName,
+  isDescriberForActiveRound,
+} from "../engine";
 import { useDibeImage } from "../hooks/useDibeImage";
 import type { DibeState } from "../types";
 
@@ -28,6 +31,12 @@ export const DescribeView = ({
     participantId,
     isDescriber
   );
+  const describerName = getActiveDescriberDisplayName(state, participantId);
+  const describerAnnouncement = describerName
+    ? tutorial
+      ? `${describerName} is describing the practice round.`
+      : `${describerName} is describing this round.`
+    : null;
 
   const handleTimerComplete = useCallback(async () => {
     if (firedRef.current) return;
@@ -38,6 +47,11 @@ export const DescribeView = ({
   if (isDescriber) {
     return (
       <div className="flex min-h-[80vh] flex-col px-4 pb-8 pt-4">
+        {describerAnnouncement ? (
+          <p className="mb-4 text-center font-display text-lg font-semibold text-unmute-navy">
+            {describerAnnouncement}
+          </p>
+        ) : null}
         {loading ? (
           <p className="flex flex-1 items-center justify-center font-body text-slate">
             Loading image…
@@ -65,7 +79,7 @@ export const DescribeView = ({
             size={140}
           />
         </div>
-        <p className="mt-4 text-center font-mono text-xs uppercase tracking-widest text-steel-blue">
+        <p className="mt-4 text-center font-body text-sm text-slate">
           Describe what you see
         </p>
       </div>
@@ -74,10 +88,16 @@ export const DescribeView = ({
 
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center px-5 pb-10">
-      <p className="font-mono text-[10px] font-normal uppercase tracking-widest text-steel-blue">
-        {tutorial ? "TUTORIAL" : `ROUND ${state.current_round}`}
-      </p>
-      <h1 className="mt-6 max-w-sm text-center font-display text-2xl font-bold text-unmute-navy">
+      {describerAnnouncement ? (
+        <p className="text-center font-display text-xl font-semibold text-unmute-navy">
+          {describerAnnouncement}
+        </p>
+      ) : null}
+      <h1
+        className={`max-w-sm text-center font-display text-2xl font-bold text-unmute-navy ${
+          describerAnnouncement ? "mt-6" : "mt-0"
+        }`}
+      >
         Listen carefully and draw what you hear
       </h1>
       <p className="mt-3 max-w-xs text-center font-body text-sm text-slate">
@@ -91,9 +111,6 @@ export const DescribeView = ({
           size={168}
         />
       </div>
-      <p className="mt-6 font-mono text-sm uppercase tracking-widest text-unmute-navy">
-        {state.timer_duration_seconds}s
-      </p>
     </div>
   );
 };

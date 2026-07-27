@@ -1,7 +1,7 @@
 "use client";
 
 import type { SessionParticipantRole } from "@/lib/types/database";
-import { getParticipantTeam } from "../engine";
+import { getActiveDescriberDisplayName, getParticipantTeam } from "../engine";
 import type { DibeState } from "../types";
 
 type BreakoutSetupViewProps = {
@@ -18,13 +18,7 @@ export const BreakoutSetupView = ({
   sendAction,
 }: BreakoutSetupViewProps) => {
   const team = getParticipantTeam(state, participantId);
-  const describerId =
-    team && team.describer_rotation.length > 0
-      ? team.describer_rotation[
-          team.current_describer_index % team.describer_rotation.length
-        ]
-      : null;
-  const isDescriber = describerId === participantId;
+  const describerName = getActiveDescriberDisplayName(state, participantId);
 
   return (
     <div className="min-h-[70vh] px-5 py-10">
@@ -34,6 +28,11 @@ export const BreakoutSetupView = ({
       <h1 className="mt-4 text-center font-display text-2xl font-bold text-unmute-navy">
         Head to your breakout room
       </h1>
+      {describerName ? (
+        <p className="mt-6 text-center font-display text-lg font-semibold text-unmute-navy">
+          {describerName} is describing this round.
+        </p>
+      ) : null}
       {team ? (
         <div
           className="mx-auto mt-8 max-w-sm rounded-lg border border-cloud-grey bg-warm-white p-6 shadow-sm"
@@ -46,13 +45,7 @@ export const BreakoutSetupView = ({
               return <li key={id}>{p?.display_name ?? "Player"}</li>;
             })}
           </ul>
-          {isDescriber ? (
-            <p className="mt-4 font-mono text-xs uppercase tracking-widest text-signal-amber">
-              You are the Describer this round
-            </p>
-          ) : (
-            <p className="mt-4 font-body text-sm text-slate">Listen and draw on paper.</p>
-          )}
+          <p className="mt-4 font-body text-sm text-slate">Listen and draw on paper.</p>
         </div>
       ) : (
         <p className="mt-8 text-center font-body text-signal-red">Team not assigned.</p>
