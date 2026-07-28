@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import {
   clientPayloadToEngineAction as dibeClientPayloadToEngineAction,
   reduceDrawItByEarState,
@@ -38,6 +40,18 @@ type ActionBody = {
   actionType?: unknown;
   payload?: unknown;
 };
+
+/**
+ * Actions that advance the session for everyone. Hiding the button client-side
+ * is not enough — the role is verified against session_participants here.
+ */
+const DIBE_LEAD_ONLY_ACTIONS = new Set([
+  "everyoneBack",
+  "skipShowDrawings",
+  "leadStartBreakoutRound",
+  "leadAdvanceTimedPhase",
+  "leadEndDrawingForAllRooms",
+]);
 
 type ProtocolSlugRow = { slug: string };
 
@@ -112,6 +126,40 @@ export async function POST(
   }
 
   if (protocolSlug === "draw-it-by-ear") {
+    if (DIBE_LEAD_ONLY_ACTIONS.has(actionType)) {
+      const participantIdFromPayload =
+        typeof payloadRecord.participantId === "string"
+          ? payloadRecord.participantId
+          : "";
+      const requesterId =
+        cookies().get(PARTICIPANT_COOKIE)?.value || participantIdFromPayload;
+
+      if (!requesterId) {
+        return NextResponse.json(
+          { error: "Could not identify participant." },
+          { status: 401 }
+        );
+      }
+
+      const { data: membership, error: membershipErr } = await supabase
+        .from("session_participants")
+        .select("role_in_session")
+        .eq("session_id", sessionId)
+        .eq("participant_id", requesterId)
+        .maybeSingle();
+
+      if (membershipErr) {
+        return NextResponse.json({ error: membershipErr.message }, { status: 500 });
+      }
+
+      if (membership?.role_in_session !== "lead") {
+        return NextResponse.json(
+          { error: "Only the session lead can advance this phase." },
+          { status: 403 }
+        );
+      }
+    }
+
     try {
       if (actionType === "initializeGame" && isDrawItByEarState(row.state_json)) {
         return NextResponse.json({ ok: true, skipped: true });
@@ -120,6 +168,10 @@ export async function POST(
       const engineAction = dibeClientPayloadToEngineAction(actionType, payloadRecord);
       const prior = isDrawItByEarState(row.state_json) ? row.state_json : null;
       const nextState = reduceDrawItByEarState(prior, engineAction);
+
+      // Guards no-op by returning the same object. Report that back so lead
+      // override controls can tell the caller nothing happened.
+      const changed = nextState !== prior;
 
       const { error: updateError } = await supabase
         .from("session_state")
@@ -169,7 +221,7 @@ export async function POST(
         }
       }
 
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, changed });
     } catch (e) {
       const message = e instanceof Error ? e.message : "Engine error";
       return NextResponse.json({ error: message }, { status: 400 });

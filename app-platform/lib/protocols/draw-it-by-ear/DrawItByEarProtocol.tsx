@@ -7,20 +7,40 @@ import { useGameState, useSessionContext } from "@/components/providers/SessionP
 import { BackToLobbyLink } from "@/components/session/back-to-lobby-link";
 import { createClient } from "@/lib/supabase/client";
 import type { SessionProtocolProps } from "@/lib/protocols/registry";
+import { isTimedPhase } from "./engine";
+import type { DibePhase } from "./types";
 import { SessionIdentityBanner } from "@/lib/protocols/the-truth-is/components/SessionIdentityBanner";
 import { BreakoutSetupView } from "./components/BreakoutSetupView";
 import { DescribeView } from "./components/DescribeView";
 import { FinalResultsView } from "./components/FinalResultsView";
 import { ImageRevealView } from "./components/ImageRevealView";
+import { LeadAdvanceControl } from "./components/LeadAdvanceControl";
 import { LeaderboardView } from "./components/LeaderboardView";
+import { LeadEndDrawingControl } from "./components/LeadEndDrawingControl";
+import { LeadRoomStartControl } from "./components/LeadRoomStartControl";
 import { MaterialsCheckView } from "./components/MaterialsCheckView";
+import { ReturnToMainView } from "./components/ReturnToMainView";
 import { RoundAggregateView } from "./components/RoundAggregateView";
 import { RoundScoringView } from "./components/RoundScoringView";
+import { ShowDrawingsView } from "./components/ShowDrawingsView";
 import { TeamFormationView } from "./components/TeamFormationView";
 import { TutorialResultsView } from "./components/TutorialResultsView";
 import { TutorialScoringView } from "./components/TutorialScoringView";
 import type { DibeCriterion, DibeImageCatalogEntry, DibeState } from "./types";
 import { isDrawItByEarState } from "./types";
+
+/**
+ * Timed phases where a session-wide advance is meaningful.
+ *
+ * ROUND_DESCRIBE is excluded because its timer is per-room; the lead's recovery
+ * there is LeadRoomStartControl. SHOW_DRAWINGS is excluded because it already
+ * renders its own lead-only "Skip ahead". Both exclusions are mirrored by
+ * leadAdvanceTimedPhase server-side, so hiding the control is not the guard.
+ */
+function hasLeadAdvanceControl(phase: DibePhase): boolean {
+  if (phase === "ROUND_DESCRIBE" || phase === "SHOW_DRAWINGS") return false;
+  return isTimedPhase(phase);
+}
 
 function parseCriteria(raw: unknown): DibeCriterion[] {
   if (!Array.isArray(raw)) return [];
@@ -48,6 +68,13 @@ const DrawItByEarProtocol = ({
   const [initError, setInitError] = useState<string | null>(null);
 
   const send = useCallback(
+    (actionType: string, payload: object) => sendAction(actionType, payload),
+    [sendAction]
+  );
+
+  // Phase views ignore the result; only the lead override controls need to know
+  // whether a server guard no-opped the action.
+  const sendVoid = useCallback(
     async (actionType: string, payload: object) => {
       await sendAction(actionType, payload);
     },
@@ -63,7 +90,7 @@ const DrawItByEarProtocol = ({
       const supabase = createClient();
       const { data: participantRows, error: participantErr } = await supabase
         .from("session_participants")
-        .select("participant_id, participants ( id, display_name )")
+        .select("participant_id, role_in_session, participants ( id, display_name )")
         .eq("session_id", sessionId);
 
       if (cancelled) return;
@@ -83,15 +110,16 @@ const DrawItByEarProtocol = ({
         return;
       }
 
-      const participants = (
-        participantRows as {
-          participant_id: string;
-          participants:
-            | { id: string; display_name: string }
-            | { id: string; display_name: string }[]
-            | null;
-        }[]
-      ).map((row) => {
+      const typedRows = participantRows as {
+        participant_id: string;
+        role_in_session: string | null;
+        participants:
+          | { id: string; display_name: string }
+          | { id: string; display_name: string }[]
+          | null;
+      }[];
+
+      const participants = typedRows.map((row) => {
         const p = row.participants;
         const one = Array.isArray(p) ? p[0] : p;
         return {
@@ -100,6 +128,13 @@ const DrawItByEarProtocol = ({
         };
       });
 
+      const leadRow = typedRows.find((row) => row.role_in_session === "lead");
+      const leadParticipantId = leadRow
+        ? (Array.isArray(leadRow.participants)
+            ? leadRow.participants[0]?.id
+            : leadRow.participants?.id) ?? leadRow.participant_id
+        : null;
+
       const imageCatalog: DibeImageCatalogEntry[] = imageRows.map((row) => ({
         id: row.id,
         name: row.name,
@@ -107,7 +142,11 @@ const DrawItByEarProtocol = ({
       }));
 
       try {
-        await send("initializeGame", { participants, imageCatalog });
+        await send("initializeGame", {
+          participants,
+          imageCatalog,
+          leadParticipantId,
+        });
       } catch (e) {
         setInitError(e instanceof Error ? e.message : "Failed to start protocol.");
       }
@@ -138,6 +177,35 @@ const DrawItByEarProtocol = ({
   }
 
   const state = stateJson as DibeState;
+
+  // The engine snapshots its roster at initializeGame, so anyone whose
+  // session_participants row was created after that point is unknown to it.
+  // Show them a spectator screen rather than a view built around a team,
+  // describer, or scoring slot they do not have.
+  if (!state.participants.some((p) => p.id === participantId)) {
+    return (
+      <div className="min-h-screen bg-warm-white">
+        <SessionIdentityBanner
+          displayName={currentParticipant.display_name}
+          roleInSession={roleInSession}
+        />
+        <div className="mx-auto max-w-md px-5 py-16 text-center">
+          <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
+            Already in progress
+          </p>
+          <h1 className="mt-4 font-display text-2xl font-bold text-unmute-navy">
+            You joined after this session started
+          </h1>
+          <p className="mt-4 font-body text-lg text-slate">
+            You&apos;re not in a breakout room for this run, so hang tight and
+            watch along. You&apos;ll be in the next session from the start.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const isLead = role === "lead";
   const showProgress =
     state.phase !== "MATERIALS_CHECK" && state.phase !== "FINAL_RESULTS";
   const progress =
@@ -166,10 +234,21 @@ const DrawItByEarProtocol = ({
             sessionId={sessionId}
             participantId={participantId}
             role={role}
-            send={send}
+            send={sendVoid}
           />
         </motion.div>
       </AnimatePresence>
+
+      {isLead && state.phase === "ROUND_DESCRIBE" ? (
+        <>
+          <LeadRoomStartControl state={state} sendAction={send} />
+          <LeadEndDrawingControl state={state} sendAction={send} />
+        </>
+      ) : null}
+
+      {isLead && hasLeadAdvanceControl(state.phase) ? (
+        <LeadAdvanceControl phase={state.phase} sendAction={send} />
+      ) : null}
     </div>
   );
 };
@@ -254,6 +333,17 @@ const PhaseBody = ({ state, sessionId, participantId, role, send }: PhaseBodyPro
           participantId={participantId}
           sendAction={send}
           heading="And here's the actual picture the describer was using."
+        />
+      );
+    case "RETURN_TO_MAIN":
+      return <ReturnToMainView state={state} role={role} sendAction={send} />;
+    case "SHOW_DRAWINGS":
+      return (
+        <ShowDrawingsView
+          state={state}
+          participantId={participantId}
+          role={role}
+          sendAction={send}
         />
       );
     case "ROUND_SCORING_1PT":

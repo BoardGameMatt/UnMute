@@ -296,12 +296,14 @@ async function main(): Promise<void> {
       },
     ];
 
+  // Plain insert, not upsert: display_name is no longer unique per team, so
+  // there is no conflict target. cleanupDemoData() already cleared these rows.
   const { error: participantsError } = await supabase
     .from("participants")
-    .upsert(participantRows, { onConflict: "team_id,display_name" });
+    .insert(participantRows);
 
   if (participantsError) {
-    console.error("participants upsert:", participantsError.message);
+    console.error("participants insert:", participantsError.message);
     process.exit(1);
   }
 

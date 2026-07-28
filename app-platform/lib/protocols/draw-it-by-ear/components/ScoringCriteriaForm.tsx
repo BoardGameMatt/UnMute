@@ -3,10 +3,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { TimerArc } from "@/components/ui/TimerArc";
 import { useDibeImage } from "../hooks/useDibeImage";
-import type { DibeCriterion } from "../types";
+import type { DibeCriterion, DibePhase } from "../types";
 
 type ScoringCriteriaFormProps = {
   sessionId: string;
+  /** Phase this form was rendered under; sent with the expiry post. */
+  phase: DibePhase;
   criteria: DibeCriterion[];
   timerStartedAt: string | null;
   timerDurationSeconds: number;
@@ -19,6 +21,7 @@ type ScoringCriteriaFormProps = {
 
 export const ScoringCriteriaForm = ({
   sessionId,
+  phase,
   criteria,
   timerStartedAt,
   timerDurationSeconds,
@@ -61,8 +64,8 @@ export const ScoringCriteriaForm = ({
       setSubmitted(true);
       await sendAction("submitScoring", { participantId, answers });
     }
-    await sendAction("scoringTimerExpired", {});
-  }, [submitted, sendAction, participantId, answers]);
+    await sendAction("scoringTimerExpired", { armedPhase: phase });
+  }, [submitted, sendAction, participantId, answers, phase]);
 
   let buttonClass =
     "mt-8 w-full rounded-md px-5 py-4 font-display text-base font-semibold transition-colors duration-200";

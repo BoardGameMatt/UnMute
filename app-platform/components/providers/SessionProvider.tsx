@@ -23,12 +23,15 @@ type GameStateSnapshot = {
   currentRound: number;
 };
 
+/** `changed: false` means the reducer no-opped and persisted state is unchanged. */
+export type SendActionResult = { changed: boolean };
+
 type SessionContextValue = {
   session: Session;
   currentParticipant: Participant;
   roleInSession: SessionParticipantRole;
   protocolName: string;
-  sendAction: (actionType: string, payload: object) => Promise<void>;
+  sendAction: (actionType: string, payload: object) => Promise<SendActionResult>;
   gameState: GameStateSnapshot | null;
 };
 
@@ -52,7 +55,7 @@ export const SessionProvider = ({
   const [gameState, setGameState] = useState<GameStateSnapshot | null>(null);
 
   const sendAction = useCallback(
-    async (actionType: string, payload: object) => {
+    async (actionType: string, payload: object): Promise<SendActionResult> => {
       const res = await fetch(`/api/session/${session.id}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -61,6 +64,14 @@ export const SessionProvider = ({
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || `Action failed (${res.status})`);
+      }
+      // `changed: false` means a server guard rejected the action and state is
+      // untouched. Absent for protocols that do not report it — assume changed.
+      try {
+        const body = (await res.json()) as { changed?: boolean };
+        return { changed: body.changed !== false };
+      } catch {
+        return { changed: true };
       }
     },
     [session.id]

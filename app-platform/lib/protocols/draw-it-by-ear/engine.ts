@@ -6,13 +6,21 @@ import type {
   DibeCriterion,
   DibeImageCatalogEntry,
   DibeParticipant,
+  DibePhase,
   DibeSessionLength,
   DibeState,
   DibeTeam,
+  DibeTeamRoundStart,
 } from "./types";
 import { DIBE_PROTOCOL_VERSION } from "./types";
 
 const TUTORIAL_IMAGE_NAME = "RoboDoc";
+
+/** Countdown shown in a breakout room after its describer presses Go. */
+export const BREAKOUT_COUNTDOWN_SECONDS = 3;
+
+const ROUND_DRAWING_SECONDS = 90;
+const SHOW_DRAWINGS_SECONDS = 45;
 
 const TEAM_NAMES = [
   "The Picassos",
@@ -96,6 +104,11 @@ function withTimer(
 
 function emptyScores(ids: string[]): Record<string, number> {
   return Object.fromEntries(ids.map((id) => [id, 0]));
+}
+
+/** Tolerates state persisted before per-room round gating existed. */
+function teamRoundStarts(state: DibeState): Record<string, DibeTeamRoundStart> {
+  return state.team_round_starts ?? {};
 }
 
 function sortCriteria(criteria: DibeCriterion[]): DibeCriterion[] {
@@ -211,19 +224,115 @@ export function canViewRoundImageReference(state: DibeState): boolean {
   return scoringPhases.includes(state.phase as (typeof scoringPhases)[number]);
 }
 
+/**
+ * True while the session is working through the tutorial round, including the
+ * return/show-drawings phases that sit between the reveal and tutorial scoring.
+ */
+export function isTutorialContext(state: DibeState): boolean {
+  if (state.phase.startsWith("TUTORIAL_")) return true;
+  if (state.phase === "RETURN_TO_MAIN" || state.phase === "SHOW_DRAWINGS") {
+    return state.post_show_drawings_phase === "TUTORIAL_SCORING_1PT";
+  }
+  return false;
+}
+
 export function getActiveDescriberId(
   state: DibeState,
   participantId: string
 ): string | null {
-  if (state.phase === "TUTORIAL_DESCRIBE") {
+  const describerPhases = [
+    "TUTORIAL_DESCRIBE",
+    "TUTORIAL_IMAGE_REVEAL",
+    "BREAKOUT_SETUP",
+    "ROUND_DESCRIBE",
+    "ROUND_IMAGE_REVEAL",
+    "RETURN_TO_MAIN",
+    "SHOW_DRAWINGS",
+  ] as const;
+  if (!describerPhases.includes(state.phase as (typeof describerPhases)[number])) {
+    return null;
+  }
+  if (isTutorialContext(state)) {
     return state.tutorial_describer_id;
   }
-  if (state.phase === "ROUND_DESCRIBE" || state.phase === "BREAKOUT_SETUP") {
-    const team = getParticipantTeam(state, participantId);
-    if (!team) return null;
-    return getCurrentDescriberId(team);
-  }
-  return null;
+  const team = getParticipantTeam(state, participantId);
+  if (!team) return null;
+  return getCurrentDescriberId(team);
+}
+
+export function getLeadDisplayName(state: DibeState): string | null {
+  if (!state.lead_participant_id) return null;
+  const lead = state.participants.find((p) => p.id === state.lead_participant_id);
+  return lead?.display_name ?? null;
+}
+
+/** Go/countdown timestamps for the room the participant belongs to, if started. */
+export function getBreakoutRoundStart(
+  state: DibeState,
+  participantId: string
+): DibeTeamRoundStart | null {
+  const team = getParticipantTeam(state, participantId);
+  if (!team) return null;
+  return teamRoundStarts(state)[team.id] ?? null;
+}
+
+/** Arms one room's countdown + drawing timer. Rooms already started are left alone. */
+function startRoomTimer(state: DibeState, teamId: string): DibeState {
+  if (state.phase !== "ROUND_DESCRIBE") return state;
+
+  const existing = teamRoundStarts(state);
+  if (existing[teamId]) return state;
+  if (!state.teams.some((t) => t.id === teamId)) return state;
+
+  const countdownStartedAt = new Date();
+  const drawingStartedAt = new Date(
+    countdownStartedAt.getTime() + BREAKOUT_COUNTDOWN_SECONDS * 1000
+  );
+
+  return {
+    ...state,
+    team_round_starts: {
+      ...existing,
+      [teamId]: {
+        countdown_started_at: countdownStartedAt.toISOString(),
+        drawing_started_at: drawingStartedAt.toISOString(),
+      },
+    },
+  };
+}
+
+/**
+ * Room-scoped round start. Only that room's current describer may fire it, and
+ * only once — other breakout rooms are untouched.
+ */
+export function startBreakoutRound(
+  state: DibeState,
+  participantId: string
+): DibeState {
+  if (state.phase !== "ROUND_DESCRIBE") return state;
+
+  const team = getParticipantTeam(state, participantId);
+  if (!team) return state;
+  if (getCurrentDescriberId(team) !== participantId) return state;
+
+  return startRoomTimer(state, team.id);
+}
+
+/** Recovery path: lead starts a room whose describer is absent or stuck. */
+export function leadStartBreakoutRound(
+  state: DibeState,
+  teamId: string,
+  armedPhase: DibePhase
+): DibeState {
+  if (armedPhase !== state.phase) return state;
+  return startRoomTimer(state, teamId);
+}
+
+/** Rooms still waiting on a Go press, for the lead's override list. */
+export function getUnstartedTeams(state: DibeState): DibeTeam[] {
+  if (state.phase !== "ROUND_DESCRIBE") return [];
+  const started = teamRoundStarts(state);
+  return state.teams.filter((team) => !started[team.id]);
 }
 
 export function getActiveDescriberDisplayName(
@@ -354,7 +463,8 @@ function advanceDescriberIndices(teams: DibeTeam[]): DibeTeam[] {
 
 export function initializeGame(
   participants: DibeParticipant[],
-  imageCatalog: DibeImageCatalogEntry[]
+  imageCatalog: DibeImageCatalogEntry[],
+  leadParticipantId: string | null = null
 ): DibeState {
   if (participants.length < 3 || participants.length > 20) {
     throw new Error("Player count must be between 3 and 20.");
@@ -376,6 +486,9 @@ export function initializeGame(
     teams: [],
     team_formation_mode: null,
     teams_locked: false,
+    lead_participant_id: leadParticipantId,
+    team_round_starts: {},
+    post_show_drawings_phase: null,
     image_catalog: imageCatalog,
     tutorial_describer_id: null,
     active_image_id: null,
@@ -427,8 +540,83 @@ export function readyMaterials(state: DibeState): DibeState {
   );
 }
 
-export function onDescribeTimerExpired(state: DibeState): DibeState {
+/**
+ * Session-wide ROUND_DESCRIBE exit. Reached when the last room finishes, or
+ * when the lead force-ends drawing.
+ */
+function advanceFromRoundDescribe(state: DibeState): DibeState {
+  if (state.phase !== "ROUND_DESCRIBE") return state;
+  return {
+    ...state,
+    phase: "ROUND_IMAGE_REVEAL",
+    timer_started_at: null,
+    timer_duration_seconds: 0,
+  };
+}
+
+/**
+ * Rooms still drawing: those that started and have not been marked complete.
+ * A room that never pressed Go has no team_round_starts entry at all and is
+ * therefore never pending — otherwise it would block the session forever.
+ */
+export function getPendingDrawingTeamIds(state: DibeState): string[] {
+  if (state.phase !== "ROUND_DESCRIBE") return [];
+  return Object.entries(teamRoundStarts(state))
+    .filter(([, start]) => start.drawing_started_at && !start.drawing_completed_at)
+    .map(([teamId]) => teamId);
+}
+
+/** True once this participant's room has finished drawing. */
+export function isRoomDrawingComplete(
+  state: DibeState,
+  participantId: string
+): boolean {
+  return Boolean(getBreakoutRoundStart(state, participantId)?.drawing_completed_at);
+}
+
+/**
+ * Marks the poster's room done. Idempotent per room, so every client in that
+ * room can post its own expiry harmlessly. Only the room whose completion
+ * empties the pending set advances the session.
+ */
+function markRoomDrawingComplete(
+  state: DibeState,
+  participantId: string | null
+): DibeState {
+  if (!participantId) return state;
+
+  const team = getParticipantTeam(state, participantId);
+  if (!team) return state;
+
+  const starts = teamRoundStarts(state);
+  const roomStart = starts[team.id];
+  if (!roomStart?.drawing_started_at) return state;
+  if (roomStart.drawing_completed_at) return state;
+
+  const next: DibeState = {
+    ...state,
+    team_round_starts: {
+      ...starts,
+      [team.id]: {
+        ...roomStart,
+        drawing_completed_at: new Date().toISOString(),
+      },
+    },
+  };
+
+  return getPendingDrawingTeamIds(next).length === 0
+    ? advanceFromRoundDescribe(next)
+    : next;
+}
+
+export function onDescribeTimerExpired(
+  state: DibeState,
+  armedPhase: DibePhase,
+  participantId: string | null = null
+): DibeState {
+  if (armedPhase !== state.phase) return state;
   if (state.phase === "TUTORIAL_DESCRIBE") {
+    // No breakout rooms in the tutorial — one shared timer, one advance.
     return {
       ...state,
       phase: "TUTORIAL_IMAGE_REVEAL",
@@ -437,26 +625,89 @@ export function onDescribeTimerExpired(state: DibeState): DibeState {
     };
   }
   if (state.phase === "ROUND_DESCRIBE") {
-    return {
-      ...state,
-      phase: "ROUND_IMAGE_REVEAL",
-      timer_started_at: null,
-      timer_duration_seconds: 0,
-    };
+    return markRoomDrawingComplete(state, participantId);
   }
   return state;
 }
 
-export function advanceFromImageReveal(state: DibeState): DibeState {
+/**
+ * Lead recovery for a room that pressed Go and then stalled. This is the old
+ * session-wide behaviour, now behind deliberate lead intent rather than
+ * whichever room happened to finish first.
+ */
+export function leadEndDrawingForAllRooms(
+  state: DibeState,
+  armedPhase: DibePhase
+): DibeState {
+  if (armedPhase !== state.phase) return state;
+  if (state.phase !== "ROUND_DESCRIBE") return state;
+  return advanceFromRoundDescribe(state);
+}
+
+export function advanceFromImageReveal(
+  state: DibeState,
+  armedPhase: DibePhase
+): DibeState {
+  if (armedPhase !== state.phase) return state;
   if (state.phase !== "TUTORIAL_IMAGE_REVEAL" && state.phase !== "ROUND_IMAGE_REVEAL") {
     return state;
   }
-  if (state.phase === "TUTORIAL_IMAGE_REVEAL") {
-    const criteria = criteriaForPoints(activeImageCriteria(state), 1);
+  return {
+    ...state,
+    phase: "RETURN_TO_MAIN",
+    post_show_drawings_phase:
+      state.phase === "TUTORIAL_IMAGE_REVEAL"
+        ? "TUTORIAL_SCORING_1PT"
+        : "ROUND_SCORING_1PT",
+    timer_started_at: null,
+    last_expired_timer_at: null,
+    timer_duration_seconds: 0,
+  };
+}
+
+/** Lead-only: everyone is back in the main room, start the show-and-tell timer. */
+export function everyoneBack(state: DibeState): DibeState {
+  if (state.phase !== "RETURN_TO_MAIN") return state;
+  return withTimer({ ...state, phase: "SHOW_DRAWINGS" }, SHOW_DRAWINGS_SECONDS);
+}
+
+export function onShowDrawingsTimerExpired(
+  state: DibeState,
+  armedPhase: DibePhase
+): DibeState {
+  if (armedPhase !== state.phase) return state;
+  if (state.phase !== "SHOW_DRAWINGS") return state;
+  if (
+    !state.timer_started_at ||
+    state.timer_started_at === state.last_expired_timer_at
+  ) {
+    return state;
+  }
+  return enterScoringFromDrawings({
+    ...state,
+    last_expired_timer_at: state.timer_started_at,
+  });
+}
+
+/** Lead-only: consumes the same timer window so a racing expiry post no-ops. */
+export function skipShowDrawings(state: DibeState): DibeState {
+  if (state.phase !== "SHOW_DRAWINGS") return state;
+  if (state.timer_started_at === state.last_expired_timer_at) return state;
+  return enterScoringFromDrawings({
+    ...state,
+    last_expired_timer_at: state.timer_started_at,
+  });
+}
+
+function enterScoringFromDrawings(state: DibeState): DibeState {
+  const criteria = criteriaForPoints(activeImageCriteria(state), 1);
+
+  if (state.post_show_drawings_phase === "TUTORIAL_SCORING_1PT") {
     return withTimer(
       {
         ...state,
         phase: "TUTORIAL_SCORING_1PT",
+        post_show_drawings_phase: null,
         active_criteria: criteria,
         scoring_submissions: {},
       },
@@ -464,21 +715,19 @@ export function advanceFromImageReveal(state: DibeState): DibeState {
       true
     );
   }
-  if (state.phase === "ROUND_IMAGE_REVEAL") {
-    const criteria = criteriaForPoints(activeImageCriteria(state), 1);
-    return withTimer(
-      {
-        ...state,
-        phase: "ROUND_SCORING_1PT",
-        active_criteria: criteria,
-        scoring_submissions: {},
-        round_criterion_hits: {},
-      },
-      35,
-      true
-    );
-  }
-  return state;
+
+  return withTimer(
+    {
+      ...state,
+      phase: "ROUND_SCORING_1PT",
+      post_show_drawings_phase: null,
+      active_criteria: criteria,
+      scoring_submissions: {},
+      round_criterion_hits: {},
+    },
+    35,
+    true
+  );
 }
 
 export function submitScoring(
@@ -516,7 +765,13 @@ export function submitScoring(
   return next;
 }
 
-export function onScoringTimerExpired(state: DibeState): DibeState {
+export function onScoringTimerExpired(
+  state: DibeState,
+  armedPhase: DibePhase
+): DibeState {
+  // The armed phase pins the post to one specific tier; the category check
+  // below alone would let a 1PT post consume the 2PT window.
+  if (armedPhase !== state.phase) return state;
   const scoringPhases = [
     "TUTORIAL_SCORING_1PT",
     "ROUND_SCORING_1PT",
@@ -802,20 +1057,22 @@ export function startRound(state: DibeState): DibeState {
 
   const image = pickRoundImage(state.image_catalog, state.images_used, nextRound);
 
-  return withTimer(
-    {
-      ...state,
-      phase: "ROUND_DESCRIBE",
-      current_round: nextRound,
-      active_image_id: image.id,
-      active_image_name: image.name,
-      active_criteria: [],
-      images_used: [...state.images_used, image.id],
-      round_criterion_hits: {},
-      scoring_submissions: {},
-    },
-    90
-  );
+  // Each breakout room starts its own drawing timer once its describer hits Go.
+  return {
+    ...state,
+    phase: "ROUND_DESCRIBE",
+    current_round: nextRound,
+    active_image_id: image.id,
+    active_image_name: image.name,
+    active_criteria: [],
+    images_used: [...state.images_used, image.id],
+    round_criterion_hits: {},
+    scoring_submissions: {},
+    team_round_starts: {},
+    timer_started_at: null,
+    last_expired_timer_at: null,
+    timer_duration_seconds: ROUND_DRAWING_SECONDS,
+  };
 }
 
 export function advanceFromAggregate(state: DibeState): DibeState {
@@ -852,14 +1109,86 @@ export function endSession(state: DibeState): DibeState {
   return { ...state, session_complete: true, phase: "FINAL_RESULTS" };
 }
 
+/**
+ * Phases that advance on a timer. Each one exposes a lead-only manual advance
+ * so a stalled or absent participant cannot deadlock the session.
+ */
+export const DIBE_TIMED_PHASES = [
+  "TUTORIAL_DESCRIBE",
+  "ROUND_DESCRIBE",
+  "TUTORIAL_IMAGE_REVEAL",
+  "ROUND_IMAGE_REVEAL",
+  "SHOW_DRAWINGS",
+  "TUTORIAL_SCORING_1PT",
+  "ROUND_SCORING_1PT",
+  "ROUND_SCORING_2PT",
+  "ROUND_SCORING_3PT",
+] as const;
+
+export function isTimedPhase(phase: DibePhase): boolean {
+  return DIBE_TIMED_PHASES.includes(phase as (typeof DIBE_TIMED_PHASES)[number]);
+}
+
+/**
+ * Lead override for a timed phase: performs exactly the transition the timer
+ * expiry would have performed, reusing the same handlers and guards.
+ */
+export function leadAdvanceTimedPhase(
+  state: DibeState,
+  armedPhase: DibePhase
+): DibeState {
+  if (armedPhase !== state.phase) return state;
+
+  switch (state.phase) {
+    // ROUND_DESCRIBE is deliberately absent: it ends per-room, so a blanket
+    // advance is never the timer's job there. The lead's paths on that phase
+    // are leadStartBreakoutRound and leadEndDrawingForAllRooms.
+    case "TUTORIAL_DESCRIBE":
+      return onDescribeTimerExpired(state, armedPhase);
+    case "TUTORIAL_IMAGE_REVEAL":
+    case "ROUND_IMAGE_REVEAL":
+      return advanceFromImageReveal(state, armedPhase);
+    case "SHOW_DRAWINGS":
+      return onShowDrawingsTimerExpired(state, armedPhase);
+    case "TUTORIAL_SCORING_1PT":
+    case "ROUND_SCORING_1PT":
+    case "ROUND_SCORING_2PT":
+    case "ROUND_SCORING_3PT":
+      return onScoringTimerExpired(state, armedPhase);
+    default:
+      return state;
+  }
+}
+
 export type DibeEngineAction =
-  | { type: "initializeGame"; participants: DibeParticipant[]; imageCatalog: DibeImageCatalogEntry[] }
+  | {
+      type: "initializeGame";
+      participants: DibeParticipant[];
+      imageCatalog: DibeImageCatalogEntry[];
+      leadParticipantId: string | null;
+    }
   | { type: "setSessionLength"; sessionLength: DibeSessionLength }
   | { type: "readyMaterials" }
-  | { type: "describeTimerExpired" }
-  | { type: "advanceFromImageReveal" }
+  | { type: "startBreakoutRound"; participantId: string }
+  // Lead-only recovery paths. Both carry armedPhase for the same guard expiries use.
+  | { type: "leadStartBreakoutRound"; teamId: string; armedPhase: DibePhase }
+  | { type: "leadAdvanceTimedPhase"; armedPhase: DibePhase }
+  | { type: "leadEndDrawingForAllRooms"; armedPhase: DibePhase }
+  // Expiry actions carry the phase their timer was armed under so a post that
+  // arrives after the session moved on is discarded instead of consuming a window.
+  // participantId resolves which breakout room finished; ROUND_DESCRIBE ends
+  // per-room, so a poster with no room simply marks nothing.
+  | {
+      type: "describeTimerExpired";
+      armedPhase: DibePhase;
+      participantId: string | null;
+    }
+  | { type: "advanceFromImageReveal"; armedPhase: DibePhase }
+  | { type: "everyoneBack" }
+  | { type: "showDrawingsTimerExpired"; armedPhase: DibePhase }
+  | { type: "skipShowDrawings" }
   | { type: "submitScoring"; participantId: string; answers: Record<string, boolean> }
-  | { type: "scoringTimerExpired" }
+  | { type: "scoringTimerExpired"; armedPhase: DibePhase }
   | { type: "startTeamFormation" }
   | { type: "autoAssignTeams" }
   | { type: "enableSelfSelectTeams" }
@@ -876,25 +1205,54 @@ export function reduceDrawItByEarState(
 ): DibeState {
   switch (action.type) {
     case "initializeGame":
-      return initializeGame(action.participants, action.imageCatalog);
+      return initializeGame(
+        action.participants,
+        action.imageCatalog,
+        action.leadParticipantId
+      );
     case "setSessionLength":
       if (!state) throw new Error("Draw It By Ear state not initialized");
       return setSessionLength(state, action.sessionLength);
     case "readyMaterials":
       if (!state) throw new Error("Draw It By Ear state not initialized");
       return readyMaterials(state);
+    case "startBreakoutRound":
+      if (!state) throw new Error("Draw It By Ear state not initialized");
+      return startBreakoutRound(state, action.participantId);
+    case "leadStartBreakoutRound":
+      if (!state) throw new Error("Draw It By Ear state not initialized");
+      return leadStartBreakoutRound(state, action.teamId, action.armedPhase);
+    case "leadAdvanceTimedPhase":
+      if (!state) throw new Error("Draw It By Ear state not initialized");
+      return leadAdvanceTimedPhase(state, action.armedPhase);
+    case "leadEndDrawingForAllRooms":
+      if (!state) throw new Error("Draw It By Ear state not initialized");
+      return leadEndDrawingForAllRooms(state, action.armedPhase);
     case "describeTimerExpired":
       if (!state) throw new Error("Draw It By Ear state not initialized");
-      return onDescribeTimerExpired(state);
+      return onDescribeTimerExpired(
+        state,
+        action.armedPhase,
+        action.participantId
+      );
     case "advanceFromImageReveal":
       if (!state) throw new Error("Draw It By Ear state not initialized");
-      return advanceFromImageReveal(state);
+      return advanceFromImageReveal(state, action.armedPhase);
+    case "everyoneBack":
+      if (!state) throw new Error("Draw It By Ear state not initialized");
+      return everyoneBack(state);
+    case "showDrawingsTimerExpired":
+      if (!state) throw new Error("Draw It By Ear state not initialized");
+      return onShowDrawingsTimerExpired(state, action.armedPhase);
+    case "skipShowDrawings":
+      if (!state) throw new Error("Draw It By Ear state not initialized");
+      return skipShowDrawings(state);
     case "submitScoring":
       if (!state) throw new Error("Draw It By Ear state not initialized");
       return submitScoring(state, action.participantId, action.answers);
     case "scoringTimerExpired":
       if (!state) throw new Error("Draw It By Ear state not initialized");
-      return onScoringTimerExpired(state);
+      return onScoringTimerExpired(state, action.armedPhase);
     case "startTeamFormation":
       if (!state) throw new Error("Draw It By Ear state not initialized");
       return startTeamFormation(state);
@@ -929,6 +1287,18 @@ export function reduceDrawItByEarState(
   }
 }
 
+/** Expiry posts must name the phase the timer was armed under. */
+function requireArmedPhase(
+  actionType: string,
+  payload: Record<string, unknown>
+): DibePhase {
+  const armedPhase = payload.armedPhase;
+  if (typeof armedPhase !== "string") {
+    throw new Error(`${actionType} requires armedPhase`);
+  }
+  return armedPhase as DibePhase;
+}
+
 export function clientPayloadToEngineAction(
   actionType: string,
   payload: Record<string, unknown>
@@ -940,10 +1310,13 @@ export function clientPayloadToEngineAction(
       if (!Array.isArray(participants) || !Array.isArray(imageCatalog)) {
         throw new Error("initializeGame requires participants and imageCatalog arrays");
       }
+      const leadParticipantId = payload.leadParticipantId;
       return {
         type: "initializeGame",
         participants: participants as DibeParticipant[],
         imageCatalog: imageCatalog as DibeImageCatalogEntry[],
+        leadParticipantId:
+          typeof leadParticipantId === "string" ? leadParticipantId : null,
       };
     }
     case "setSessionLength": {
@@ -955,10 +1328,55 @@ export function clientPayloadToEngineAction(
     }
     case "readyMaterials":
       return { type: "readyMaterials" };
+    case "startBreakoutRound": {
+      const participantId = payload.participantId;
+      if (typeof participantId !== "string") {
+        throw new Error("startBreakoutRound requires participantId");
+      }
+      return { type: "startBreakoutRound", participantId };
+    }
+    case "leadStartBreakoutRound": {
+      const teamId = payload.teamId;
+      if (typeof teamId !== "string") {
+        throw new Error("leadStartBreakoutRound requires teamId");
+      }
+      return {
+        type: "leadStartBreakoutRound",
+        teamId,
+        armedPhase: requireArmedPhase(actionType, payload),
+      };
+    }
+    case "leadAdvanceTimedPhase":
+      return {
+        type: "leadAdvanceTimedPhase",
+        armedPhase: requireArmedPhase(actionType, payload),
+      };
+    case "leadEndDrawingForAllRooms":
+      return {
+        type: "leadEndDrawingForAllRooms",
+        armedPhase: requireArmedPhase(actionType, payload),
+      };
     case "describeTimerExpired":
-      return { type: "describeTimerExpired" };
+      return {
+        type: "describeTimerExpired",
+        armedPhase: requireArmedPhase(actionType, payload),
+        participantId:
+          typeof payload.participantId === "string" ? payload.participantId : null,
+      };
     case "advanceFromImageReveal":
-      return { type: "advanceFromImageReveal" };
+      return {
+        type: "advanceFromImageReveal",
+        armedPhase: requireArmedPhase(actionType, payload),
+      };
+    case "everyoneBack":
+      return { type: "everyoneBack" };
+    case "showDrawingsTimerExpired":
+      return {
+        type: "showDrawingsTimerExpired",
+        armedPhase: requireArmedPhase(actionType, payload),
+      };
+    case "skipShowDrawings":
+      return { type: "skipShowDrawings" };
     case "submitScoring": {
       const participantId = payload.participantId;
       const answers = payload.answers;
@@ -972,7 +1390,10 @@ export function clientPayloadToEngineAction(
       };
     }
     case "scoringTimerExpired":
-      return { type: "scoringTimerExpired" };
+      return {
+        type: "scoringTimerExpired",
+        armedPhase: requireArmedPhase(actionType, payload),
+      };
     case "startTeamFormation":
       return { type: "startTeamFormation" };
     case "autoAssignTeams":

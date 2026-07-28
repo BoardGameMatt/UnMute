@@ -26,6 +26,7 @@ export const RoundScoringView = ({
   <ScoringCriteriaForm
     key={state.phase}
     sessionId={sessionId}
+    phase={state.phase}
     criteria={state.active_criteria}
     timerStartedAt={state.timer_started_at}
     timerDurationSeconds={state.timer_duration_seconds}

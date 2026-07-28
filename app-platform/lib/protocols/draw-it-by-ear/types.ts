@@ -14,6 +14,8 @@ export type DibePhase =
   | "BREAKOUT_SETUP"
   | "ROUND_DESCRIBE"
   | "ROUND_IMAGE_REVEAL"
+  | "RETURN_TO_MAIN"
+  | "SHOW_DRAWINGS"
   | "ROUND_SCORING_1PT"
   | "ROUND_SCORING_2PT"
   | "ROUND_SCORING_3PT"
@@ -49,6 +51,23 @@ export interface DibeTeam {
 
 export type DibeTeamFormationMode = "auto" | "self_select" | null;
 
+/** Per-breakout-room start gating for a non-tutorial drawing round. */
+export interface DibeTeamRoundStart {
+  /** Set when that room's describer presses Go. */
+  countdown_started_at: string;
+  /** When the countdown ends and that room's drawing timer begins. */
+  drawing_started_at: string;
+  /**
+   * Set when that room's drawing timer runs out. Round end is per-room: the
+   * session only leaves ROUND_DESCRIBE once every room that started is marked.
+   * Optional because state persisted before per-room completion existed.
+   */
+  drawing_completed_at?: string | null;
+}
+
+/** Scoring phase to enter once SHOW_DRAWINGS exits. */
+export type DibePostDrawingsPhase = "TUTORIAL_SCORING_1PT" | "ROUND_SCORING_1PT";
+
 export interface DibeRoundState {
   round_number: number;
   image_id: string;
@@ -74,6 +93,12 @@ export interface DibeState {
   teams: DibeTeam[];
   team_formation_mode: DibeTeamFormationMode;
   teams_locked: boolean;
+  /** Participant id of the session lead (drives lead-name copy). */
+  lead_participant_id: string | null;
+  /** team id → that room's Go/countdown timestamps for the current round. */
+  team_round_starts: Record<string, DibeTeamRoundStart>;
+  /** Scoring phase queued while RETURN_TO_MAIN / SHOW_DRAWINGS run. */
+  post_show_drawings_phase: DibePostDrawingsPhase | null;
   /** Image catalog (no URLs — paths resolved server-side). */
   image_catalog: DibeImageCatalogEntry[];
   tutorial_describer_id: string | null;
@@ -93,7 +118,15 @@ export interface DibeState {
   /** Per-describer best single-round team score (for MVP award) */
   describer_best_round_scores: Record<string, number>;
   timer_started_at: string | null;
-  /** timer_started_at value already consumed by scoringTimerExpired for the current window */
+  /**
+   * timer_started_at value already consumed by an expiry post.
+   *
+   * NOTE: this field is shared across every timer in the protocol (describe,
+   * show-drawings, each scoring tier). It collapses duplicate posts within a
+   * single timer window, but it does NOT identify which timer expired — a
+   * stale post from an earlier phase sees a fresh timer_started_at and passes
+   * this guard. Expiry actions must also carry the phase they were armed under.
+   */
   last_expired_timer_at: string | null;
   timer_duration_seconds: number;
   session_complete: boolean;

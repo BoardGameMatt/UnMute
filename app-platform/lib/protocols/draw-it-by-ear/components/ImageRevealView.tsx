@@ -21,15 +21,16 @@ export const ImageRevealView = ({
 }: ImageRevealViewProps) => {
   const advancedRef = useRef(false);
   const { signedUrl, loading, error } = useDibeImage(sessionId, participantId, true);
+  const armedPhase = state.phase;
 
   useEffect(() => {
     const t = window.setTimeout(() => {
       if (advancedRef.current) return;
       advancedRef.current = true;
-      void sendAction("advanceFromImageReveal", {});
+      void sendAction("advanceFromImageReveal", { armedPhase });
     }, 4000);
     return () => clearTimeout(t);
-  }, [sendAction]);
+  }, [sendAction, armedPhase]);
 
   return (
     <div className="flex min-h-[75vh] flex-col items-center justify-center px-5 py-10">

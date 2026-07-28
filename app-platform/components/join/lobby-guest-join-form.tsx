@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DISPLAY_NAME_MAX_LENGTH } from "@/lib/constants";
 
 type LobbyGuestJoinFormProps = {
   sessionId: string;
@@ -119,6 +120,7 @@ export function LobbyGuestJoinForm({
           name="displayName"
           type="text"
           autoComplete="name"
+          maxLength={DISPLAY_NAME_MAX_LENGTH}
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full rounded-md border border-cloud-grey bg-warm-white px-4 py-5 font-body text-lg text-charcoal shadow-sm outline-none transition placeholder:text-slate focus:border-unmute-navy focus:ring-2 focus:ring-unmute-navy/20"

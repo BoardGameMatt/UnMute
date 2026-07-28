@@ -29,8 +29,10 @@ export function SessionLobbyView({
   const [startError, setStartError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const canStart =
-    currentRole === "lead" && participants.length >= 2 && !isPending;
+  // The lead starts whenever they choose — no minimum headcount.
+  const canStart = currentRole === "lead" && !isPending;
+  const leadName =
+    participants.find((p) => p.roleInSession === "lead")?.displayName ?? null;
 
   useEffect(() => {
     if (currentRole !== "member") return;
@@ -139,12 +141,12 @@ export function SessionLobbyView({
             onClick={handleStart}
             className="w-full max-w-md rounded-md bg-signal-amber px-6 py-4 font-display text-lg font-semibold text-deep-navy shadow-sm transition hover:bg-sunrise-gold disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isPending ? "Starting…" : "Start Session"}
+            {isPending ? "Starting…" : "Start session"}
           </button>
         </div>
       ) : currentRole === "member" ? (
         <p className="text-center font-body text-base text-slate">
-          Waiting for lead to start…
+          Waiting for {leadName ?? "the lead"} to start.
         </p>
       ) : (
         <p className="text-center font-body text-base text-slate">

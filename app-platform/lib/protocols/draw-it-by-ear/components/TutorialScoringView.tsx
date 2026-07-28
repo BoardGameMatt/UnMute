@@ -18,6 +18,7 @@ export const TutorialScoringView = ({
 }: TutorialScoringViewProps) => (
   <ScoringCriteriaForm
     sessionId={sessionId}
+    phase={state.phase}
     criteria={state.active_criteria}
     timerStartedAt={state.timer_started_at}
     timerDurationSeconds={state.timer_duration_seconds}
