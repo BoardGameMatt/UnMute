@@ -31,15 +31,6 @@ export async function startSessionAction(
     return { error: "Only the session lead can start." };
   }
 
-  const { count, error: countErr } = await supabase
-    .from("session_participants")
-    .select("*", { count: "exact", head: true })
-    .eq("session_id", sessionId);
-
-  if (countErr || count === null || count < 2) {
-    return { error: "At least two participants are required to start." };
-  }
-
   const { error: upErr } = await supabase
     .from("sessions")
     .update({

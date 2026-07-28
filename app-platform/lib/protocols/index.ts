@@ -5,6 +5,7 @@
 
 import "./placeholder";
 import "./the-truth-is";
+import "./draw-it-by-ear";
 
 export {
   getProtocol,

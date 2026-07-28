@@ -1,1 +1,6 @@
+<<<<<<< HEAD
 .DS_Store
+=======
+.vercel
+.env*
+>>>>>>> draw-it-by-ear-v1

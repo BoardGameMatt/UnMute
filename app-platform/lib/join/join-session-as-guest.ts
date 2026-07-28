@@ -1,3 +1,4 @@
+import { normalizeDisplayName } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
 export type GuestJoinCoreResult =
@@ -13,7 +14,8 @@ export async function joinSessionAsGuestCore(input: {
   teamId: string;
   displayName: string;
 }): Promise<GuestJoinCoreResult> {
-  const { sessionId, teamId, displayName } = input;
+  const { sessionId, teamId } = input;
+  const displayName = normalizeDisplayName(input.displayName);
 
   if (!sessionId || !teamId) {
     return { ok: false, error: "Missing session context. Refresh and try again." };
@@ -81,12 +83,6 @@ export async function joinSessionAsGuestCore(input: {
     .single();
 
   if (pErr) {
-    if (pErr.code === "23505") {
-      return {
-        ok: false,
-        error: "That name is already taken in this team. Try another.",
-      };
-    }
     return { ok: false, error: pErr.message };
   }
 

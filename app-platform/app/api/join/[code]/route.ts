@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { normalizeDisplayName } from "@/lib/constants";
 import { joinSessionAsGuestCore } from "@/lib/join/join-session-as-guest";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,9 +24,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   const sessionId = String(formData.get("sessionId") ?? "").trim();
   const teamId = String(formData.get("teamId") ?? "").trim();
-  const rawName = formData.get("displayName");
-  const displayName =
-    typeof rawName === "string" ? rawName.trim() : "";
+  const displayName = normalizeDisplayName(formData.get("displayName"));
 
   const supabase = createClient();
   const { data: sessionRow, error: sessionLookupErr } = await supabase

@@ -252,6 +252,37 @@ export type SessionStateInsert = {
 
 export type SessionStateUpdate = Partial<Omit<SessionState, "id">>;
 
+export interface ProtocolImage {
+  id: string;
+  protocol_slug: string;
+  name: string;
+  image_path: string;
+  criteria: Json;
+  created_at: string;
+}
+
+export type ProtocolImageInsert = Omit<ProtocolImage, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export interface DibeTeamRow {
+  id: string;
+  session_id: string;
+  name: string;
+  color: string;
+  member_ids: string[];
+  describer_rotation: string[];
+  current_describer_index: number;
+  cumulative_score: number;
+  created_at: string;
+}
+
+export type DibeTeamRowInsert = Omit<DibeTeamRow, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -313,6 +344,18 @@ export type Database = {
         Row: SessionState;
         Insert: SessionStateInsert;
         Update: SessionStateUpdate;
+        Relationships: [];
+      };
+      protocol_images: {
+        Row: ProtocolImage;
+        Insert: ProtocolImageInsert;
+        Update: Partial<ProtocolImageInsert>;
+        Relationships: [];
+      };
+      dibe_teams: {
+        Row: DibeTeamRow;
+        Insert: DibeTeamRowInsert;
+        Update: Partial<DibeTeamRowInsert>;
         Relationships: [];
       };
     };

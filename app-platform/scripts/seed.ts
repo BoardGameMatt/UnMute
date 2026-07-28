@@ -11,10 +11,120 @@ import type { Database } from "../lib/types/database";
 config({ path: resolve(process.cwd(), ".env.local") });
 
 const SEED_TEAM_JOIN_CODE = "DEMOTM";
-const SEED_SESSION_JOIN_CODE = "TRUTH1";
+const SEED_SESSION_JOIN_CODE = "DIBE01";
 
 const ADMIN_EMAIL = "matt@unmutelabs.com";
 const ADMIN_DISPLAY_NAME = "Matt Hendricks";
+
+async function cleanupDemoData(
+  supabase: ReturnType<typeof createClient>
+): Promise<void> {
+  console.log("Cleanup: looking up demo team by join_code...");
+
+  const { data: existingTeam, error: teamLookupErr } = await supabase
+    .from("teams")
+    .select("id")
+    .eq("join_code", SEED_TEAM_JOIN_CODE)
+    .maybeSingle();
+
+  if (teamLookupErr) {
+    console.error("cleanup teams lookup:", teamLookupErr.message);
+    process.exit(1);
+  }
+
+  if (!existingTeam) {
+    console.log("Cleanup: no demo team found, skipping.");
+    return;
+  }
+
+  const demoTeamId = existingTeam.id;
+
+  const { data: demoSessions, error: sessionsLookupErr } = await supabase
+    .from("sessions")
+    .select("id")
+    .eq("team_id", demoTeamId);
+
+  if (sessionsLookupErr) {
+    console.error("cleanup sessions lookup:", sessionsLookupErr.message);
+    process.exit(1);
+  }
+
+  const sessionIds = (demoSessions ?? []).map((s) => s.id);
+
+  if (sessionIds.length > 0) {
+    const { error: spErr } = await supabase
+      .from("session_participants")
+      .delete()
+      .in("session_id", sessionIds);
+
+    if (spErr) {
+      console.error("cleanup session_participants:", spErr.message);
+      process.exit(1);
+    }
+    console.log(
+      `Cleanup: deleted session_participants for ${sessionIds.length} demo session(s).`
+    );
+
+    const { error: stateErr } = await supabase
+      .from("session_state")
+      .delete()
+      .in("session_id", sessionIds);
+
+    if (stateErr) {
+      console.error("cleanup session_state:", stateErr.message);
+      process.exit(1);
+    }
+    console.log(
+      `Cleanup: deleted session_state for ${sessionIds.length} demo session(s).`
+    );
+
+    const { error: sessionsErr } = await supabase
+      .from("sessions")
+      .delete()
+      .in("id", sessionIds);
+
+    if (sessionsErr) {
+      console.error("cleanup sessions:", sessionsErr.message);
+      process.exit(1);
+    }
+    console.log(`Cleanup: deleted ${sessionIds.length} demo session(s).`);
+  } else {
+    console.log("Cleanup: no demo sessions found.");
+  }
+
+  const { error: participantsErr } = await supabase
+    .from("participants")
+    .delete()
+    .eq("team_id", demoTeamId);
+
+  if (participantsErr) {
+    console.error("cleanup participants:", participantsErr.message);
+    process.exit(1);
+  }
+  console.log("Cleanup: deleted participants for demo team.");
+
+  const { error: rosterErr } = await supabase
+    .from("team_roster")
+    .delete()
+    .eq("team_id", demoTeamId);
+
+  if (rosterErr) {
+    console.error("cleanup team_roster:", rosterErr.message);
+    process.exit(1);
+  }
+  console.log("Cleanup: deleted team_roster for demo team.");
+
+  const { error: teamErr } = await supabase
+    .from("teams")
+    .delete()
+    .eq("join_code", SEED_TEAM_JOIN_CODE);
+
+  if (teamErr) {
+    console.error("cleanup teams:", teamErr.message);
+    process.exit(1);
+  }
+  console.log("Cleanup: deleted demo team.");
+}
 
 async function main(): Promise<void> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -28,6 +138,8 @@ async function main(): Promise<void> {
   }
 
   const supabase = createClient(url, key);
+
+  await cleanupDemoData(supabase);
 
   const protocols: Database["public"]["Tables"]["protocols"]["Insert"][] = [
     {
@@ -61,14 +173,14 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const { data: truthProtocol, error: truthProtoErr } = await supabase
+  const { data: dibeProtocol, error: dibeProtoErr } = await supabase
     .from("protocols")
     .select("id")
-    .eq("slug", "the-truth-is")
+    .eq("slug", "draw-it-by-ear")
     .single();
 
-  if (truthProtoErr || !truthProtocol) {
-    console.error("load the-truth-is protocol:", truthProtoErr?.message);
+  if (dibeProtoErr || !dibeProtocol) {
+    console.error("load draw-it-by-ear protocol:", dibeProtoErr?.message);
     process.exit(1);
   }
 
@@ -184,12 +296,14 @@ async function main(): Promise<void> {
       },
     ];
 
+  // Plain insert, not upsert: display_name is no longer unique per team, so
+  // there is no conflict target. cleanupDemoData() already cleared these rows.
   const { error: participantsError } = await supabase
     .from("participants")
-    .upsert(participantRows, { onConflict: "team_id,display_name" });
+    .insert(participantRows);
 
   if (participantsError) {
-    console.error("participants upsert:", participantsError.message);
+    console.error("participants insert:", participantsError.message);
     process.exit(1);
   }
 
@@ -197,7 +311,7 @@ async function main(): Promise<void> {
     .from("sessions")
     .upsert(
       {
-        protocol_id: truthProtocol.id,
+        protocol_id: dibeProtocol.id,
         protocol_slot_id: null,
         team_id: demoTeam.id,
         status: "lobby",
@@ -210,6 +324,36 @@ async function main(): Promise<void> {
 
   if (sessionError || !sessionRow) {
     console.error("sessions upsert:", sessionError?.message);
+    process.exit(1);
+  }
+
+  const { data: seededParticipants, error: seedParticipantsErr } = await supabase
+    .from("participants")
+    .select("id, display_name, role")
+    .eq("team_id", demoTeam.id);
+
+  if (seedParticipantsErr || !seededParticipants) {
+    console.error("participants select:", seedParticipantsErr?.message);
+    process.exit(1);
+  }
+
+  const sessionParticipantRows: Database["public"]["Tables"]["session_participants"]["Insert"][] =
+    seededParticipants.map((participant) => ({
+      session_id: sessionRow.id,
+      participant_id: participant.id,
+      role_in_session:
+        participant.display_name === "Matt" ? "lead" : "member",
+      connected: false,
+    }));
+
+  const { error: sessionParticipantsError } = await supabase
+    .from("session_participants")
+    .upsert(sessionParticipantRows, {
+      onConflict: "session_id,participant_id",
+    });
+
+  if (sessionParticipantsError) {
+    console.error("session_participants upsert:", sessionParticipantsError.message);
     process.exit(1);
   }
 
@@ -232,6 +376,16 @@ async function main(): Promise<void> {
   console.log("  join_code:", sessionRow.join_code);
   console.log("  session_id:", sessionRow.id);
   console.log("  team_id:", demoTeam.id);
+
+  console.log("\nClaim links (open one per browser):");
+  for (const participant of seededParticipants) {
+    const roleInSession =
+      participant.display_name === "Matt" ? "lead" : "member";
+    const roleLabel = roleInSession === "lead" ? "LEAD" : roleInSession;
+    console.log(
+      `  ${participant.display_name} (${roleLabel}): http://localhost:3000/api/session/${sessionRow.id}/claim-participant?pid=${participant.id}`
+    );
+  }
 }
 
 main().catch((err: unknown) => {
