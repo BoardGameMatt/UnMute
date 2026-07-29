@@ -16,7 +16,7 @@ function sessionIdFromPathname(pathname: string): string | null {
 
 /**
  * Full-page GET so Set-Cookie is applied reliably (unlike Set-Cookie on fetch()).
- * Join redirects here with ?pid= before the lobby load.
+ * Join redirects here with ?pid= before the lobby or session load.
  */
 export async function GET(request: Request, context: RouteContext) {
   const url = new URL(request.url);
@@ -51,11 +51,21 @@ export async function GET(request: Request, context: RouteContext) {
     );
   }
 
+  const { data: session } = await supabase
+    .from("sessions")
+    .select("status")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  // Active sessions skip the lobby — late joiners land in the protocol
+  // (spectator if the roster was already snapshotted).
+  const destPath =
+    session?.status === "active"
+      ? `/session/${sessionId}`
+      : `/session/${sessionId}/lobby`;
+
   const origin = url.origin;
-  const response = NextResponse.redirect(
-    new URL(`/session/${sessionId}/lobby`, origin),
-    303
-  );
+  const response = NextResponse.redirect(new URL(destPath, origin), 303);
 
   response.cookies.set(PARTICIPANT_COOKIE, participantId, {
     path: "/",

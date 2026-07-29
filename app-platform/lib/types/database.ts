@@ -98,6 +98,13 @@ export interface Session {
   team_id: string;
   status: SessionStatus;
   join_code: string;
+  /**
+   * @deprecated Stopped reading — host_token is the lead claim path.
+   * Column kept in production; do not drop.
+   */
+  designated_lead_name: string | null;
+  /** Unguessable token for the facilitator host URL. */
+  host_token: string;
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
@@ -223,6 +230,8 @@ export type SessionInsert = {
   team_id: string;
   status?: SessionStatus;
   join_code?: string;
+  designated_lead_name?: string | null;
+  host_token?: string;
   started_at?: string | null;
   completed_at?: string | null;
   created_at?: string;

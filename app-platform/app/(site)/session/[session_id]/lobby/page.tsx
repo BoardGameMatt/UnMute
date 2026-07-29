@@ -117,6 +117,7 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
         joinCode={sessionRecord.join_code}
         initialParticipants={participants}
         currentRole={currentRole}
+        currentParticipantId={participantId}
       />
     </main>
   );

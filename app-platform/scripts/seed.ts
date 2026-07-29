@@ -4,6 +4,7 @@
  */
 
 import { config } from "dotenv";
+import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../lib/types/database";
@@ -316,10 +317,12 @@ async function main(): Promise<void> {
         team_id: demoTeam.id,
         status: "lobby",
         join_code: SEED_SESSION_JOIN_CODE,
+        // Cryptographically random 32-byte hex — same generator as migration 006 default.
+        host_token: randomBytes(32).toString("hex"),
       },
       { onConflict: "join_code" }
     )
-    .select("id, join_code")
+    .select("id, join_code, host_token")
     .single();
 
   if (sessionError || !sessionRow) {
@@ -376,6 +379,10 @@ async function main(): Promise<void> {
   console.log("  join_code:", sessionRow.join_code);
   console.log("  session_id:", sessionRow.id);
   console.log("  team_id:", demoTeam.id);
+  console.log(
+    "  host URL:",
+    `http://localhost:3000/host/${sessionRow.host_token}`
+  );
 
   console.log("\nClaim links (open one per browser):");
   for (const participant of seededParticipants) {

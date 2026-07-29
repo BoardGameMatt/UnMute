@@ -83,7 +83,8 @@ export function LobbyGuestJoinForm({
       if (res.ok) {
         try {
           const landed = new URL(res.url, window.location.origin);
-          if (/\/session\/[^/]+\/lobby\/?$/.test(landed.pathname)) {
+          // Lobby (pre-start) or session page (late join into active).
+          if (/\/session\/[^/]+(\/lobby)?\/?$/.test(landed.pathname)) {
             window.location.href = res.url;
             return;
           }

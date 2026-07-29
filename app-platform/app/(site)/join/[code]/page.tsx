@@ -107,6 +107,10 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
     showRejoin = !!link;
   }
 
+  const acceptingJoins =
+    (session.status === "lobby" || session.status === "active") &&
+    !team.require_auth;
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
       <div className="flex w-full max-w-lg flex-col items-center gap-10">
@@ -121,28 +125,30 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
           </div>
         ) : null}
 
-        {session.status === "active" ? (
-          <ActiveSessionRejoin
-            sessionId={session.id}
-            showRejoin={showRejoin}
-          />
+        {session.status === "active" && showRejoin ? (
+          <ActiveSessionRejoin sessionId={session.id} showRejoin />
         ) : null}
 
-        {session.status === "lobby" && team.require_auth ? (
+        {(session.status === "lobby" || session.status === "active") &&
+        team.require_auth ? (
           <RequireAuthPanel />
         ) : null}
 
-        {session.status === "lobby" && !team.require_auth ? (
+        {acceptingJoins && !showRejoin ? (
           <div className="flex w-full flex-col items-center gap-8">
             <div className="space-y-2 text-center">
               <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
-                You&apos;re joining
+                {session.status === "active"
+                  ? "Session in progress"
+                  : "You're joining"}
               </p>
               <h1 className="font-display text-3xl font-bold text-unmute-navy">
                 Welcome
               </h1>
               <p className="font-body text-lg text-slate">
-                Choose a display name your team will see in the room.
+                {session.status === "active"
+                  ? "Choose a display name to join. If the session is already underway, you may watch as a spectator."
+                  : "Choose a display name your team will see in the room."}
               </p>
             </div>
             <LobbyGuestJoinForm

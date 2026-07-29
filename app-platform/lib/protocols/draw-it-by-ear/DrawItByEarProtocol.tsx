@@ -66,6 +66,10 @@ const DrawItByEarProtocol = ({
   const { sendAction, currentParticipant, roleInSession } = useSessionContext();
   const { stateJson, isLoading } = useGameState();
   const [initError, setInitError] = useState<string | null>(null);
+  const [waitingForPlayers, setWaitingForPlayers] = useState(false);
+  const [rosterCount, setRosterCount] = useState(0);
+  /** Bumped on session_participants INSERT so initializeGame retries without reload. */
+  const [rosterVersion, setRosterVersion] = useState(0);
 
   const send = useCallback(
     (actionType: string, payload: object) => sendAction(actionType, payload),
@@ -81,6 +85,55 @@ const DrawItByEarProtocol = ({
     [sendAction]
   );
 
+  // Valid protocol state arriving over Realtime (e.g. another client initialized)
+  // makes any prior initError stale — clear it so it cannot block render.
+  useEffect(() => {
+    if (isDrawItByEarState(stateJson)) {
+      setInitError(null);
+      setWaitingForPlayers(false);
+    }
+  }, [stateJson]);
+
+  // Live roster: joins must re-trigger initializeGame on already-mounted clients.
+  useEffect(() => {
+    const supabase = createClient();
+
+    void (async () => {
+      const { count } = await supabase
+        .from("session_participants")
+        .select("*", { count: "exact", head: true })
+        .eq("session_id", sessionId);
+      setRosterCount(count ?? 0);
+    })();
+
+    const channel = supabase
+      .channel(`dibe_init_roster:${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "session_participants",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => {
+          setRosterVersion((v) => v + 1);
+          void (async () => {
+            const { count } = await supabase
+              .from("session_participants")
+              .select("*", { count: "exact", head: true })
+              .eq("session_id", sessionId);
+            setRosterCount(count ?? 0);
+          })();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [sessionId]);
+
   useEffect(() => {
     if (isLoading) return;
     if (isDrawItByEarState(stateJson)) return;
@@ -95,9 +148,20 @@ const DrawItByEarProtocol = ({
 
       if (cancelled) return;
       if (participantErr || !participantRows?.length) {
+        setWaitingForPlayers(false);
         setInitError("Could not load participants for this session.");
         return;
       }
+
+      setRosterCount(participantRows.length);
+
+      if (participantRows.length < 3) {
+        setInitError(null);
+        setWaitingForPlayers(true);
+        return;
+      }
+
+      setWaitingForPlayers(false);
 
       const { data: imageRows, error: imageErr } = await supabase
         .from("protocol_images")
@@ -142,22 +206,57 @@ const DrawItByEarProtocol = ({
       }));
 
       try {
+        setInitError(null);
         await send("initializeGame", {
           participants,
           imageCatalog,
           leadParticipantId,
         });
       } catch (e) {
-        setInitError(e instanceof Error ? e.message : "Failed to start protocol.");
+        const message =
+          e instanceof Error ? e.message : "Failed to start protocol.";
+        if (/between 3 and 20|at least 3/i.test(message)) {
+          setWaitingForPlayers(true);
+          setInitError(null);
+        } else {
+          setWaitingForPlayers(false);
+          setInitError(message);
+        }
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [isLoading, stateJson, sessionId, send]);
+  }, [isLoading, stateJson, sessionId, send, rosterVersion]);
 
-  if (initError) {
+  // Valid state wins over any stale error — another client may have initialized.
+  if (isDrawItByEarState(stateJson)) {
+    // fall through to protocol render below
+  } else if (isLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center px-5 font-body text-slate">
+        Loading…
+      </div>
+    );
+  } else if (waitingForPlayers || (rosterCount > 0 && rosterCount < 3)) {
+    const here = Math.max(rosterCount, 1);
+    return (
+      <div className="mx-auto max-w-md px-5 py-16 text-center">
+        <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
+          Almost ready
+        </p>
+        <h1 className="mt-4 font-display text-2xl font-bold text-unmute-navy">
+          Waiting for more participants
+        </h1>
+        <p className="mt-4 font-body text-lg text-slate">
+          This protocol needs at least 3 people. {here}{" "}
+          {here === 1 ? "person is" : "people are"} here so far — it will start
+          automatically when enough have joined.
+        </p>
+      </div>
+    );
+  } else if (initError) {
     return (
       <div className="px-5 py-12">
         <p className="text-center font-body text-signal-red" role="alert">
@@ -166,9 +265,7 @@ const DrawItByEarProtocol = ({
         <BackToLobbyLink sessionId={sessionId} />
       </div>
     );
-  }
-
-  if (isLoading || !isDrawItByEarState(stateJson)) {
+  } else {
     return (
       <div className="flex min-h-[40vh] items-center justify-center px-5 font-body text-slate">
         Loading…

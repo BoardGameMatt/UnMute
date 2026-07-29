@@ -74,6 +74,43 @@ function shuffle<T>(items: T[]): T[] {
   return arr;
 }
 
+/**
+ * Assign distinct name/color pairs for a formation event.
+ * Shuffles the pool once and takes the first N (without replacement).
+ * Pool size is TEAM_NAMES.length (9). If teamCount exceeds the pool,
+ * overflow teams get sequential "Team N" labels that cannot collide with
+ * the artist-name pool.
+ */
+export function assignTeamIdentities(
+  teamCount: number
+): { name: string; color: string }[] {
+  if (teamCount <= 0) return [];
+
+  const pool: { name: string; color: string }[] = shuffle(
+    TEAM_NAMES.map((name, i) => ({
+      name,
+      color: (TEAM_COLORS[i] ?? TEAM_COLORS[0]) as string,
+    }))
+  );
+
+  const identities: { name: string; color: string }[] = pool.slice(
+    0,
+    Math.min(teamCount, pool.length)
+  );
+
+  let overflow = 1;
+  while (identities.length < teamCount) {
+    identities.push({
+      name: `Team ${overflow}`,
+      color: (TEAM_COLORS[identities.length % TEAM_COLORS.length] ??
+        TEAM_COLORS[0]) as string,
+    });
+    overflow += 1;
+  }
+
+  return identities;
+}
+
 function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)] as T;
 }
@@ -127,35 +164,24 @@ function findRoboDoc(catalog: DibeImageCatalogEntry[]): DibeImageCatalogEntry {
   return robo;
 }
 
-/** Max 4 per team; even sizes; prefer larger groups; min 2 per team when multiple teams. */
+/**
+ * Team count = floor(participants / 3), minimum 1.
+ * Sizes are as even as possible; remainder is spread one per team from the front.
+ * Guarantees every team has at least 3 members when participantCount >= 3.
+ */
 export function computeTeamSizes(participantCount: number): number[] {
   if (participantCount < 3) {
     throw new Error("Draw It By Ear needs at least 3 players.");
   }
 
-  if (participantCount <= 4) {
-    return [participantCount];
+  const teamCount = Math.max(1, Math.floor(participantCount / 3));
+  const base = Math.floor(participantCount / teamCount);
+  const remainder = participantCount % teamCount;
+  const sizes: number[] = [];
+  for (let i = 0; i < teamCount; i++) {
+    sizes.push(i < remainder ? base + 1 : base);
   }
-
-  let teamCount = Math.ceil(participantCount / 4);
-  const maxTeams = Math.floor(participantCount / 2);
-
-  while (teamCount <= maxTeams) {
-    const base = Math.floor(participantCount / teamCount);
-    const remainder = participantCount % teamCount;
-    const sizes: number[] = [];
-    for (let i = 0; i < teamCount; i++) {
-      sizes.push(i < remainder ? base + 1 : base);
-    }
-    const valid =
-      sizes.every((s) => s >= 2 && s <= 4) && sizes.reduce((a, b) => a + b, 0) === participantCount;
-    if (valid) {
-      return sizes;
-    }
-    teamCount += 1;
-  }
-
-  return [participantCount];
+  return sizes;
 }
 
 export function buildAutoTeams(
@@ -164,6 +190,7 @@ export function buildAutoTeams(
 ): DibeTeam[] {
   const ids = shuffledIds ?? shuffle(participants.map((p) => p.id));
   const sizes = computeTeamSizes(ids.length);
+  const identities = assignTeamIdentities(sizes.length);
   const teams: DibeTeam[] = [];
   let offset = 0;
 
@@ -172,10 +199,11 @@ export function buildAutoTeams(
     const member_ids = ids.slice(offset, offset + size);
     offset += size;
     const rotation = shuffle([...member_ids]);
+    const identity = identities[i]!;
     teams.push({
       id: newId(),
-      name: TEAM_NAMES[i] ?? `Team ${i + 1}`,
-      color: TEAM_COLORS[i] ?? TEAM_COLORS[0],
+      name: identity.name,
+      color: identity.color,
       member_ids,
       describer_rotation: rotation,
       current_describer_index: 0,
@@ -961,12 +989,14 @@ export function autoAssignTeams(state: DibeState): DibeState {
 export function enableSelfSelectTeams(state: DibeState): DibeState {
   if (state.phase !== "TEAM_FORMATION") return state;
   const teamCount = computeTeamSizes(state.participants.length).length;
+  const identities = assignTeamIdentities(teamCount);
   const teams: DibeTeam[] = [];
   for (let i = 0; i < teamCount; i++) {
+    const identity = identities[i]!;
     teams.push({
       id: newId(),
-      name: TEAM_NAMES[i] ?? `Team ${i + 1}`,
-      color: TEAM_COLORS[i] ?? TEAM_COLORS[0],
+      name: identity.name,
+      color: identity.color,
       member_ids: [],
       describer_rotation: [],
       current_describer_index: 0,
@@ -1000,7 +1030,8 @@ export function joinTeam(
   if (idx < 0) return state;
 
   const target = teams[idx];
-  if (target.member_ids.length >= 4) return state;
+  const maxPerTeam = Math.ceil(state.participants.length / state.teams.length);
+  if (target.member_ids.length >= maxPerTeam) return state;
 
   teams[idx] = {
     ...target,
@@ -1020,11 +1051,11 @@ export function lockTeams(state: DibeState): DibeState {
     return { ...state, formation_error: "Every participant must join a team." };
   }
 
-  const singleton = state.teams.some((t) => t.member_ids.length < 2);
-  if (singleton && state.teams.length > 1) {
+  const undersized = state.teams.some((t) => t.member_ids.length < 3);
+  if (undersized) {
     return {
       ...state,
-      formation_error: "Each team needs at least 2 members.",
+      formation_error: "Each team needs at least 3 members.",
     };
   }
 

@@ -2,7 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { startSessionAction } from "@/app/(site)/session/[session_id]/lobby/actions";
+import {
+  startSessionAction,
+  transferLeadAction,
+} from "@/app/(site)/session/[session_id]/lobby/actions";
 import { JOIN_URL_DISPLAY } from "@/lib/constants";
 import { useSessionParticipants } from "@/hooks/useSessionParticipants";
 import { createClient } from "@/lib/supabase/client";
@@ -14,6 +17,7 @@ type SessionLobbyViewProps = {
   joinCode: string;
   initialParticipants: LobbyParticipant[];
   currentRole: "lead" | "member" | null;
+  currentParticipantId: string | null;
 };
 
 export function SessionLobbyView({
@@ -22,17 +26,29 @@ export function SessionLobbyView({
   joinCode,
   initialParticipants,
   currentRole,
+  currentParticipantId,
 }: SessionLobbyViewProps) {
   const router = useRouter();
   const participants = useSessionParticipants(sessionId, initialParticipants);
   const supabase = useMemo(() => createClient(), []);
   const [startError, setStartError] = useState<string | null>(null);
+  const [transferError, setTransferError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [transferringId, setTransferringId] = useState<string | null>(null);
 
-  // The lead starts whenever they choose — no minimum headcount.
   const canStart = currentRole === "lead" && !isPending;
+  const hasLead = participants.some((p) => p.roleInSession === "lead");
   const leadName =
     participants.find((p) => p.roleInSession === "lead")?.displayName ?? null;
+
+  // After transferring lead away, this client is no longer lead — refresh role.
+  useEffect(() => {
+    if (currentRole !== "lead" || !currentParticipantId) return;
+    const me = participants.find((p) => p.participantId === currentParticipantId);
+    if (me && me.roleInSession !== "lead") {
+      router.refresh();
+    }
+  }, [participants, currentRole, currentParticipantId, router]);
 
   useEffect(() => {
     if (currentRole !== "member") return;
@@ -61,6 +77,15 @@ export function SessionLobbyView({
     };
   }, [currentRole, sessionId, supabase, router]);
 
+  // New lead (after transfer) should see Start; refresh when our row becomes lead.
+  useEffect(() => {
+    if (currentRole === "lead" || !currentParticipantId) return;
+    const me = participants.find((p) => p.participantId === currentParticipantId);
+    if (me?.roleInSession === "lead") {
+      router.refresh();
+    }
+  }, [participants, currentRole, currentParticipantId, router]);
+
   // Always display uppercase — stored codes are uppercase, but never trust case.
   const chars = joinCode.toUpperCase().split("");
 
@@ -71,6 +96,20 @@ export function SessionLobbyView({
       if (result && "error" in result && result.error) {
         setStartError(result.error);
       }
+    });
+  };
+
+  const handleMakeLead = (targetParticipantId: string) => {
+    setTransferError(null);
+    setTransferringId(targetParticipantId);
+    startTransition(async () => {
+      const result = await transferLeadAction(sessionId, targetParticipantId);
+      setTransferringId(null);
+      if (result && "error" in result && result.error) {
+        setTransferError(result.error);
+        return;
+      }
+      router.refresh();
     });
   };
 
@@ -114,19 +153,37 @@ export function SessionLobbyView({
           {participants.map((p) => (
             <li
               key={p.sessionParticipantId}
-              className="flex items-center justify-between rounded-lg border border-cloud-grey bg-warm-white px-4 py-3 shadow-sm"
+              className="flex items-center justify-between gap-3 rounded-lg border border-cloud-grey bg-warm-white px-4 py-3 shadow-sm"
             >
               <span className="font-body text-lg text-charcoal">
                 {p.displayName}
               </span>
-              {p.roleInSession === "lead" ? (
-                <span className="rounded-full bg-signal-amber/15 px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-widest text-unmute-navy">
-                  Lead
-                </span>
-              ) : null}
+              <div className="flex shrink-0 items-center gap-2">
+                {p.roleInSession === "lead" ? (
+                  <span className="rounded-full bg-signal-amber/15 px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-widest text-unmute-navy">
+                    Lead
+                  </span>
+                ) : currentRole === "lead" ? (
+                  <button
+                    type="button"
+                    disabled={isPending || transferringId === p.participantId}
+                    onClick={() => handleMakeLead(p.participantId)}
+                    className="rounded-md border border-cloud-grey px-3 py-1.5 font-display text-xs font-semibold text-unmute-navy transition-colors hover:bg-cloud-grey disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {transferringId === p.participantId
+                      ? "Transferring…"
+                      : "Make this person lead"}
+                  </button>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>
+        {transferError ? (
+          <p className="mt-3 text-center text-sm text-signal-red" role="alert">
+            {transferError}
+          </p>
+        ) : null}
       </section>
 
       {currentRole === "lead" ? (
@@ -142,8 +199,18 @@ export function SessionLobbyView({
             onClick={handleStart}
             className="w-full max-w-md rounded-md bg-signal-amber px-6 py-4 font-display text-lg font-semibold text-deep-navy shadow-sm transition hover:bg-sunrise-gold disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isPending ? "Starting…" : "Start session"}
+            {isPending && !transferringId ? "Starting…" : "Start session"}
           </button>
+        </div>
+      ) : !hasLead ? (
+        <div className="mx-auto max-w-md space-y-3 text-center">
+          <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
+            Waiting on facilitator
+          </p>
+          <p className="font-body text-base text-slate">
+            You&apos;re in the room. The facilitator has a private host link —
+            once they open it, they become lead and can start the session.
+          </p>
         </div>
       ) : currentRole === "member" ? (
         <p className="text-center font-body text-base text-slate">

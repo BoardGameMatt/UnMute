@@ -6,8 +6,12 @@ export type GuestJoinCoreResult =
   | { ok: false; error: string };
 
 /**
- * Inserts guest participant + session link. Caller sets cookie and redirects.
- * Used by API route (preferred) so POST does not target /join/[code] RSC page.
+ * Inserts guest participant + session link as a member. Lead is never assigned
+ * on the join-code path — only the host token URL claims lead.
+ *
+ * Joins are accepted while status is lobby or active. Completed/cancelled are
+ * rejected. Late joiners into an already-initialized protocol land as
+ * spectators (engine roster is snapshotted at initializeGame).
  */
 export async function joinSessionAsGuestCore(input: {
   sessionId: string;
@@ -41,7 +45,7 @@ export async function joinSessionAsGuestCore(input: {
     return { ok: false, error: "Invalid session context." };
   }
 
-  if (session.status !== "lobby") {
+  if (session.status !== "lobby" && session.status !== "active") {
     return { ok: false, error: "This session is no longer accepting joins." };
   }
 
@@ -59,25 +63,13 @@ export async function joinSessionAsGuestCore(input: {
     return { ok: false, error: "This team requires sign-in to join." };
   }
 
-  const { count: existingCount, error: countErr } = await supabase
-    .from("session_participants")
-    .select("*", { count: "exact", head: true })
-    .eq("session_id", sessionId);
-
-  if (countErr) {
-    return { ok: false, error: countErr.message };
-  }
-
-  const isFirstJoin = (existingCount ?? 0) === 0;
-  const sessionRole = isFirstJoin ? "lead" : "member";
-
   const { data: participant, error: pErr } = await supabase
     .from("participants")
     .insert({
       team_id: teamId,
       person_id: null,
       display_name: displayName,
-      role: sessionRole,
+      role: "member",
     })
     .select("id")
     .single();
@@ -89,7 +81,7 @@ export async function joinSessionAsGuestCore(input: {
   const { error: spErr } = await supabase.from("session_participants").insert({
     session_id: sessionId,
     participant_id: participant.id,
-    role_in_session: sessionRole,
+    role_in_session: "member",
   });
 
   if (spErr) {

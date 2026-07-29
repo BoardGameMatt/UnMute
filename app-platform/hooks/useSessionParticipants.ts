@@ -26,8 +26,8 @@ async function fetchParticipants(
 }
 
 /**
- * Subscribes to inserts on `session_participants` for this session and keeps
- * the participant list in sync without a full page reload.
+ * Subscribes to inserts and updates on `session_participants` for this session
+ * and keeps the participant list (including lead badge) in sync.
  */
 export function useSessionParticipants(
   sessionId: string,
@@ -48,6 +48,19 @@ export function useSessionParticipants(
         "postgres_changes",
         {
           event: "INSERT",
+          schema: "public",
+          table: "session_participants",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        async () => {
+          const next = await fetchParticipants(supabase, sessionId);
+          setParticipants(next);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
           schema: "public",
           table: "session_participants",
           filter: `session_id=eq.${sessionId}`,

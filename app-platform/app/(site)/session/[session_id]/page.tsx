@@ -41,7 +41,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
   const { data: session, error: sessionErr } = await supabase
     .from("sessions")
     .select(
-      "id, protocol_id, team_id, status, join_code, started_at, completed_at, created_at, protocol_slot_id, protocols ( slug, name )"
+      "id, protocol_id, team_id, status, join_code, designated_lead_name, host_token, started_at, completed_at, created_at, protocol_slot_id, protocols ( slug, name )"
     )
     .eq("id", sessionId)
     .maybeSingle();
