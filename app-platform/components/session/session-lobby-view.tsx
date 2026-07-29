@@ -61,6 +61,7 @@ export function SessionLobbyView({
     };
   }, [currentRole, sessionId, supabase, router]);
 
+  // Always display uppercase — stored codes are uppercase, but never trust case.
   const chars = joinCode.toUpperCase().split("");
 
   const handleStart = () => {
@@ -92,7 +93,7 @@ export function SessionLobbyView({
           {chars.map((char, i) => (
             <div
               key={`${char}-${i}`}
-              className="flex h-14 min-w-[44px] items-center justify-center rounded-lg border-2 border-cloud-grey bg-warm-white px-2 font-mono text-2xl font-medium text-deep-navy sm:h-16 sm:min-w-[52px] sm:text-[28px] sm:leading-none"
+              className="flex h-14 min-w-[44px] items-center justify-center rounded-lg border-2 border-cloud-grey bg-warm-white px-2 font-mono text-2xl font-medium uppercase tracking-widest text-deep-navy sm:h-16 sm:min-w-[52px] sm:text-[28px] sm:leading-none"
             >
               {char}
             </div>

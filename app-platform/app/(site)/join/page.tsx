@@ -2,13 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { JOIN_CODE_LENGTH, normalizeJoinCode } from "@/lib/constants";
 
 export default function JoinPage() {
   const router = useRouter();
   const [code, setCode] = useState("");
 
-  const normalized = code.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-  const canSubmit = normalized.length === 6;
+  const normalized = normalizeJoinCode(code);
+  const canSubmit = normalized.length === JOIN_CODE_LENGTH;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +37,11 @@ export default function JoinPage() {
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
-              maxLength={6}
+              // Allow paste with spaces/hyphens; normalizeJoinCode trims to 6.
+              maxLength={12}
               value={code}
-              onChange={(e) =>
-                setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
-              }
-              className="w-full rounded-md border border-cloud-grey bg-warm-white px-4 py-5 text-center font-mono text-3xl tracking-[0.35em] text-charcoal shadow-sm outline-none transition focus:border-unmute-navy focus:ring-2 focus:ring-unmute-navy/20"
+              onChange={(e) => setCode(normalizeJoinCode(e.target.value))}
+              className="w-full rounded-md border border-cloud-grey bg-warm-white px-4 py-5 text-center font-mono text-3xl uppercase tracking-[0.4em] text-charcoal shadow-sm outline-none transition focus:border-unmute-navy focus:ring-2 focus:ring-unmute-navy/20"
               placeholder="••••••"
               aria-invalid={!canSubmit && code.length > 0}
             />

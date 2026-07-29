@@ -5,7 +5,7 @@ import { ActiveSessionRejoin } from "@/components/join/active-session-rejoin";
 import { LobbyGuestJoinForm } from "@/components/join/lobby-guest-join-form";
 import { RequireAuthPanel } from "@/components/join/require-auth-panel";
 import { createClient } from "@/lib/supabase/server";
-import { PARTICIPANT_COOKIE } from "@/lib/constants";
+import { PARTICIPANT_COOKIE, JOIN_CODE_LENGTH, normalizeJoinCode } from "@/lib/constants";
 
 type JoinCodePageProps = {
   params: { code: string };
@@ -15,10 +15,9 @@ export const dynamic = "force-dynamic";
 
 export default async function JoinCodePage({ params }: JoinCodePageProps) {
   noStore();
-  const raw = params.code ?? "";
-  const code = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  const code = normalizeJoinCode(params.code ?? "");
 
-  if (code.length !== 6) {
+  if (code.length !== JOIN_CODE_LENGTH) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-md space-y-4 text-center">

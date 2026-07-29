@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { normalizeDisplayName } from "@/lib/constants";
+import {
+  JOIN_CODE_LENGTH,
+  normalizeDisplayName,
+  normalizeJoinCode,
+} from "@/lib/constants";
 import { joinSessionAsGuestCore } from "@/lib/join/join-session-as-guest";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = { params: { code: string } };
 
-function normalizeCode(raw: string): string {
-  return raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-}
-
 export async function POST(request: Request, context: RouteContext) {
-  const code = normalizeCode(context.params.code ?? "");
-  if (code.length !== 6) {
+  const code = normalizeJoinCode(context.params.code ?? "");
+  if (code.length !== JOIN_CODE_LENGTH) {
     return NextResponse.json({ error: "Invalid join code." }, { status: 400 });
   }
 
@@ -37,7 +37,7 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Session not found." }, { status: 404 });
   }
 
-  if (sessionRow.join_code !== code) {
+  if (normalizeJoinCode(sessionRow.join_code) !== code) {
     return NextResponse.json(
       { error: "Join code does not match this session." },
       { status: 400 }
