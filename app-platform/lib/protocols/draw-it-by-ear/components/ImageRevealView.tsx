@@ -4,6 +4,9 @@ import { useEffect, useRef } from "react";
 import { useDibeImage } from "../hooks/useDibeImage";
 import type { DibeState } from "../types";
 
+// Client-side only, effective duration is the minimum across all clients, so a stale bundle can truncate it.
+const IMAGE_REVEAL_MS = 8000;
+
 type ImageRevealViewProps = {
   state: DibeState;
   sessionId: string;
@@ -28,7 +31,7 @@ export const ImageRevealView = ({
       if (advancedRef.current) return;
       advancedRef.current = true;
       void sendAction("advanceFromImageReveal", { armedPhase });
-    }, 4000);
+    }, IMAGE_REVEAL_MS);
     return () => clearTimeout(t);
   }, [sendAction, armedPhase]);
 
