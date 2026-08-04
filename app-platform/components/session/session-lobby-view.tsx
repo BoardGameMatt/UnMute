@@ -11,6 +11,9 @@ import { useSessionParticipants } from "@/hooks/useSessionParticipants";
 import { createClient } from "@/lib/supabase/client";
 import type { LobbyParticipant } from "@/lib/types/lobby";
 
+/** Matches the floor the protocol enforces at initializeGame. */
+const MIN_PARTICIPANTS_TO_START = 3;
+
 type SessionLobbyViewProps = {
   sessionId: string;
   protocolName: string;
@@ -34,9 +37,15 @@ export function SessionLobbyView({
   const [startError, setStartError] = useState<string | null>(null);
   const [transferError, setTransferError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isStarting, setIsStarting] = useState(false);
   const [transferringId, setTransferringId] = useState<string | null>(null);
 
-  const canStart = currentRole === "lead" && !isPending;
+  // Same population the protocol counts at initializeGame: every
+  // session_participants row for this session, lead included.
+  const participantCount = participants.length;
+  const hasEnoughToStart = participantCount >= MIN_PARTICIPANTS_TO_START;
+  const canStart =
+    currentRole === "lead" && !isPending && !isStarting && hasEnoughToStart;
   const hasLead = participants.some((p) => p.roleInSession === "lead");
   const leadName =
     participants.find((p) => p.roleInSession === "lead")?.displayName ?? null;
@@ -91,9 +100,11 @@ export function SessionLobbyView({
 
   const handleStart = () => {
     setStartError(null);
+    setIsStarting(true);
     startTransition(async () => {
       const result = await startSessionAction(sessionId);
       if (result && "error" in result && result.error) {
+        setIsStarting(false);
         setStartError(result.error);
       }
     });
@@ -126,7 +137,7 @@ export function SessionLobbyView({
         aria-label="Join code for projector"
       >
         <p className="mb-4 text-center font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-steel-blue">
-          Join code — show on projector
+          Join code: show on projector
         </p>
         <div className="mb-4 flex flex-wrap justify-center gap-2 sm:gap-3">
           {chars.map((char, i) => (
@@ -199,8 +210,13 @@ export function SessionLobbyView({
             onClick={handleStart}
             className="w-full max-w-md rounded-md bg-signal-amber px-6 py-4 font-display text-lg font-semibold text-deep-navy shadow-sm transition hover:bg-sunrise-gold disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isPending && !transferringId ? "Starting…" : "Start session"}
+            {isStarting ? "Starting…" : "Start session"}
           </button>
+          <p className="max-w-md text-center font-body text-sm text-slate">
+            {hasEnoughToStart
+              ? "Do not press Start until everyone has joined."
+              : `Start unlocks when at least ${MIN_PARTICIPANTS_TO_START} people have joined. ${participantCount} here so far.`}
+          </p>
         </div>
       ) : !hasLead ? (
         <div className="mx-auto max-w-md space-y-3 text-center">
@@ -208,8 +224,8 @@ export function SessionLobbyView({
             Waiting on facilitator
           </p>
           <p className="font-body text-base text-slate">
-            You&apos;re in the room. The facilitator has a private host link —
-            once they open it, they become lead and can start the session.
+            You&apos;re in the room. The facilitator has a private host link.
+            Once they open it, they become lead and can start the session.
           </p>
         </div>
       ) : currentRole === "member" ? (

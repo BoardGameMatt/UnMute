@@ -1,10 +1,11 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { returnToLobbyAction } from "@/app/(site)/session/[session_id]/lobby/actions";
 import { SessionProgressBar } from "@/components/ui/SessionProgressBar";
 import { useGameState, useSessionContext } from "@/components/providers/SessionProvider";
-import { BackToLobbyLink } from "@/components/session/back-to-lobby-link";
 import { createClient } from "@/lib/supabase/client";
 import type { SessionProtocolProps } from "@/lib/protocols/registry";
 import { isTimedPhase } from "./engine";
@@ -58,6 +59,56 @@ function parseCriteria(raw: unknown): DibeCriterion[] {
     }));
 }
 
+type ReturnToLobbyButtonProps = {
+  sessionId: string;
+  isReturning: boolean;
+  onReturning: (returning: boolean) => void;
+};
+
+/**
+ * Lead-only escape hatch from a session that started but never initialized.
+ * Sends the session back to lobby status before navigating, otherwise the
+ * lobby route bounces straight back here.
+ */
+const ReturnToLobbyButton = ({
+  sessionId,
+  isReturning,
+  onReturning,
+}: ReturnToLobbyButtonProps) => {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleClick = async () => {
+    setError(null);
+    onReturning(true);
+    const result = await returnToLobbyAction(sessionId);
+    if (result.ok) {
+      router.push(`/session/${sessionId}/lobby`);
+      return;
+    }
+    onReturning(false);
+    setError(result.error ?? "Could not return to the lobby.");
+  };
+
+  return (
+    <div className="mt-6 flex flex-col items-center gap-3">
+      <button
+        type="button"
+        onClick={() => void handleClick()}
+        disabled={isReturning}
+        className="inline-flex rounded-md border border-cloud-grey bg-transparent px-5 py-3 font-display text-base font-semibold text-unmute-navy shadow-sm transition hover:bg-cloud-grey/60 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Return to lobby
+      </button>
+      {error ? (
+        <p className="font-body text-sm text-signal-red" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+};
+
 const DrawItByEarProtocol = ({
   sessionId,
   participantId,
@@ -68,6 +119,8 @@ const DrawItByEarProtocol = ({
   const [initError, setInitError] = useState<string | null>(null);
   const [waitingForPlayers, setWaitingForPlayers] = useState(false);
   const [rosterCount, setRosterCount] = useState(0);
+  /** True once the lead has asked to go back to lobby; blocks re-initialization. */
+  const [isReturning, setIsReturning] = useState(false);
   /** Bumped on session_participants INSERT so initializeGame retries without reload. */
   const [rosterVersion, setRosterVersion] = useState(0);
 
@@ -136,6 +189,7 @@ const DrawItByEarProtocol = ({
 
   useEffect(() => {
     if (isLoading) return;
+    if (isReturning) return;
     if (isDrawItByEarState(stateJson)) return;
 
     let cancelled = false;
@@ -228,7 +282,7 @@ const DrawItByEarProtocol = ({
     return () => {
       cancelled = true;
     };
-  }, [isLoading, stateJson, sessionId, send, rosterVersion]);
+  }, [isLoading, isReturning, stateJson, sessionId, send, rosterVersion]);
 
   // Valid state wins over any stale error — another client may have initialized.
   if (isDrawItByEarState(stateJson)) {
@@ -241,6 +295,12 @@ const DrawItByEarProtocol = ({
     );
   } else if (waitingForPlayers || (rosterCount > 0 && rosterCount < 3)) {
     const here = Math.max(rosterCount, 1);
+    console.log("DIBE_DEBUG", {
+      roleInSession,
+      rosterCount,
+      waitingForPlayers,
+      isReturning,
+    });
     return (
       <div className="mx-auto max-w-md px-5 py-16 text-center">
         <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
@@ -251,9 +311,16 @@ const DrawItByEarProtocol = ({
         </h1>
         <p className="mt-4 font-body text-lg text-slate">
           This protocol needs at least 3 people. {here}{" "}
-          {here === 1 ? "person is" : "people are"} here so far — it will start
+          {here === 1 ? "person is" : "people are"} here so far. It will start
           automatically when enough have joined.
         </p>
+        {roleInSession === "lead" ? (
+          <ReturnToLobbyButton
+            sessionId={sessionId}
+            isReturning={isReturning}
+            onReturning={setIsReturning}
+          />
+        ) : null}
       </div>
     );
   } else if (initError) {
@@ -262,7 +329,13 @@ const DrawItByEarProtocol = ({
         <p className="text-center font-body text-signal-red" role="alert">
           {initError}
         </p>
-        <BackToLobbyLink sessionId={sessionId} />
+        {roleInSession === "lead" ? (
+          <ReturnToLobbyButton
+            sessionId={sessionId}
+            isReturning={isReturning}
+            onReturning={setIsReturning}
+          />
+        ) : null}
       </div>
     );
   } else {

@@ -34,6 +34,28 @@ async function requireLead(
   return { participantId };
 }
 
+/**
+ * Return session_state to the shape it has before a protocol initializes:
+ * phase 'waiting', an empty state_json object, round zero. state_json is
+ * NOT NULL, so it is cleared to {} and never to null.
+ */
+async function resetSessionStateToPreInit(
+  supabase: ReturnType<typeof createClient>,
+  sessionId: string
+) {
+  const { error } = await supabase
+    .from("session_state")
+    .update({
+      state_json: {},
+      phase: "waiting",
+      current_round: 0,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("session_id", sessionId);
+
+  return error;
+}
+
 export async function startSessionAction(
   sessionId: string
 ): Promise<{ error?: string } | void> {
@@ -43,6 +65,27 @@ export async function startSessionAction(
   }
 
   const supabase = createClient();
+
+  // The reset below is destructive, so it must never run against a session that is already active.
+  const { data: sessionRow, error: statusErr } = await supabase
+    .from("sessions")
+    .select("status")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (statusErr || !sessionRow) {
+    return { error: "Could not load this session." };
+  }
+
+  if (sessionRow.status !== "lobby") {
+    return { error: "This session has already started." };
+  }
+
+  // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
+  const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
+  if (resetErr) {
+    return { error: resetErr.message };
+  }
 
   const { error: upErr } = await supabase
     .from("sessions")
@@ -58,6 +101,43 @@ export async function startSessionAction(
   }
 
   redirect(`/session/${sessionId}`);
+}
+
+/**
+ * Send an already-started session back to the lobby.
+ *
+ * Order matters: clear session_state first, then flip status. A session left
+ * active with intact state is recoverable; one with cleared state and active
+ * status is not, so a failed reset leaves sessions untouched.
+ */
+export async function returnToLobbyAction(
+  sessionId: string
+): Promise<{ error?: string; ok?: boolean }> {
+  const auth = await requireLead(sessionId);
+  if ("error" in auth) {
+    return { error: auth.error };
+  }
+
+  const supabase = createClient();
+
+  const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
+  if (resetErr) {
+    return { error: resetErr.message };
+  }
+
+  const { error: upErr } = await supabase
+    .from("sessions")
+    .update({
+      status: "lobby",
+      started_at: null,
+    })
+    .eq("id", sessionId);
+
+  if (upErr) {
+    return { error: upErr.message };
+  }
+
+  return { ok: true };
 }
 
 /**
