@@ -164,21 +164,22 @@ phase. Cause: a stale `SHOW_DRAWINGS` expiry consumed a freshly opened scoring
 tier 139 milliseconds after it opened, advancing through two tiers with no
 submissions recorded.
 
-**4.3** A window guard keyed only on timer start time is not sufficient on its
-own. It collapses duplicate posts inside one timer window, but it cannot tell
-which timer expired, because a stale post arriving during a later phase sees a
-fresh start time and passes. Keep both guards: the window guard for
-duplicates, the phase guard for staleness.
+A window guard keyed only on timer start time does not satisfy this
+requirement on its own. It collapses duplicate posts inside one timer window,
+but it cannot tell which timer expired, because a stale post arriving during a
+later phase sees a fresh start time and passes. That is precisely how the
+incident above happened. Keep both guards: the window guard for duplicates, the
+phase guard for staleness.
 
-**4.4** Durations are named constants. No inline millisecond or second
+**4.3** Durations are named constants. No inline millisecond or second
 literals at the call site. Cause: the image reveal delay sat as a bare `4000`
 in a `setTimeout`, which hid both its value and the fact that it was
 client-side only.
 
-**4.5** Completion gates count only participants who can actually submit. See
+**4.4** Completion gates count only participants who can actually submit. See
 3.3.
 
-**4.6** Do not add a wall-clock comparison to an expiry handler. Cause: an
+**4.5** Do not add a wall-clock comparison to an expiry handler. Cause: an
 earlier handler compared server time against the timer start and rejected
 valid expiries whenever the server clock trailed the client's, which hung the
 round because the client posts only once.
@@ -209,9 +210,39 @@ inside another Moment's folder.
 **5.5** Design tokens per `.cursorrules`. No hardcoded hex values and no
 hardcoded font names in components.
 
-## 6. New Moment checklist
+## 6. Verification
 
-Verify each item before merge. These are things to check, not things to read.
+Twenty items. The split is by how each one can be checked, not by importance.
+
+### 6.1 Pre-merge checklist
+
+Every item here is verifiable by reading a diff or running one command. Verify
+all twelve before merge.
+
+1. Start is disabled below the minimum participant count, and its helper copy
+   and disabled state derive from one boolean.
+2. Every lead-reachable error and waiting branch offers a recovery control
+   that resets state, and the reset runs before the status flip.
+3. No "back to lobby" navigation exists that leaves status unchanged.
+4. Every screen is attributed to lead, participant, or rotating role in the
+   Moment's own spec.
+5. Every gated and every timed phase exposes a lead manual advance.
+6. Rotating-role holders who do not submit are excluded from completion
+   counts.
+7. Every timer-expiry handler takes `armedPhase` and no-ops on mismatch.
+8. No expiry handler compares wall-clock time.
+9. Every duration is a named constant.
+10. The Moment registers through `registerProtocol` and is imported by
+    `lib/protocols/index.ts`.
+11. No hardcoded hex values and no hardcoded font names in any component.
+12. `npm run lint` and `npx tsc --noEmit` both pass from `app-platform/`.
+
+### 6.2 Pre-client rehearsal script
+
+None of these eight items can be verified by reading code, and no harness
+currently exists to run them. They require a live session and, for most of
+them, two browsers. They must be exercised in a rehearsal session before any
+client run.
 
 1. Opening the host link on a second browser transfers lead, and the first
    browser loses session control.
@@ -221,25 +252,8 @@ Verify each item before merge. These are things to check, not things to read.
 4. A join attempted while the session is `active` succeeds.
 5. A participant who joins after the roster snapshot renders the spectator
    state, with no error and no blank screen.
-6. Start is disabled below the minimum participant count, and its helper copy
-   and disabled state derive from one boolean.
-7. Start cannot be double-submitted.
-8. Every lead-reachable error and waiting branch offers a recovery control
-   that resets state, and the reset runs before the status flip.
-9. No "back to lobby" navigation exists that leaves status unchanged.
-10. Every screen is attributed to lead, participant, or rotating role in the
-    Moment's own spec.
-11. Every lead-only action is rejected server side when called by a member,
-    tested by calling it as a member rather than by inspecting the UI.
-12. Every gated and every timed phase exposes a lead manual advance.
-13. Rotating-role holders who do not submit are excluded from completion
-    counts.
-14. Every timer-expiry handler takes `armedPhase` and no-ops on mismatch.
-15. No expiry handler compares wall-clock time.
-16. Every duration is a named constant.
-17. Every phase change lands in `session_state` and arrives over Realtime on a
-    second client.
-18. The Moment registers through `registerProtocol` and is imported by
-    `lib/protocols/index.ts`.
-19. No hardcoded hex values and no hardcoded font names in any component.
-20. `npm run lint` and `npx tsc --noEmit` both pass from `app-platform/`.
+6. Start cannot be double-submitted.
+7. Every lead-only action is rejected server side when called by a member,
+   tested by calling it as a member rather than by inspecting the UI.
+8. Every phase change lands in `session_state` and arrives over Realtime on a
+   second client.

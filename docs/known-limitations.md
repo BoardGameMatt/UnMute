@@ -34,6 +34,14 @@ This cannot be backfilled. Every session played before the table exists is
 permanently undiagnosable. That is the argument for building it before the next
 round of client sessions, not after.
 
+It also blocks verification, not just diagnosis. Eight of the twenty
+verification items in the contract currently require watching two browsers
+live, which is why they sit in moment-contract 6.2 rather than the pre-merge
+checklist. With an append-only event log, most of them become row reads after
+the fact: lead transfer, one-lead-per-session, role on join, and phase
+broadcast are all assertions about recorded events rather than things a person
+has to witness on a second screen.
+
 ## 2. `session_state.phase` is unconstrained text
 
 Defined as `phase text NOT NULL DEFAULT 'waiting'` in
@@ -141,7 +149,7 @@ closes.
 ## 10. Named duration constants are audited in only one Moment
 
 The contract requires named duration constants with no inline literals
-(moment-contract 4.4). Draw It By Ear is compliant and audited: the reveal
+(moment-contract 4.3). Draw It By Ear is compliant and audited: the reveal
 delay is the named `IMAGE_REVEAL_MS`, and no other `setTimeout` exists anywhere
 in that Moment's tree.
 
