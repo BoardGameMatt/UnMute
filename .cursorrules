@@ -145,9 +145,7 @@ Subtle only. Use shadow-sm as default for cards. On hover, transition to shadow-
 - Keep components focused — if it's doing more than one thing, split it
 
 ## Key Constraints
-- All state transitions in protocols go through sendAction() API — never mutate state client-side
-- Timers display client-side but are server-authoritative for phase transitions
-- Images in "Draw It By Ear" must NEVER be sent to Drawer clients — role-check before serving
+- Structural rules (state routing through sendAction, server-authoritative timers, protocol image gating) live in docs/moment-contract.md, which is normative for them
 - Join codes are 6 characters, uppercase alphanumeric
 - Mobile-first for all participant-facing screens
 - Desktop-optimized for admin screens only

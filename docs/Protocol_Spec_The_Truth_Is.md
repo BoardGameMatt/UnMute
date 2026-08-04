@@ -1,3 +1,7 @@
+> **Status: pre-implementation design intent.** Written before this protocol was built.
+> It predates the session lifecycle, actor model, and state and timing decisions.
+> `docs/moment-contract.md` supersedes this document on all structural matters.
+
 # Protocol Spec: "The Truth Is..."
 
 **Slug:** `the-truth-is`
