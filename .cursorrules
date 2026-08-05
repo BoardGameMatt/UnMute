@@ -151,3 +151,11 @@ Subtle only. Use shadow-sm as default for cards. On hover, transition to shadow-
 - Join codes are 6 characters, uppercase alphanumeric
 - Mobile-first for all participant-facing screens
 - Desktop-optimized for admin screens only
+
+## Protocol specs
+Protocol specs live in /docs/protocols/ at the repo root.
+When working on a protocol, read its spec first and treat it as
+authoritative. Do not invent mechanics that are not in the spec.
+If the spec is ambiguous, choose the more conservative option and
+record the choice, rather than inventing a mechanic.
+EOF
