@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "npx tsx scripts/seed.ts",
+    "validate:wao": "npx tsx scripts/validate-wao-questions.ts",
     "test": "tsx --test lib/protocols/draw-it-by-ear/*.test.ts"
   },
   "dependencies": {

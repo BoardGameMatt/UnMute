@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "protocol": "wrong-answers-only",
+  "questions": [
+    {
+      "category_title": "Real IKEA product names",
+      "disambiguation_rule": "A name IKEA has actually used for a product.",
+      "disambiguation_detail": "Invented Swedish-sounding words do not count, however plausible they look. Discontinued products still count.",
+      "correct_count": 4,
+      "difficulty": 2,
+      "region_tag": "global",
+      "pinned": false,
+      "active": false,
+      "items": [
+        {
+          "label": "BILLY",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "FLATPACKO",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "POÄNG",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "KALLAX",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "MALM",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "SNÖRVAX",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "VÄNDLIG",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "HÄRNVIKA",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "TRÄSKOGA",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "LAGOM",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
+      "category_title": "Correct airport code and city pairings",
+      "disambiguation_rule": "The three-letter IATA code assigned to an airport serving the named city.",
+      "disambiguation_detail": "Judged on the code as officially assigned, not on how well the letters seem to fit the city.",
+      "correct_count": 5,
+      "difficulty": 3,
+      "region_tag": "global",
+      "pinned": false,
+      "active": false,
+      "items": [
+        {
+          "label": "CDG — Paris",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "LAX — Lagos",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "NRT — Tokyo",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "YYZ — Toronto",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "GRU — São Paulo",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "SVO — Moscow",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "DUB — Dubai",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "PEK — Perth",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "BER — Bern",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "BOM — Boston",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
+      "category_title": "English words borrowed directly from Dutch",
+      "disambiguation_rule": "Entered English directly from Dutch.",
+      "disambiguation_detail": "Judged on the immediate source language given in a standard etymological dictionary, not the ultimate origin. A word that reached English through another language does not count.",
+      "correct_count": 3,
+      "difficulty": 4,
+      "region_tag": "intl",
+      "pinned": false,
+      "active": false,
+      "items": [
+        {
+          "label": "kindergarten",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "croissant",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "cookie",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "yacht",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "fjord",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "pretzel",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "sauna",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "kayak",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "waffle",
+          "is_correct": true,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "aardvark",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": null,
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    }
+  ]
+}
