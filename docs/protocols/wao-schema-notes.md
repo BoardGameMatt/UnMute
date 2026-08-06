@@ -476,3 +476,94 @@ carries the participant's cookie session and is subject to RLS, `admin.ts`
 carries neither and bypasses RLS, so WAO server code must authorize the caller
 itself before using the service client. Nothing in this step enforces that; it
 is a rule for whoever writes the first WAO route.
+
+## Pairing algorithm
+
+`app-platform/lib/wao/assign-pairs.ts` exports `assignPairs(participantIds,
+history)`, a pure function with no I/O and no randomness. The caller passes
+history; the function never reads or writes Supabase. Re-exported from
+`lib/wao/index.ts`. Tests live in `assign-pairs.test.ts` and run under the
+repo's existing `tsx --test` / `node:test` setup (`npm test`).
+
+### Result shape
+
+```ts
+type RoundAssignment =
+  | { ok: true; pairs: AssignedPair[]; sitOut: string | null }
+  | { ok: false; reason: string };
+```
+
+Success covers the roster exactly: every id appears once, either in a pair or
+as `sitOut`. `sitOut` is null when headcount is even. Failure is an explicit
+discriminated result, never a throw. The `reason` string is meant to be
+surfaced to the facilitator when regeneration fails.
+
+### Constraints (spec §17; §5.2 relaxation withdrawn)
+
+1. No repeat pairings within the session. Hard.
+2. Even sit-out distribution: nobody sits out twice until everyone has sat out
+   once (spec §3.6).
+
+There is no cross-department constraint and no department argument. Section 17
+withdrew both. If no assignment satisfies the two constraints, the function
+returns `{ ok: false, reason }` rather than relaxing anything.
+
+### How it works
+
+Pairings are unordered. `pairKey(a, b)` sorts the two ids so `{A,B}` and
+`{B,A}` collide. History stores raw pairs; the forbidden set is built from
+those keys before search.
+
+Even headcount: backtracking perfect matching on the full roster, trying
+partners in input order, skipping forbidden edges.
+
+Odd headcount: eligible sit-outs are everyone at the current minimum sit-out
+count (input order preserved). For each candidate, try a perfect matching on
+the remaining even set. First success wins.
+
+### Determinism
+
+No randomness and no seed parameter. Candidates are always tried in the order
+of the `participantIds` array the caller passed. Same roster order and same
+history always produce the same assignment (or the same failure). A seed would
+only be needed if the search shuffled; it does not.
+
+### Judgment calls
+
+**42. Module lives at `lib/wao/`, not under `lib/protocols/`.** The brief asked
+for `lib/wao/`. Pairing is protocol logic but has no React surface yet, and
+keeping it out of the protocol component tree makes the pure-function boundary
+obvious. A later step can re-export from a protocol package if needed.
+
+**43. History is flat `{ pairs, sitOuts }`, not per-round.** The algorithm only
+needs the set of used edges and the sit-out multiset. Round numbers belong to
+persistence (`wao_rounds`), not to the pure function. The caller that writes
+`wao_pairs` is responsible for assembling history from prior rows.
+
+**44. Within a returned pair, `participantA` is the one that appears earlier in
+the input roster.** Matches the schema convention that `participant_a` is
+always present and makes golden tests stable. The no-repeat check does not
+depend on this order.
+
+**45. Empty roster fails; one participant succeeds as a solo sit-out.** Zero is
+an explicit failure so a caller that forgot to load the roster cannot invent
+an empty round. One person has nowhere to pair, so they are the sit-out; once
+they have sat out, "everyone has sat out once" is true and they may sit out
+again. That matches §3.6 read for the degenerate roster rather than inventing
+a special case that throws.
+
+**46. Four participants exhaust after three rounds.** K₄ has exactly three
+perfect matchings. The fourth call returns failure. That is the acceptance
+case for "surface to the facilitator rather than relax," and it is covered by
+test. Two participants fail on the second round for the same reason.
+
+**47. Duplicate ids in the input are collapsed, first occurrence kept.** A
+defensive guard so a buggy caller cannot turn an even roster odd by repeating
+an id. Not a substitute for fixing the caller.
+
+**48. Departed participants in history are ignored for sit-out counts and only
+block a pair when both members are still candidates.** Sit-out counts are
+tallied only for the current roster, so a new joiner starts at zero and is
+preferred. A historical pair involving someone who left cannot be re-formed
+anyway and does not need special handling beyond the forbidden-edge check on
+the remaining graph.
