@@ -502,3 +502,29 @@ in Section 13 tests exactly this.
 `lib/supabase/server.ts` and `lib/supabase/admin.ts` are not
 interchangeable. `server.ts` carries the participant's cookie session and
 is subject to RLS. `admin.ts` carries neither.
+
+---
+
+## 17. Amendment: cross-department pairing deferred
+
+Supersedes the cross-department elements of Section 5.
+
+Cross-department pairing is **out of scope for v1 and for the NAFA pilot.**
+NAFA is a small organisation and the pilot roster is close to the whole
+team, so the constraint buys little on a group this size while adding a
+capture mechanism, a free-text normalisation problem, and a constraint
+relaxation path.
+
+**Pairing constraints for v1, in full:**
+
+1. No repeat pairings within a session. Hard constraint.
+2. Even distribution of sit-outs where headcount is odd.
+
+That is the complete list. Section 5.2's relaxation order no longer
+applies, since there is only one constraint to relax and it is not
+optional. If no valid assignment exists, the algorithm surfaces the
+failure to the facilitator rather than relaxing anything.
+
+Section 5.4's depSection 5.4's depSection 5.4's depSection 5.4's depSection 5.4's depSection 5.4's depSectioumn to `session_participants` and it
+is retained, unused and empty, for a future season where the constraint
+is worth its cost. Nothing reads or writes it in v1.
