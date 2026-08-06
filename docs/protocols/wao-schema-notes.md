@@ -716,3 +716,39 @@ room; the lead plays. Sit-out rotation treats them like anyone else.
 **58. Pair-insert failure rolls back the round row** so a retry does not leave
 an orphan round with no pairs. Not transactional across tables without a DB
 function; best-effort delete is enough for v1.
+
+## Question library loader
+
+`app-platform/scripts/load-wao-questions.ts` inserts
+`supabase/seed-data/wao-questions.json` into `wao_questions` and
+`wao_question_items`. Run from `app-platform`:
+
+```bash
+npm run load:wao
+npx tsx scripts/load-wao-questions.ts [path-to-json]   # optional alternate file
+```
+
+Requires `.env.local` with `NEXT_PUBLIC_SUPABASE_URL` and
+`SUPABASE_SERVICE_ROLE_KEY` (both tables are service_role only). It spawns the
+existing validator first and exits without writing if validation fails. It
+never deletes, truncates, or updates existing rows.
+
+**Idempotency key: `category_title`.** Before inserting a question the loader
+looks up that exact title. If a row exists it skips the question and all of its
+items. There is no unique constraint on `category_title` in 008, so this is
+application-level only — safe for sequential re-runs, not a substitute for a
+unique index under concurrent loaders. Chosen over inventing a slug column
+because judgment call 31 already treats `category_title` as the natural key.
+
+On success it prints how many questions and items were inserted, and how many
+questions were skipped as already present.
+
+### Judgment calls
+
+**59. Skip-on-exist, never upsert.** An existing row keeps whatever is in the
+database even if the JSON has changed. Correcting library content is a
+deliberate edit, not a silent overwrite from a load against a shared project.
+
+**60. Item insert failure leaves the question row.** Rolling the question back
+would be a delete, which this loader is forbidden from doing. The error names
+the orphaned question id so it can be fixed by hand.
