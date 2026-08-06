@@ -395,3 +395,84 @@ degenerate unconstrained mode spec 5.4 describes. `lib/types/database.ts` also
 does not know the column yet; regenerating or hand-editing it belongs to the
 step that writes the first query against it, since this step is limited to
 schema.
+
+## Service-role access for WAO server code
+
+Judgment call 3 restricts `wao_questions`, `wao_question_items`, `wao_pairs`,
+`wao_taps`, and `wao_round_results` to `service_role`, so every WAO server read
+and write has to go through a service-role client. **No new module was created,
+because one already existed:** `app-platform/lib/supabase/admin.ts` exports
+`createServiceClient()`, built on `createClient<Database>` with
+`SUPABASE_SERVICE_ROLE_KEY` and a throw when the URL or key is missing. WAO
+server code uses that. A second service-role module would have meant two doors
+to the same RLS-bypassing key and two places to keep a guard in sync.
+
+What was missing was the guard, and the key was undocumented. Both are fixed:
+
+**The guard is two layers, in `admin.ts`.** `import "server-only"` fails the
+build if any client component imports the module, and a module-scope
+`typeof window !== "undefined"` throw is the runtime backstop. `server-only` was
+not previously a dependency; it is now, at `^0.0.1`, zero-dependency and the
+mechanism Next.js documents for this. Verified by temporarily adding a
+`"use client"` page that imports `createServiceClient`: `next build` failed with
+`You're importing a component that needs server-only`, pointing at line 2 of
+`admin.ts`. The temporary page was deleted and the build passes clean.
+
+**`SUPABASE_SERVICE_ROLE_KEY` is now in `.env.local.example`**, with a comment
+that it bypasses RLS entirely, must never reach the browser, and must never take
+a `NEXT_PUBLIC_` prefix. No key value is committed anywhere; `.env.local` holds
+the real value and is gitignored by both `.gitignore` files.
+
+**Import audit, as of this step: clean.** The only importer of
+`lib/supabase/admin` anywhere in the repo is
+`app/api/dibe/image/[sessionId]/route.ts`, a route handler with no `"use client"`
+directive. No client component, shared module, page, or layout reaches it
+transitively. The `server-only` import means this stays true by construction
+rather than by audit.
+
+### FK teardown ordering
+
+The `ON DELETE RESTRICT` references in 008 mean deletion order now matters, and
+getting it wrong throws a foreign key violation rather than cleaning up quietly.
+Any WAO cleanup — a seed teardown in the shape of the `cleanupDemoData` function
+in `scripts/seed.ts`, a test fixture reset, or a manual purge — must delete in
+this order:
+
+1. `wao_taps`
+2. `wao_round_results`
+3. `wao_pairs`
+4. `wao_rounds`
+5. `wao_sessions`
+
+and only then touch `participants`. `wao_pairs.participant_a` and
+`participant_b` both `RESTRICT` against `participants`, and `wao_taps.item_id`
+and `wao_rounds.question_id` `RESTRICT` against the library tables, so deleting a
+participant who has played, or a question that has been drawn, fails until the
+protocol rows are gone. Deleting the platform `sessions` row still cascades to
+`wao_sessions`, `wao_rounds`, and `wao_pairs`, which is the easy path when the
+whole session is going away, but it does not help when only a participant is
+being removed.
+
+### Judgment calls in this step
+
+**39. Hardening the existing client rather than adding a WAO-specific one.**
+The brief asked for a new module alongside `server.ts` on the premise that no
+service-role client existed. One did. Duplicating it would have left the
+original unguarded while adding a second copy to maintain, so the guard went on
+`admin.ts` instead. This is the only edit to an existing module in the step and
+it changes no caller: `createServiceClient` keeps its name, signature, and
+behaviour.
+
+**40. Both guard layers, not one.** `server-only` is the stronger of the two,
+because it fails at build time and the mistake never ships. It is also a
+bundler-condition mechanism, so it does nothing for code paths outside the Next
+build, such as a `tsx` script importing the module. The `typeof window` throw
+costs one branch at module load and covers that gap.
+
+**41. `lib/supabase/server.ts` was left alone.** It still creates a cookie-aware
+anon client through `@supabase/ssr`, which remains correct for everything
+outside the WAO tables. The two clients are not interchangeable: `server.ts`
+carries the participant's cookie session and is subject to RLS, `admin.ts`
+carries neither and bypasses RLS, so WAO server code must authorize the caller
+itself before using the service client. Nothing in this step enforces that; it
+is a rule for whoever writes the first WAO route.

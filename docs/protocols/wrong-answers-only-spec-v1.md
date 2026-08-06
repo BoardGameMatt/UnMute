@@ -474,3 +474,31 @@ One change at a time. Each step independently testable.
 - Confirm 4 scored rounds versus 3, once one full rehearsal has produced real timing data.
 - Follow-rate surfacing to participants: deferred past v1 deliberately. It is interesting data and it may also be the thing that makes people self-conscious enough to stop playing naturally.
 - Whether Concurrence Rate rolls into the Season-level calibration number described in the design document, or stands as its own line.
+
+---
+
+## 16. Authorization boundary
+
+Belongs conceptually with Section 7. Recorded separately because it was
+identified after the service-role client was built.
+
+The RLS design in Section 7.2 restricts the WAO tables carrying the answer
+key and private pair state to `service_role`. That moves the security
+boundary out of the database and into application code. The database will
+no longer stop a participant from reading another pair's state, because
+the service client bypasses RLS entirely.
+
+**Every WAO route that uses the service client must, before touching it:**
+
+1. Verify the caller's participant identity from the cookie.
+2. Confirm that participant belongs to the session being addressed.
+3. For any pair-scoped read or write, confirm the caller is a member of
+   the pair being addressed.
+
+No route may reach for the service client before these checks pass. This
+is the only thing preventing cross-pair access, and acceptance bar item 5
+in Section 13 tests exactly this.
+
+`lib/supabase/server.ts` and `lib/supabase/admin.ts` are not
+interchangeable. `server.ts` carries the participant's cookie session and
+is subject to RLS. `admin.ts` carries neither.

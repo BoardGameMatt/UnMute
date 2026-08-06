@@ -1,5 +1,12 @@
+// Build-time guard: importing this from a client component fails the build.
+import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
+
+// Runtime backstop for any path the bundler condition does not cover.
+if (typeof window !== "undefined") {
+  throw new Error("lib/supabase/admin.ts must never be loaded in the browser");
+}
 
 /** Service-role client for server-only operations (signed URLs, etc.). */
 export function createServiceClient() {
