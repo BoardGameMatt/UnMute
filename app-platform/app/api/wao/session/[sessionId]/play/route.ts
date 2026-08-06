@@ -51,7 +51,13 @@ export async function GET(_request: Request, context: RouteContext) {
     );
   }
 
-  for (const round of roundList) {
+  // Prefer an unlocked round so a just-started round wins over a locked prior.
+  const ordered = [
+    ...roundList.filter((r) => r.locked_at === null),
+    ...roundList.filter((r) => r.locked_at !== null),
+  ];
+
+  for (const round of ordered) {
     const { data: pairs, error: pairsErr } = await auth.admin
       .from("wao_pairs")
       .select("*")

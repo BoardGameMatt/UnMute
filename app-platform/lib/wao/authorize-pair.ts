@@ -175,3 +175,55 @@ export async function authorizeSessionParticipant(
 
   return { ok: true, participantId, sessionId, admin };
 }
+
+export type LeadAuthSuccess = {
+  ok: true;
+  participantId: string;
+  sessionId: string;
+  admin: ReturnType<typeof createServiceClient>;
+};
+
+export type LeadAuthResult = LeadAuthSuccess | PairAuthFailure;
+
+/**
+ * Facilitator gate. Matches lobby `requireLead` and the action-route lead
+ * check: PARTICIPANT_COOKIE + session_participants.role_in_session === "lead".
+ * Service client is created only after the lead check passes.
+ */
+export async function authorizeSessionLead(
+  sessionId: string
+): Promise<LeadAuthResult> {
+  const cookieStore = cookies();
+  const participantId = cookieStore.get(PARTICIPANT_COOKIE)?.value ?? null;
+
+  if (!participantId) {
+    return { ok: false, status: 401, error: "Not authenticated for this session." };
+  }
+
+  const supabase = createClient();
+  const { data: row, error: rowErr } = await supabase
+    .from("session_participants")
+    .select("role_in_session")
+    .eq("session_id", sessionId)
+    .eq("participant_id", participantId)
+    .maybeSingle();
+
+  if (rowErr) {
+    return { ok: false, status: 500, error: rowErr.message };
+  }
+  if (!row) {
+    return { ok: false, status: 403, error: "Not a participant in this session." };
+  }
+  if (row.role_in_session !== "lead") {
+    return { ok: false, status: 403, error: "Only the session lead can do that." };
+  }
+
+  let admin: ReturnType<typeof createServiceClient>;
+  try {
+    admin = createServiceClient();
+  } catch {
+    return { ok: false, status: 500, error: "Service client is not configured." };
+  }
+
+  return { ok: true, participantId, sessionId, admin };
+}

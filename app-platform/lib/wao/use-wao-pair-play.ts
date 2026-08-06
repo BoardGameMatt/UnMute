@@ -41,7 +41,12 @@ function applyOptimistic(
   return Array.from(set);
 }
 
-export function useWaoPairPlay(sessionId: string, participantId: string) {
+export function useWaoPairPlay(
+  sessionId: string,
+  participantId: string,
+  options: { isLead?: boolean } = {}
+) {
+  const isLead = options.isLead === true;
   const [state, setState] = useState<WaoPairPlayState | null>(null);
   const [phase, setPhase] = useState<WaoPlayPhase>("loading");
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +54,8 @@ export function useWaoPairPlay(sessionId: string, participantId: string) {
   const [pending, setPending] = useState<PendingTap[]>([]);
   const [selectionA, setSelectionA] = useState<string[]>([]);
   const [selectionB, setSelectionB] = useState<string[]>([]);
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const clientSeqRef = useRef(0);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closingTimerRef = useRef(false);
@@ -80,6 +87,41 @@ export function useWaoPairPlay(sessionId: string, participantId: string) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Members (and lead after start on another device) pick up a new round without
+  // hammering — poll only while waiting.
+  useEffect(() => {
+    if (phase !== "waiting") return;
+    const id = setInterval(() => {
+      void load();
+    }, 3000);
+    return () => clearInterval(id);
+  }, [phase, load]);
+
+  const startRound = useCallback(async () => {
+    if (!isLead || starting) return;
+    setStarting(true);
+    setStartError(null);
+    try {
+      const includeInactive = process.env.NODE_ENV !== "production";
+      const res = await fetch(`/api/wao/session/${sessionId}/start-round`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ includeInactive }),
+      });
+      const body = (await res.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        setStartError(body?.error ?? "Could not start the round.");
+        return;
+      }
+      await load();
+    } finally {
+      setStarting(false);
+    }
+  }, [isLead, starting, sessionId, load]);
 
   const refreshState = useCallback(async (pairId: string) => {
     const res = await fetch(`/api/wao/pair/${pairId}/state`, {
@@ -324,6 +366,10 @@ export function useWaoPairPlay(sessionId: string, participantId: string) {
     lockIn,
     onTimerComplete,
     reload: load,
+    startRound,
+    starting,
+    startError,
+    isLead,
     settleSeconds: WAO_SETTLE_SECONDS,
   };
 }

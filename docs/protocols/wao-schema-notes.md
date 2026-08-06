@@ -656,3 +656,63 @@ server still accepts taps during the 3s settle so in-flight requests land.
 
 **54. Solo lock closes the round when `locked_a_at` is set.** Matches
 `is_solo` shape; no partner to wait for.
+
+## Round setup
+
+The missing piece between join and play: a facilitator action that creates
+`wao_session` / `wao_round` / `wao_pairs` so `GET .../play` and `WaoPlayView`
+have something to load.
+
+### Path
+
+`POST /api/wao/session/[sessionId]/start-round` → `startWaoRound` in
+`lib/wao/start-round.ts`:
+
+1. Create `wao_sessions` if absent (`timer_seconds: 90`).
+2. Refuse with 409 if any round in that session still has `locked_at` null.
+3. Draw a question (`lib/wao/draw-question.ts`): unused pinned first, else
+   ascending difficulty band, random within the band; no repeats in-session
+   (spec §9.6).
+4. Insert `wao_rounds` with `started_at` set now, `is_sample: false`.
+5. Load roster from `session_participants` (joined_at order), build pairing
+   history from prior `wao_pairs`, call `assignPairs`, insert pair rows
+   (including solo sit-out).
+
+Lead UI: on the waiting screen, **Start round** calls this route then reloads
+play state. Members poll `/play` every 3s while waiting. `/play` prefers an
+unlocked round so a just-started round wins over a locked prior.
+
+### Authorization
+
+`authorizeSessionLead` — same pattern as lobby `requireLead` and the DIBE
+lead check on `POST /api/session/[id]/action`: `PARTICIPANT_COOKIE` must
+identify a `session_participants` row with `role_in_session === "lead"`.
+Not `authorizePairMember` (no pair exists yet). Participant routes are
+unchanged and still require the pair helper.
+
+### Inactive question gate
+
+The three seed questions are `active: false`. Drawing them requires **both**:
+
+1. Request body `{ "includeInactive": true }`
+2. `NODE_ENV !== "production"`
+
+Production ignores the flag (and returns 400 if it is sent). The lead Start
+button only sends `includeInactive: true` when the client bundle is not
+production. Active-only remains the default path.
+
+### Judgment calls
+
+**55. Round numbers start at 1**, not 0. Sample rounds are out of scope; using
+1 keeps `round_number >= 0` happy and leaves 0 free for a future sample.
+
+**56. Open-round conflict is a hard 409**, not regenerate. Spec 5.5 allows
+regeneration before play; this step does not, so a stuck open round must be
+locked or deleted by hand before another start.
+
+**57. Lead is included in the roster.** `session_participants` is the whole
+room; the lead plays. Sit-out rotation treats them like anyone else.
+
+**58. Pair-insert failure rolls back the round row** so a retry does not leave
+an orphan round with no pairs. Not transactional across tables without a DB
+function; best-effort delete is enough for v1.

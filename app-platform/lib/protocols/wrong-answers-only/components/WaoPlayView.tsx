@@ -1,5 +1,6 @@
 "use client";
 
+import type { SessionParticipantRole } from "@/lib/types/database";
 import { WaoItemButton } from "./WaoItemButton";
 import { WaoPlayTimer } from "./WaoPlayTimer";
 import { useWaoPairPlay } from "@/lib/wao/use-wao-pair-play";
@@ -7,10 +8,17 @@ import { useWaoPairPlay } from "@/lib/wao/use-wao-pair-play";
 type WaoPlayViewProps = {
   sessionId: string;
   participantId: string;
+  role: SessionParticipantRole;
 };
 
-export function WaoPlayView({ sessionId, participantId }: WaoPlayViewProps) {
-  const play = useWaoPairPlay(sessionId, participantId);
+export function WaoPlayView({
+  sessionId,
+  participantId,
+  role,
+}: WaoPlayViewProps) {
+  const play = useWaoPairPlay(sessionId, participantId, {
+    isLead: role === "lead",
+  });
 
   if (play.phase === "loading") {
     return (
@@ -31,15 +39,38 @@ export function WaoPlayView({ sessionId, participantId }: WaoPlayViewProps) {
         </h1>
         <p className="max-w-sm text-center font-body text-slate">
           {play.error ??
-            "Your pair will appear here once the facilitator starts play."}
+            (play.isLead
+              ? "Start the round when everyone is in the room."
+              : "Your pair will appear here once the facilitator starts play.")}
         </p>
-        <button
-          type="button"
-          onClick={() => void play.reload()}
-          className="rounded-md border border-cloud-grey px-4 py-2 font-display text-sm font-semibold text-unmute-navy hover:bg-cloud-grey"
-        >
-          Check again
-        </button>
+        {play.startError ? (
+          <p className="max-w-sm text-center font-body text-sm text-signal-red" role="alert">
+            {play.startError}
+          </p>
+        ) : null}
+        {play.isLead ? (
+          <button
+            type="button"
+            disabled={play.starting}
+            onClick={() => void play.startRound()}
+            className="w-full max-w-xs rounded-md bg-signal-amber px-6 py-4 font-display text-lg font-semibold text-deep-navy shadow-sm transition hover:bg-sunrise-gold disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {play.starting ? "Starting…" : "Start round"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void play.reload()}
+            className="rounded-md border border-cloud-grey px-4 py-2 font-display text-sm font-semibold text-unmute-navy hover:bg-cloud-grey"
+          >
+            Check again
+          </button>
+        )}
+        {play.isLead && process.env.NODE_ENV !== "production" ? (
+          <p className="max-w-sm text-center font-body text-xs text-slate">
+            Dev: start draws inactive test questions (includeInactive).
+          </p>
+        ) : null}
       </main>
     );
   }

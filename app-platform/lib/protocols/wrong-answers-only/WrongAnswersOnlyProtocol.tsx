@@ -10,8 +10,15 @@ import { WaoPlayView } from "./components/WaoPlayView";
 const WrongAnswersOnlyProtocol = ({
   sessionId,
   participantId,
+  role,
 }: SessionProtocolProps) => {
-  return <WaoPlayView sessionId={sessionId} participantId={participantId} />;
+  return (
+    <WaoPlayView
+      sessionId={sessionId}
+      participantId={participantId}
+      role={role}
+    />
+  );
 };
 
 export default WrongAnswersOnlyProtocol;
