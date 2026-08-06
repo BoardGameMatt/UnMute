@@ -4,6 +4,7 @@ import {
   assignPairs,
   pairKey,
   type PairHistory,
+  type Pairing,
   type RoundAssignmentSuccess,
 } from "./assign-pairs";
 
@@ -31,22 +32,23 @@ function playRounds(
   roster: string[],
   roundCount: number
 ): { assignments: RoundAssignmentSuccess[]; history: PairHistory } {
-  const history = emptyHistory();
+  const pairs: Pairing[] = [];
+  const sitOuts: string[] = [];
   const assignments: RoundAssignmentSuccess[] = [];
 
   for (let r = 0; r < roundCount; r++) {
-    const result = assignPairs(roster, history);
+    const result = assignPairs(roster, { pairs, sitOuts });
     const success = assertSuccess(result);
     assignments.push(success);
     for (const pair of success.pairs) {
-      history.pairs.push([pair.participantA, pair.participantB]);
+      pairs.push([pair.participantA, pair.participantB]);
     }
     if (success.sitOut !== null) {
-      history.sitOuts.push(success.sitOut);
+      sitOuts.push(success.sitOut);
     }
   }
 
-  return { assignments, history };
+  return { assignments, history: { pairs, sitOuts } };
 }
 
 function allPairKeys(assignments: RoundAssignmentSuccess[]): string[] {
@@ -106,10 +108,10 @@ function assertSitOutRotation(
   const counts = new Map<string, number>();
   for (const id of roster) counts.set(id, 0);
   for (const id of sitOuts) counts.set(id, (counts.get(id) ?? 0) + 1);
-  const values = [...counts.values()];
+  const values = Array.from(counts.values());
   const min = Math.min(...values);
   const max = Math.max(...values);
-  assert.ok(max - min <= 1, `sit-out counts uneven: ${JSON.stringify([...counts])}`);
+  assert.ok(max - min <= 1, `sit-out counts uneven: ${JSON.stringify(Array.from(counts))}`);
 }
 
 describe("assignPairs", () => {

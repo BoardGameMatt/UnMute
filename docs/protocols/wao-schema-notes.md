@@ -567,3 +567,92 @@ tallied only for the current roster, so a new joiner starts at zero and is
 preferred. A historical pair involving someone who left cannot be re-formed
 anyway and does not need special handling beyond the forbidden-edge check on
 the remaining graph.
+
+## Selection state, pair Realtime, and four-state UI
+
+Step 7 of the build: one round of play for a pair that already exists. No
+scoring, reveal, facilitator screen, question drawing, or round advancement.
+
+### Modules
+
+| Path | Role |
+|---|---|
+| `lib/wao/authorize-pair.ts` | Section 16 gate. `authorizePairMember(pairId)` and `authorizeSessionParticipant(sessionId)`. |
+| `lib/wao/reduce-taps.ts` | Pure reduction of `wao_taps` → two selection sets. |
+| `lib/wao/build-pair-state.ts` | Public play payload; strips `is_correct`. |
+| `lib/wao/broadcast.ts` | Server `httpSend` onto `wao:{round_id}:{pair_id}`. |
+| `lib/wao/use-wao-pair-play.ts` | Client hook: optimistic taps, ack/retry, channel, timer settle. |
+| `lib/protocols/wrong-answers-only/` | Registered protocol shell + four-state UI. |
+| `app/api/wao/pair/[pairId]/{tap,lock,state,close-timer}` | Pair-scoped routes. |
+| `app/api/wao/session/[sessionId]/play` | Discover the caller's current pair. |
+
+### Authorization helper
+
+`authorizePairMember` is the only gate. Cookie identity first, then service
+client to load the pair (RLS leaves no other option), immediate pair-membership
+check, then round → wao_session → `session_participants` via the anon server
+client. On success it returns `{ participantId, pair, round, waoSession, admin }`.
+Routes use `auth.admin` and never call `createServiceClient()` themselves.
+
+`authorizeSessionParticipant` is the session-scoped twin for discovery: cookie
++ membership on the anon client, then service client only after that passes.
+
+### Tie-break rule
+
+Tap reduction sorts by:
+
+1. `created_at` ascending (server timestamp only — never client-supplied)
+2. `client_seq` ascending
+3. `participant_id`, then `item_id`
+
+`client_seq` is unique per `(pair_id, participant_id)`, so two partners can
+share a timestamp and a seq value; the id tie-break keeps the total order
+stable across processes. Same inputs always produce the same sets.
+
+### Retry behaviour
+
+Optimistic local update → `POST /tap` with `clientSeq` → ack replaces confirmed
+sets. On failure, retry twice with backoff (300ms, 600ms). The unique constraint
+on `(pair_id, participant_id, client_seq)` makes a successful retry after a
+lost response idempotent (`23505` → treat as ack). After two failed retries, a
+non-blocking warning appears and state is refetched. Unconfirmed items show a
+steel-blue sync dot.
+
+### Realtime note
+
+Broadcast channels are **not RLS-protected**. The channel name embeds
+`pair_id`, which therefore functions as a capability token. No participant
+client may ever receive another pair's `pair_id`. State and play payloads only
+return the caller's own pair. Do not switch this to `postgres_changes` on
+`wao_taps` — anon cannot read that table.
+
+### Judgment calls
+
+**49. `close-timer` is a fourth route.** The brief listed tap, lock, and state.
+Timer close needs a server-authoritative write after the settle window; folding
+it into lock would blur Lock It In (bonus-eligible, both-locked) with timer
+expiry. Separate route, same auth helper.
+
+**50. Amber only on Lock It In and the final-15s timer stroke.** The persistent
+norm uses steel-blue, not amber. `WaoPlayTimer` hardcodes `#F5A623` /
+`#1B3A5C` for SVG strokes the same way `TimerArc` already does — SVG attributes
+cannot take Tailwind tokens.
+
+**51. Service client returned untyped.** `createClient<Database>` from
+`@supabase/supabase-js` requires Row shapes to satisfy `Record<string, unknown>`.
+This repo's `Database` uses interfaces, which do not, so Schema collapses to
+`never` and every insert is a type error. The SSR anon client already falls
+back to `any`. `createServiceClient` now returns plain `SupabaseClient`. WAO
+table interfaces still live in `database.ts` for documentation and manual casts.
+Converting every Row to a type alias is a separate cleanup.
+
+**52. Protocol registers and renders a waiting state when no pair exists.**
+Round creation is out of scope, so the shell discovers via `/play` and shows
+"Waiting for the round" until a pair row exists for this participant.
+
+**53. Taps accepted until `locked_at` is set.** Client disables input at T=0;
+server still accepts taps during the 3s settle so in-flight requests land.
+`close-timer` requires `now >= started_at + timer_seconds + 3`.
+
+**54. Solo lock closes the round when `locked_a_at` is set.** Matches
+`is_solo` shape; no partner to wait for.
