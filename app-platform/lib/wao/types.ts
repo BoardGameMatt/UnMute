@@ -91,6 +91,7 @@ export type WaoRevealState = {
   pairId: string;
   roundId: string;
   sessionId: string;
+  roundNumber: number;
   categoryTitle: string;
   disambiguationRule: string;
   disambiguationDetail: string | null;

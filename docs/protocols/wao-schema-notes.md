@@ -770,7 +770,7 @@ in v1: every round ends on timer expiry, `bonus` is always written as `0`, and
 | `lib/wao/build-reveal-state.ts` | Reveal payload after lock; loads `is_correct` only here. |
 | `POST …/close-timer` | Locks the round, then calls `ensureRoundScored`. |
 | `GET …/reveal` | `authorizePairMember` → reveal state for that pair only. |
-| `WaoRevealView` | Four buckets + score / LOTT / Save, partner named. |
+| `WaoRevealView` | Four buckets + shared/solo score + Save; partner named. LOTT not shown. |
 
 ### Submitted set and score
 
@@ -792,7 +792,9 @@ LOTT       = score(lott_set) − score(submitted_set)
 ```
 
 Solo pairs store `lott = 0` and `had_save = false`. Save is true when any
-exactly-one-partner item was actually correct.
+exactly-one-partner item was actually correct. **LOTT is stored but not shown
+on the participant reveal in v1** (spec §3.4 amendment); the solo-elimination
+buckets carry the debrief without a points accusation.
 
 ### Concurrence
 
@@ -820,3 +822,34 @@ double-count when two clients close the same round. Source of truth is
 
 **63. Empty buckets are omitted from the UI**, not shown as empty sections.
 The four-bucket order is fixed; absent buckets simply do not render.
+
+## Round advancement and session end
+
+After reveal, the facilitator (lead only via `authorizeSessionLead`) can:
+
+1. **Start another round** — `POST /api/wao/session/[sessionId]/start-round`
+   (same path as the first round). `startWaoRound` refuses an open round,
+   draws a unused question (§9.6), runs `assignPairs` against full prior
+   history (§17: fail aloud, never relax), and sets `started_at`. Pairing
+   or library exhaustion returns 400/409 with the reason shown on the lead
+   controls. Participants on reveal poll `/play` and enter the new round
+   when an unlocked round with a different `roundId` appears.
+
+2. **End session** — `POST /api/wao/session/[sessionId]/end` sets
+   `sessions.status = completed` (blocked while a round is still open).
+   Same completion path as DIBE/TTI: `SessionCompletedRedirect` and the
+   existing `/session/[id]/feedback` screen. Lead also navigates there
+   immediately on success.
+
+Lead post-reveal panel (`WaoLeadAdvanceControls`): finished round number,
+rounds completed / planned (`wao_sessions.round_count`), and session
+`concurrence_rate`. Not a leaderboard.
+
+### Judgment calls
+
+**64. End requires no open round.** Ending mid-play would orphan taps; wait
+for timer lock + score first.
+
+**65. Participants never call start/end.** Those routes use
+`authorizeSessionLead` only. Participant reveal stays on
+`authorizePairMember`.

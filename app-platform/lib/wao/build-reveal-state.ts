@@ -133,6 +133,7 @@ export async function buildPairRevealState(args: {
     pairId: pair.id,
     roundId: round.id,
     sessionId: waoSession.session_id,
+    roundNumber: round.round_number,
     categoryTitle: question.category_title,
     disambiguationRule: question.disambiguation_rule,
     disambiguationDetail: question.disambiguation_detail,

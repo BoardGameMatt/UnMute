@@ -12,6 +12,7 @@ import {
   type WaoTapAction,
 } from "@/lib/wao/types";
 import { perspectiveSelections } from "@/lib/wao/reduce-taps";
+import type { WaoFacilitatorStatus } from "@/lib/protocols/wrong-answers-only/components/WaoLeadAdvanceControls";
 
 type PendingTap = {
   itemId: string;
@@ -66,6 +67,14 @@ export function useWaoPairPlay(
   const [reveal, setReveal] = useState<WaoRevealState | null>(null);
   const [revealError, setRevealError] = useState<string | null>(null);
   const [revealLoading, setRevealLoading] = useState(false);
+  const [facilitatorStatus, setFacilitatorStatus] =
+    useState<WaoFacilitatorStatus | null>(null);
+  const [facilitatorStatusError, setFacilitatorStatusError] = useState<
+    string | null
+  >(null);
+  const [advanceError, setAdvanceError] = useState<string | null>(null);
+  const [startingNext, setStartingNext] = useState(false);
+  const [endingSession, setEndingSession] = useState(false);
   const clientSeqRef = useRef(0);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closingTimerRef = useRef(false);
@@ -379,6 +388,117 @@ export function useWaoPairPlay(
     };
   }, [phase, state?.pairId]);
 
+  // While on reveal, watch for a newly started (unlocked) round.
+  useEffect(() => {
+    if (phase !== "locked" || !reveal) return;
+
+    let cancelled = false;
+    const check = async () => {
+      const res = await fetch(`/api/wao/session/${sessionId}/play`, {
+        credentials: "same-origin",
+      });
+      if (cancelled || !res.ok) return;
+      const next = (await res.json()) as WaoPairPlayState;
+      if (next.lockedAt || !next.startedAt) return;
+      if (next.roundId === reveal.roundId) return;
+
+      setState(next);
+      pairIdRef.current = next.pairId;
+      const abs = perspectiveToAbsolute(next);
+      setSelectionA(abs.selectionA);
+      setSelectionB(abs.selectionB);
+      clientSeqRef.current = 0;
+      setPending([]);
+      closingTimerRef.current = false;
+      setReveal(null);
+      setRevealError(null);
+      revealFetchedForRef.current = null;
+      setPhase("playing");
+    };
+
+    const id = setInterval(() => {
+      void check();
+    }, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [phase, reveal, sessionId]);
+
+  const refreshFacilitatorStatus = useCallback(async () => {
+    if (!isLead) return;
+    setFacilitatorStatusError(null);
+    const res = await fetch(`/api/wao/session/${sessionId}/facilitator-status`, {
+      credentials: "same-origin",
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      setFacilitatorStatusError(body?.error ?? "Could not load facilitator status.");
+      setFacilitatorStatus(null);
+      return;
+    }
+    const body = (await res.json()) as WaoFacilitatorStatus;
+    setFacilitatorStatus(body);
+  }, [isLead, sessionId]);
+
+  useEffect(() => {
+    if (phase !== "locked" || !isLead || !reveal) return;
+    void refreshFacilitatorStatus();
+  }, [phase, isLead, reveal, refreshFacilitatorStatus]);
+
+  const startNextRound = useCallback(async () => {
+    if (!isLead || startingNext) return false;
+    setStartingNext(true);
+    setAdvanceError(null);
+    try {
+      const includeInactive = process.env.NODE_ENV !== "production";
+      const res = await fetch(`/api/wao/session/${sessionId}/start-round`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ includeInactive }),
+      });
+      const body = (await res.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        setAdvanceError(
+          body?.error ??
+            "Could not start the next round. Pairing or questions may be exhausted."
+        );
+        await refreshFacilitatorStatus();
+        return false;
+      }
+      await load();
+      return true;
+    } finally {
+      setStartingNext(false);
+    }
+  }, [isLead, startingNext, sessionId, load, refreshFacilitatorStatus]);
+
+  const endSession = useCallback(async () => {
+    if (!isLead || endingSession) return false;
+    setEndingSession(true);
+    setAdvanceError(null);
+    try {
+      const res = await fetch(`/api/wao/session/${sessionId}/end`, {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const body = (await res.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        setAdvanceError(body?.error ?? "Could not end the session.");
+        await refreshFacilitatorStatus();
+        return false;
+      }
+      return true;
+    } finally {
+      setEndingSession(false);
+    }
+  }, [isLead, endingSession, sessionId, refreshFacilitatorStatus]);
+
   const inputDisabled = phase !== "playing" || Boolean(state?.lockedAt);
 
   return {
@@ -404,6 +524,13 @@ export function useWaoPairPlay(
     reveal,
     revealError,
     revealLoading,
+    facilitatorStatus,
+    facilitatorStatusError,
+    advanceError,
+    startingNext,
+    endingSession,
+    startNextRound,
+    endSession,
   };
 }
 

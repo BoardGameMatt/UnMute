@@ -4,8 +4,7 @@ import type { SessionProtocolProps } from "@/lib/protocols/registry";
 import { WaoPlayView } from "./components/WaoPlayView";
 
 /**
- * Wrong Answers Only — play shell for one existing pair.
- * Round creation, scoring, and reveal are out of scope for this step.
+ * Wrong Answers Only — play, reveal, lead advance / end session.
  */
 const WrongAnswersOnlyProtocol = ({
   sessionId,

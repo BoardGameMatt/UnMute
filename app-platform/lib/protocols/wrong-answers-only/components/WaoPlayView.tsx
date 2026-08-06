@@ -1,7 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { SessionParticipantRole } from "@/lib/types/database";
 import { WaoItemButton } from "./WaoItemButton";
+import { WaoLeadAdvanceControls } from "./WaoLeadAdvanceControls";
 import { WaoPlayTimer } from "./WaoPlayTimer";
 import { WaoRevealView } from "./WaoRevealView";
 import { useWaoPairPlay } from "@/lib/wao/use-wao-pair-play";
@@ -17,6 +19,7 @@ export function WaoPlayView({
   participantId,
   role,
 }: WaoPlayViewProps) {
+  const router = useRouter();
   const play = useWaoPairPlay(sessionId, participantId, {
     isLead: role === "lead",
   });
@@ -78,7 +81,38 @@ export function WaoPlayView({
 
   if (play.phase === "locked") {
     if (play.reveal) {
-      return <WaoRevealView reveal={play.reveal} />;
+      return (
+        <WaoRevealView
+          reveal={play.reveal}
+          waitingHint={
+            play.isLead
+              ? null
+              : "Waiting for the facilitator to start the next round or end the session…"
+          }
+          leadControls={
+            play.isLead ? (
+              <WaoLeadAdvanceControls
+                status={play.facilitatorStatus}
+                statusError={play.facilitatorStatusError}
+                actionError={play.advanceError}
+                startingNext={play.startingNext}
+                ending={play.endingSession}
+                onStartNext={() => {
+                  void play.startNextRound();
+                }}
+                onEndSession={() => {
+                  void (async () => {
+                    const ok = await play.endSession();
+                    if (ok) {
+                      router.replace(`/session/${sessionId}/feedback`);
+                    }
+                  })();
+                }}
+              />
+            ) : null
+          }
+        />
+      );
     }
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-warm-white px-5">
@@ -138,6 +172,11 @@ export function WaoPlayView({
               {state.disambiguationDetail}
             </p>
           ) : null}
+          <p className="font-body text-sm text-slate">
+            {state.isSolo
+              ? "Tap the answers you think are WRONG."
+              : "Tap the answers you think are WRONG. Only what you and your partner BOTH tap counts."}
+          </p>
           <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
             No searching. No chat.
           </p>

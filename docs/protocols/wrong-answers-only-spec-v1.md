@@ -106,7 +106,9 @@ Awarded only when both partners have pressed Lock It In. Timer expiry earns no b
 
 ### 3.4 Left On The Table (LOTT)
 
-Computed and displayed per pair per round.
+Computed and stored per pair per round. **Not displayed to participants in
+v1** — the solo-elimination buckets already surface the debrief without
+quantifying a colleague's non-confirmation as points.
 
 ```
 solo_wrong   = items tapped by exactly one partner that were actually wrong
@@ -114,7 +116,8 @@ lott_set     = submitted_set ∪ solo_wrong
 LOTT         = score(lott_set) − score(submitted_set)
 ```
 
-Displayed as: *"You left 12 points on the table."*
+Stored on `wao_round_results.lott` for analysis. Facilitator or later
+surfaces may show it; the participant reveal does not.
 
 ### 3.5 The Save
 
@@ -122,7 +125,9 @@ If any item tapped by exactly one partner was actually **correct**, display inst
 
 *"Your partner's caution saved you from a zero."*
 
-Both LOTT and Save can appear in the same round. That is the interesting case and the debrief should reach for it.
+Both Save and the solo-elimination buckets can appear in the same round.
+That is the interesting case and the debrief should reach for it. LOTT
+remains stored for analysis but is not shown on the participant reveal in v1.
 
 ### 3.6 Solo play (half value)
 
@@ -160,14 +165,17 @@ Total ≈ 18 minutes. If the envelope is hard 15, cut to 3 scored rounds. **Do n
 
 ### 4.2 Reveal screen (per pair, on the participant's own phone)
 
-The reveal is the debrief content. Four buckets, visually distinct, in this order:
+The reveal is the debrief content. Four buckets, visually distinct, in this order
+(paired rounds). Solo rounds use first-person copy with no "both" or partner
+references, and omit buckets 3–4.
 
 1. **Both tapped, correct elimination** — scored, green-equivalent treatment
 2. **Both tapped, but it belonged** — the zero-maker, if present, called out unambiguously
 3. **Only you tapped, and you were right** — the deference failure
 4. **Only your partner tapped, and they were right** — the trust failure
 
-Below the buckets: round score, LOTT number, Save flag if applicable.
+Below the buckets: the shared round score (or half-value solo score), and the
+Save flag if applicable. LOTT is stored but not shown (see §3.4).
 
 ### 4.3 Shared screen (facilitator)
 
@@ -528,3 +536,74 @@ failure to the facilitator rather than relaxing anything.
 Section 5.4's depSection 5.4's depSection 5.4's depSection 5.4's depSection 5.4's depSection 5.4's depSectioumn to `session_participants` and it
 is retained, unused and empty, for a future season where the constraint
 is worth its cost. Nothing reads or writes it in v1.
+
+---
+
+## 18. Amendments from build and live testing
+
+Recorded as they were decided. Where these conflict with earlier
+sections, these win.
+
+### 18.1 Lock It In is withdrawn from v1
+
+Supersedes Section 2.4's second lock path and all of Section 3.3.
+
+There is no Lock It In button and no time bonus. Without a bonus,
+locking early strictly reduces option value, so rational play never
+presses it; adding the bonus introduces a second risk decision to a
+mechanic that already has one.
+
+**Timer expiry plus the settle window is the only way a round ends.**
+`lock_reason` is always `timer`. `wao_round_results.bonus` is always 0.
+
+The `locked_a_at` and `locked_b_at` columns and the `both_locked`
+CHECK value remain in migration 008, unused, so the feature can return
+without a schema change.
+
+### 18.2 Lock state is per-pair, not per-round
+
+A round contains multipA round contains multipA round contains multipA round contains multipA round contains multier is round-global.
+
+`wao_rounds.locked_at` is set when the timer plus settle window expires.
+The participant UI reads its own pair's state, never the round's, to
+decide whether input is disabled.
+
+This was a live bug: a solo participant's early lock closed the round
+for every other pair and their subsequent taps were rejected.
+
+### 18.3 The partner's name is required, not optional
+
+Adds to Section 4.2.
+
+The play screen and the reveal screen must both name the partner.
+Initial chips alone are not sufficient. The reflection close asks why a
+specific colleague did or did not confirm a selection, so anonymity
+defeats the protocol's purpose.
+
+Solo copy must never use "both" or reference a partner.
+
+### 18.4 Persistent play instruction
+
+Adds to Section 8.4.
+
+A short instruction stays visible throughout play, alongside the
+"No searching. No chat." norm:
+
+> Tap the answers you think are WRONG. Only what you and your partner
+> BOTH tap counts.
+
+The protocol inverts normal trivia instinct, and the penalty for getting
+it backwards is a silent zero. Stating it once at the start is not
+enough.
+
+### 18.5 Timer presentation
+
+Adds to Section 8.2 and 8.3.
+
+A depleting ring, no numerals for most of the round. Navy on a grey
+track, shifting to amber with a one-second pulse inside the final
+fifteen seconds, then a large numeric 3, 2, 1 in the final three
+seconds. The numerals disappear when the settle phase begins.
+
+Open question for rehearsal: whether the ring alone is legible enough
+mid-round on a phone held at an angle.

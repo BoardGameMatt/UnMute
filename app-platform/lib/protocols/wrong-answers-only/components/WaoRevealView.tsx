@@ -1,10 +1,15 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import type { WaoRevealItem, WaoRevealState } from "@/lib/wao/types";
 
 type WaoRevealViewProps = {
   reveal: WaoRevealState;
+  /** Facilitator advance panel — only the lead passes this. */
+  leadControls?: ReactNode;
+  /** Non-lead waiting copy while the next round may start. */
+  waitingHint?: string | null;
 };
 
 const fade = {
@@ -59,8 +64,13 @@ const BucketList = ({
   );
 };
 
-export function WaoRevealView({ reveal }: WaoRevealViewProps) {
-  const partnerLabel = reveal.isSolo
+export function WaoRevealView({
+  reveal,
+  leadControls,
+  waitingHint,
+}: WaoRevealViewProps) {
+  const isSolo = reveal.isSolo;
+  const partnerLabel = isSolo
     ? null
     : reveal.partnerDisplayName ?? "your partner";
 
@@ -72,11 +82,11 @@ export function WaoRevealView({ reveal }: WaoRevealViewProps) {
       >
         <header className="space-y-2 text-center">
           <p className="font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-steel-blue">
-            Round reveal
+            Round {reveal.roundNumber} reveal
           </p>
-          {reveal.isSolo ? (
+          {isSolo ? (
             <p className="font-body text-sm text-slate">
-              Solo round — half value.
+              Solo round — half value. No partner this time.
             </p>
           ) : (
             <p className="font-body text-base text-charcoal">
@@ -93,37 +103,41 @@ export function WaoRevealView({ reveal }: WaoRevealViewProps) {
 
         <div className="flex flex-col gap-3">
           <BucketList
-            title="You both eliminated — and you were right"
-            subtitle="Scored together."
+            title={
+              isSolo
+                ? "You eliminated — and you were right"
+                : "You both eliminated — and you were right"
+            }
+            subtitle={isSolo ? "Correct eliminations." : "Scored together."}
             items={reveal.buckets.bothCorrectElimination}
             tone="success"
           />
           <BucketList
-            title="You both eliminated — but it belonged"
+            title={
+              isSolo
+                ? "You eliminated — but it belonged"
+                : "You both eliminated — but it belonged"
+            }
             subtitle="This zeroed the round. No partial credit."
             items={reveal.buckets.bothButBelonged}
             tone="danger"
           />
-          <BucketList
-            title="Only you eliminated — and you were right"
-            subtitle={
-              partnerLabel
-                ? `${partnerLabel} did not confirm.`
-                : "No partner this round."
-            }
-            items={reveal.buckets.onlyYouRight}
-            tone="mine"
-          />
-          <BucketList
-            title={
-              partnerLabel
-                ? `Only ${partnerLabel} eliminated — and they were right`
-                : "Only your partner eliminated — and they were right"
-            }
-            subtitle="You did not confirm."
-            items={reveal.buckets.onlyPartnerRight}
-            tone="theirs"
-          />
+          {!isSolo ? (
+            <>
+              <BucketList
+                title="Only you eliminated — and you were right"
+                subtitle={`${partnerLabel} did not confirm.`}
+                items={reveal.buckets.onlyYouRight}
+                tone="mine"
+              />
+              <BucketList
+                title={`Only ${partnerLabel} eliminated — and they were right`}
+                subtitle="You did not confirm."
+                items={reveal.buckets.onlyPartnerRight}
+                tone="theirs"
+              />
+            </>
+          ) : null}
         </div>
 
         <section className="space-y-3 border-t border-cloud-grey pt-5 text-center">
@@ -133,38 +147,40 @@ export function WaoRevealView({ reveal }: WaoRevealViewProps) {
               points
             </span>
           </p>
-
-          {!reveal.isSolo && reveal.lott > 0 ? (
+          {isSolo ? (
             <p className="font-body text-base text-charcoal">
-              You left{" "}
+              Half-value solo score.
+            </p>
+          ) : (
+            <p className="font-body text-base text-charcoal">
+              Shared score — what you and{" "}
               <span className="font-display font-semibold text-unmute-navy">
-                {reveal.lott}
+                {partnerLabel}
               </span>{" "}
-              points on the table.
+              earned together.
             </p>
-          ) : null}
+          )}
 
-          {!reveal.isSolo && reveal.hadSave ? (
+          {!isSolo && reveal.hadSave ? (
             <p className="font-body text-base text-charcoal">
-              {partnerLabel ? (
-                <>
-                  <span className="font-display font-semibold text-unmute-navy">
-                    {partnerLabel}
-                  </span>
-                  &apos;s caution saved you from a zero.
-                </>
-              ) : (
-                "Your partner's caution saved you from a zero."
-              )}
+              <span className="font-display font-semibold text-unmute-navy">
+                {partnerLabel}
+              </span>
+              &apos;s caution saved you from a zero.
             </p>
           ) : null}
 
-          {!reveal.isSolo && reveal.exactMatch ? (
+          {!isSolo && reveal.exactMatch ? (
             <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
               Exact match this round
             </p>
           ) : null}
         </section>
+
+        {leadControls}
+        {waitingHint ? (
+          <p className="text-center font-body text-sm text-slate">{waitingHint}</p>
+        ) : null}
       </motion.div>
     </main>
   );
