@@ -1,7 +1,8 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SessionLobbyView } from "@/components/session/session-lobby-view";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
+import { buildJoinUrl, resolveAppOrigin } from "@/lib/session/app-origin";
 import { mapSessionParticipantRows } from "@/lib/session/map-lobby-participants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -115,6 +116,7 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
         sessionId={sessionId}
         protocolName={protocolName}
         joinCode={sessionRecord.join_code}
+        joinUrl={buildJoinUrl(resolveAppOrigin(headers()), sessionRecord.join_code)}
         initialParticipants={participants}
         currentRole={currentRole}
         currentParticipantId={participantId}

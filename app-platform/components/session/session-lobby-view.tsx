@@ -6,6 +6,7 @@ import {
   startSessionAction,
   transferLeadAction,
 } from "@/app/(site)/session/[session_id]/lobby/actions";
+import { SessionJoinQr } from "@/components/session/session-join-qr";
 import { JOIN_URL_DISPLAY } from "@/lib/constants";
 import { useSessionParticipants } from "@/hooks/useSessionParticipants";
 import { createClient } from "@/lib/supabase/client";
@@ -18,6 +19,7 @@ type SessionLobbyViewProps = {
   sessionId: string;
   protocolName: string;
   joinCode: string;
+  joinUrl: string;
   initialParticipants: LobbyParticipant[];
   currentRole: "lead" | "member" | null;
   currentParticipantId: string | null;
@@ -27,6 +29,7 @@ export function SessionLobbyView({
   sessionId,
   protocolName,
   joinCode,
+  joinUrl,
   initialParticipants,
   currentRole,
   currentParticipantId,
@@ -139,6 +142,7 @@ export function SessionLobbyView({
         <p className="mb-4 text-center font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-steel-blue">
           Join code: show on projector
         </p>
+        <SessionJoinQr joinUrl={joinUrl} />
         <div className="mb-4 flex flex-wrap justify-center gap-2 sm:gap-3">
           {chars.map((char, i) => (
             <div
@@ -150,7 +154,7 @@ export function SessionLobbyView({
           ))}
         </div>
         <p className="text-center font-body text-sm text-slate">
-          <span className="font-body">Go to </span>
+          <span className="font-body">Can&apos;t scan? Go to </span>
           <span className="font-mono text-unmute-navy">{JOIN_URL_DISPLAY}</span>
           <span className="font-body"> and enter this code</span>
         </p>
