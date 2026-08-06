@@ -17,6 +17,15 @@ export {
 } from "./reduce-taps";
 
 export {
+  buildRevealBuckets,
+  eliminationCurveScore,
+  scoreEliminationSet,
+  scorePair,
+  type ScorePairInput,
+  type ScorePairOutcome,
+} from "./score-pair";
+
+export {
   deriveItemState,
   waoPairChannelName,
   WAO_SETTLE_SECONDS,
@@ -24,6 +33,9 @@ export {
   type WaoItemVisualState,
   type WaoPairPlayState,
   type WaoPublicItem,
+  type WaoRevealBuckets,
+  type WaoRevealItem,
+  type WaoRevealState,
   type WaoSelectionSets,
   type WaoTapAction,
 } from "./types";

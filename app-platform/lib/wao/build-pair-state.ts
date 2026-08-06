@@ -78,11 +78,6 @@ export async function buildPairPlayState(args: {
       ? pair.participant_b
       : pair.participant_a;
 
-  const myLockedAt =
-    participantId === pair.participant_a ? pair.locked_a_at : pair.locked_b_at;
-  const partnerLockedAt =
-    participantId === pair.participant_a ? pair.locked_b_at : pair.locked_a_at;
-
   const myDisplayName = await displayName(admin, participantId);
   const partnerDisplayName =
     partnerId !== null ? await displayName(admin, partnerId) : null;
@@ -107,8 +102,6 @@ export async function buildPairPlayState(args: {
     partnerParticipantId: partnerId,
     myDisplayName,
     partnerDisplayName,
-    myLockedAt: myLockedAt ?? null,
-    partnerLockedAt: partnerLockedAt ?? null,
     items,
     selectionMine: perspective.selectionMine,
     selectionTheirs: perspective.selectionTheirs,

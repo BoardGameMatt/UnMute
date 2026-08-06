@@ -8,6 +8,7 @@ import {
   type WaoBroadcastPayload,
   type WaoItemVisualState,
   type WaoPairPlayState,
+  type WaoRevealState,
   type WaoTapAction,
 } from "@/lib/wao/types";
 import { perspectiveSelections } from "@/lib/wao/reduce-taps";
@@ -19,7 +20,13 @@ type PendingTap = {
   attempts: number;
 };
 
-export type WaoPlayPhase = "loading" | "waiting" | "playing" | "settling" | "locked" | "error";
+export type WaoPlayPhase =
+  | "loading"
+  | "waiting"
+  | "playing"
+  | "settling"
+  | "locked"
+  | "error";
 
 const MAX_RETRIES = 2;
 
@@ -56,9 +63,14 @@ export function useWaoPairPlay(
   const [selectionB, setSelectionB] = useState<string[]>([]);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [reveal, setReveal] = useState<WaoRevealState | null>(null);
+  const [revealError, setRevealError] = useState<string | null>(null);
+  const [revealLoading, setRevealLoading] = useState(false);
   const clientSeqRef = useRef(0);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closingTimerRef = useRef(false);
+  const pairIdRef = useRef<string | null>(null);
+  const revealFetchedForRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -70,15 +82,21 @@ export function useWaoPairPlay(
       setPhase(res.status === 404 ? "waiting" : "error");
       setError(body?.error ?? "Could not load play state.");
       setState(null);
+      pairIdRef.current = null;
       return;
     }
     const next = (await res.json()) as WaoPairPlayState;
     setState(next);
+    pairIdRef.current = next.pairId;
     const abs = perspectiveToAbsolute(next);
     setSelectionA(abs.selectionA);
     setSelectionB(abs.selectionB);
     clientSeqRef.current = 0;
     setPending([]);
+    closingTimerRef.current = false;
+    setReveal(null);
+    setRevealError(null);
+    revealFetchedForRef.current = null;
     if (next.lockedAt) setPhase("locked");
     else if (next.startedAt) setPhase("playing");
     else setPhase("waiting");
@@ -88,8 +106,6 @@ export function useWaoPairPlay(
     void load();
   }, [load]);
 
-  // Members (and lead after start on another device) pick up a new round without
-  // hammering — poll only while waiting.
   useEffect(() => {
     if (phase !== "waiting") return;
     const id = setInterval(() => {
@@ -130,13 +146,13 @@ export function useWaoPairPlay(
     if (!res.ok) return;
     const next = (await res.json()) as WaoPairPlayState;
     setState(next);
+    pairIdRef.current = next.pairId;
     const abs = perspectiveToAbsolute(next);
     setSelectionA(abs.selectionA);
     setSelectionB(abs.selectionB);
     if (next.lockedAt) setPhase("locked");
   }, []);
 
-  // Realtime broadcast channel — pair_id is a capability token.
   useEffect(() => {
     if (!state?.channel || !state.pairId) return;
 
@@ -160,20 +176,18 @@ export function useWaoPairPlay(
           )
         );
       })
-      .on("broadcast", { event: "lock" }, ({ payload }) => {
+      .on("broadcast", { event: "round_locked" }, ({ payload }) => {
         const body = payload as WaoBroadcastPayload;
-        if (body.type !== "lock" || body.pairId !== state.pairId) return;
-        setState((prev) => {
-          if (!prev) return prev;
-          const iAmA = prev.myParticipantId === prev.participantA;
-          return {
-            ...prev,
-            myLockedAt: iAmA ? body.lockedAAt : body.lockedBAt,
-            partnerLockedAt: iAmA ? body.lockedBAt : body.lockedAAt,
-            lockedAt: body.lockedAt,
-            lockReason: body.lockReason,
-          };
-        });
+        if (body.type !== "round_locked" || body.pairId !== state.pairId) return;
+        setState((prev) =>
+          prev
+            ? {
+                ...prev,
+                lockedAt: body.lockedAt,
+                lockReason: body.lockReason,
+              }
+            : prev
+        );
         if (body.lockedAt) setPhase("locked");
       })
       .subscribe();
@@ -219,7 +233,7 @@ export function useWaoPairPlay(
   const sendTap = useCallback(
     async (itemId: string) => {
       if (!state || phase !== "playing") return;
-      if (state.myLockedAt || state.lockedAt) return;
+      if (state.lockedAt) return;
 
       const currentlyMine = displayMine.includes(itemId);
       const action: WaoTapAction = currentlyMine ? "deselect" : "select";
@@ -275,52 +289,25 @@ export function useWaoPairPlay(
     [state, phase, displayMine, refreshState]
   );
 
-  const lockIn = useCallback(async () => {
-    if (!state || state.myLockedAt || state.lockedAt) return;
-    const res = await fetch(`/api/wao/pair/${state.pairId}/lock`, {
-      method: "POST",
-      credentials: "same-origin",
-    });
-    if (!res.ok) {
-      const body = (await res.json().catch(() => null)) as { error?: string } | null;
-      setSyncWarning(body?.error ?? "Could not lock in.");
-      return;
-    }
-    const body = (await res.json()) as {
-      lockedAAt: string | null;
-      lockedBAt: string | null;
-      lockedAt: string | null;
-      lockReason: "both_locked" | "timer" | null;
-    };
-    setState((prev) => {
-      if (!prev) return prev;
-      const iAmA = prev.myParticipantId === prev.participantA;
-      return {
-        ...prev,
-        myLockedAt: iAmA ? body.lockedAAt : body.lockedBAt,
-        partnerLockedAt: iAmA ? body.lockedBAt : body.lockedAAt,
-        lockedAt: body.lockedAt,
-        lockReason: body.lockReason,
-      };
-    });
-    if (body.lockedAt) setPhase("locked");
-  }, [state]);
-
   const onTimerComplete = useCallback(() => {
-    if (!state || closingTimerRef.current) return;
+    if (closingTimerRef.current) return;
+    const pairId = pairIdRef.current;
+    if (!pairId) return;
+
     setPhase("settling");
     if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
-    settleTimerRef.current = setTimeout(() => {
+
+    const closeAfterSettle = async () => {
       closingTimerRef.current = true;
-      void (async () => {
-        const res = await fetch(`/api/wao/pair/${state.pairId}/close-timer`, {
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        const res = await fetch(`/api/wao/pair/${pairId}/close-timer`, {
           method: "POST",
           credentials: "same-origin",
         });
         if (res.ok) {
           const body = (await res.json()) as {
             lockedAt: string | null;
-            lockReason: "both_locked" | "timer" | null;
+            lockReason: "timer" | null;
           };
           setState((prev) =>
             prev
@@ -332,12 +319,24 @@ export function useWaoPairPlay(
               : prev
           );
           setPhase("locked");
-        } else {
-          void refreshState(state.pairId);
+          return;
         }
-      })();
+        if (res.status !== 409) {
+          void refreshState(pairId);
+          return;
+        }
+        // Client clock ahead of server settle gate — wait and retry.
+        closingTimerRef.current = false;
+        await wait(400 * (attempt + 1));
+        closingTimerRef.current = true;
+      }
+      void refreshState(pairId);
+    };
+
+    settleTimerRef.current = setTimeout(() => {
+      void closeAfterSettle();
     }, WAO_SETTLE_SECONDS * 1000);
-  }, [state, refreshState]);
+  }, [refreshState]);
 
   useEffect(() => {
     return () => {
@@ -345,10 +344,42 @@ export function useWaoPairPlay(
     };
   }, []);
 
-  const inputDisabled =
-    phase !== "playing" ||
-    Boolean(state?.myLockedAt) ||
-    Boolean(state?.lockedAt);
+  useEffect(() => {
+    if (phase !== "locked") return;
+    const pairId = pairIdRef.current ?? state?.pairId ?? null;
+    if (!pairId) return;
+    if (revealFetchedForRef.current === pairId) return;
+
+    let cancelled = false;
+    revealFetchedForRef.current = pairId;
+    setRevealLoading(true);
+    setRevealError(null);
+
+    void (async () => {
+      const res = await fetch(`/api/wao/pair/${pairId}/reveal`, {
+        credentials: "same-origin",
+      });
+      if (cancelled) return;
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setRevealError(body?.error ?? "Could not load reveal.");
+        setRevealLoading(false);
+        revealFetchedForRef.current = null;
+        return;
+      }
+      const body = (await res.json()) as WaoRevealState;
+      setReveal(body);
+      setRevealLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, state?.pairId]);
+
+  const inputDisabled = phase !== "playing" || Boolean(state?.lockedAt);
 
   return {
     state,
@@ -363,7 +394,6 @@ export function useWaoPairPlay(
     myInitial: initialFromLetter(state?.myDisplayName ?? "Y"),
     partnerInitial: initialFromLetter(state?.partnerDisplayName ?? "P"),
     sendTap,
-    lockIn,
     onTimerComplete,
     reload: load,
     startRound,
@@ -371,6 +401,9 @@ export function useWaoPairPlay(
     startError,
     isLead,
     settleSeconds: WAO_SETTLE_SECONDS,
+    reveal,
+    revealError,
+    revealLoading,
   };
 }
 

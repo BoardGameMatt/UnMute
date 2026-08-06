@@ -15,6 +15,7 @@ type TapBody = {
 /**
  * Append one tap to wao_taps. Server timestamps only.
  * client_seq is required for UNIQUE (pair_id, participant_id, client_seq) retry dedupe.
+ * Round ends only via timer; taps are rejected once the round is locked.
  */
 export async function POST(request: Request, context: RouteContext) {
   const auth = await authorizePairMember(context.params.pairId);
@@ -51,17 +52,6 @@ export async function POST(request: Request, context: RouteContext) {
 
   if (auth.round.locked_at) {
     return NextResponse.json({ error: "Round is already locked." }, { status: 409 });
-  }
-
-  const myLocked =
-    auth.participantId === auth.pair.participant_a
-      ? auth.pair.locked_a_at
-      : auth.pair.locked_b_at;
-  if (myLocked) {
-    return NextResponse.json(
-      { error: "You have already locked in." },
-      { status: 409 }
-    );
   }
 
   const { data: item, error: itemErr } = await auth.admin

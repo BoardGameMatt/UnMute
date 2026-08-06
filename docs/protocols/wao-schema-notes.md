@@ -752,3 +752,71 @@ deliberate edit, not a silent overwrite from a load against a shared project.
 **60. Item insert failure leaves the question row.** Rolling the question back
 would be a delete, which this loader is forbidden from doing. The error names
 the orphaned question id so it can be fixed by hand.
+
+## Scoring, LOTT, Save, and participant reveal (steps 8–10)
+
+Server-side only. Computed from `wao_taps` at round close, never from
+client-reported selection state. Lock It In and §3.3 time bonus are withdrawn
+in v1: every round ends on timer expiry, `bonus` is always written as `0`, and
+`lock_reason` is always `timer`.
+
+### Modules
+
+| Path | Role |
+|---|---|
+| `lib/wao/score-pair.ts` | Pure curve, zero rule, solo halving, LOTT, Save, exact_match, reveal buckets. |
+| `lib/wao/score-pair.test.ts` | Pure-logic coverage for those rules. |
+| `lib/wao/score-round.ts` | Persist one `wao_round_results` row per pair; refresh session concurrence. |
+| `lib/wao/build-reveal-state.ts` | Reveal payload after lock; loads `is_correct` only here. |
+| `POST …/close-timer` | Locks the round, then calls `ensureRoundScored`. |
+| `GET …/reveal` | `authorizePairMember` → reveal state for that pair only. |
+| `WaoRevealView` | Four buckets + score / LOTT / Save, partner named. |
+
+### Submitted set and score
+
+- Real pair: intersection of the two reduced selection sets.
+- Solo: participant A's set alone.
+- Any submitted item with `is_correct` → score `0` (no partial credit).
+- Otherwise triangular curve 1, 3, 6, 10, 15, then +5 (20, 25, 30, 35).
+- Solo: store `floor(raw / 2)` in `wao_round_results.score` (judgment call 27).
+- `UNIQUE (pair_id)`: insert conflicts (`23505`) are treated as already-scored,
+  not as a second write. Counters are recomputed from stored rows afterward so
+  a double-fired close cannot double-count concurrence.
+
+### LOTT and Save
+
+```
+solo_wrong = items tapped by exactly one partner that were wrong
+lott_set   = submitted_set ∪ solo_wrong
+LOTT       = score(lott_set) − score(submitted_set)
+```
+
+Solo pairs store `lott = 0` and `had_save = false`. Save is true when any
+exactly-one-partner item was actually correct.
+
+### Concurrence
+
+`exact_match` is true only when both partners' full selection sets are
+identical; always false for solo. After scoring, `refreshSessionConcurrence`
+recounts non-solo results for the WAO session into `paired_round_count`,
+`exact_match_round_count`, and `concurrence_rate`
+(`round(100 * exact / paired, 2)`, or null when paired is 0).
+
+### Answer-key discipline
+
+`build-pair-state.ts` still selects only `id, label`. `is_correct` is queried
+only inside `build-reveal-state.ts` / `score-round.ts` after the round is
+locked. The reveal payload never sends an `is_correct` field; buckets already
+encode the judgment.
+
+### Judgment calls
+
+**61. Bonus column stays, value always 0.** Migration 008 keeps `bonus`; v1
+writes zero so a future Lock It In can return without a migration.
+
+**62. Concurrence is recomputed, not incremented.** Avoids lost updates and
+double-count when two clients close the same round. Source of truth is
+`wao_round_results` joined to non-solo `wao_pairs`.
+
+**63. Empty buckets are omitted from the UI**, not shown as empty sections.
+The four-bucket order is fixed; absent buckets simply do not render.

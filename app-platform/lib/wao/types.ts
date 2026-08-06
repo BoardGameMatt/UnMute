@@ -32,6 +32,7 @@ export type WaoPairPlayState = {
   disambiguationDetail: string | null;
   timerSeconds: number;
   startedAt: string | null;
+  /** Round close (timer only in v1). */
   lockedAt: string | null;
   lockReason: WaoLockReason | null;
   isSolo: boolean;
@@ -41,8 +42,6 @@ export type WaoPairPlayState = {
   partnerParticipantId: string | null;
   myDisplayName: string;
   partnerDisplayName: string | null;
-  myLockedAt: string | null;
-  partnerLockedAt: string | null;
   items: WaoPublicItem[];
   selectionMine: string[];
   selectionTheirs: string[];
@@ -63,17 +62,49 @@ export type WaoBroadcastTapPayload = {
   selectionB: string[];
 };
 
-export type WaoBroadcastLockPayload = {
-  type: "lock";
+export type WaoBroadcastRoundLockedPayload = {
+  type: "round_locked";
   pairId: string;
-  participantId: string;
-  lockedAAt: string | null;
-  lockedBAt: string | null;
   lockedAt: string | null;
   lockReason: WaoLockReason | null;
 };
 
-export type WaoBroadcastPayload = WaoBroadcastTapPayload | WaoBroadcastLockPayload;
+export type WaoBroadcastPayload =
+  | WaoBroadcastTapPayload
+  | WaoBroadcastRoundLockedPayload;
+
+/** Reveal item — label only; is_correct is never sent as a field. */
+export type WaoRevealItem = {
+  id: string;
+  label: string;
+};
+
+export type WaoRevealBuckets = {
+  bothCorrectElimination: WaoRevealItem[];
+  bothButBelonged: WaoRevealItem[];
+  onlyYouRight: WaoRevealItem[];
+  onlyPartnerRight: WaoRevealItem[];
+};
+
+/** Post-lock reveal payload for one pair member. */
+export type WaoRevealState = {
+  pairId: string;
+  roundId: string;
+  sessionId: string;
+  categoryTitle: string;
+  disambiguationRule: string;
+  disambiguationDetail: string | null;
+  isSolo: boolean;
+  myDisplayName: string;
+  partnerDisplayName: string | null;
+  score: number;
+  bonus: number;
+  lott: number;
+  hadSave: boolean;
+  exactMatch: boolean;
+  submittedItemIds: string[];
+  buckets: WaoRevealBuckets;
+};
 
 export function waoPairChannelName(roundId: string, pairId: string): string {
   return `wao:${roundId}:${pairId}`;
