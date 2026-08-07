@@ -16,6 +16,7 @@ import type { WaoRevealState } from "./types";
 import { perspectiveSelections, reduceTaps } from "./reduce-taps";
 import { buildRevealBuckets } from "./score-pair";
 import { ensureRoundScored } from "./score-round";
+import { shuffleItemsForPair } from "./shuffle-items";
 
 type Admin = ReturnType<typeof createServiceClient>;
 
@@ -76,21 +77,24 @@ export async function buildPairRevealState(args: {
   }
 
   // Reveal-only: is_correct is allowed after lock + score.
+  // Map rows first so isCorrect stays on the item through shuffle (pair.id).
   const { data: itemRows, error: itemsErr } = await admin
     .from("wao_question_items")
     .select("id, label, is_correct")
-    .eq("question_id", round.question_id)
-    .order("label", { ascending: true });
+    .eq("question_id", round.question_id);
 
   if (itemsErr) {
     return { ok: false, status: 500, error: itemsErr.message };
   }
 
-  const items = (itemRows ?? []).map((row) => ({
-    id: row.id as string,
-    label: row.label as string,
-    isCorrect: row.is_correct === true,
-  }));
+  const items = shuffleItemsForPair(
+    (itemRows ?? []).map((row) => ({
+      id: row.id as string,
+      label: row.label as string,
+      isCorrect: row.is_correct === true,
+    })),
+    pair.id
+  );
 
   const { data: tapRows, error: tapsErr } = await admin
     .from("wao_taps")

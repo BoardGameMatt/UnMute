@@ -3,6 +3,822 @@
   "protocol": "wrong-answers-only",
   "questions": [
     {
+      "category_title": "Planets of the Solar System",
+      "disambiguation_rule": "One of the eight planets recognised by the International Astronomical Union.",
+      "disambiguation_detail": "The IAU's 2006 resolution is the standard. Dwarf planets, moons, stars, and comets are separate categories and do not count, however large or familiar they are.",
+      "correct_count": 5,
+      "difficulty": 1,
+      "region_tag": "global",
+      "pinned": true,
+      "active": true,
+      "items": [
+        {
+          "label": "Mercury",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://iauarchive.eso.org/static/resolutions/Resolution_GA26-5-6.pdf",
+          "source_1_note": "IAU Resolution B5 footnote 1: the eight planets are Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune.",
+          "source_2_url": "https://iauarchive.eso.org/public/themes/pluto/",
+          "source_2_note": "IAU: the 2006 resolution means the Solar System officially consists of those eight planets."
+        },
+        {
+          "label": "Venus",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://iauarchive.eso.org/static/resolutions/Resolution_GA26-5-6.pdf",
+          "source_1_note": "IAU Resolution B5 footnote 1: named in the enumerated list of eight planets.",
+          "source_2_url": "https://iauarchive.eso.org/public/themes/pluto/",
+          "source_2_note": "IAU: named in the official list of eight planets."
+        },
+        {
+          "label": "Mars",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://iauarchive.eso.org/static/resolutions/Resolution_GA26-5-6.pdf",
+          "source_1_note": "IAU Resolution B5 footnote 1: named in the enumerated list of eight planets.",
+          "source_2_url": "https://iauarchive.eso.org/public/themes/pluto/",
+          "source_2_note": "IAU: named in the official list of eight planets."
+        },
+        {
+          "label": "Jupiter",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://iauarchive.eso.org/static/resolutions/Resolution_GA26-5-6.pdf",
+          "source_1_note": "IAU Resolution B5 footnote 1: named in the enumerated list of eight planets.",
+          "source_2_url": "https://iauarchive.eso.org/public/themes/pluto/",
+          "source_2_note": "IAU: named in the official list of eight planets."
+        },
+        {
+          "label": "Neptune",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://iauarchive.eso.org/static/resolutions/Resolution_GA26-5-6.pdf",
+          "source_1_note": "IAU Resolution B5 footnote 1: named in the enumerated list of eight planets.",
+          "source_2_url": "https://iauarchive.eso.org/public/themes/pluto/",
+          "source_2_note": "IAU: named in the official list of eight planets."
+        },
+        {
+          "label": "Pluto",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://iauarchive.eso.org/static/resolutions/Resolution_GA26-5-6.pdf",
+          "source_1_note": "IAU Resolution B6: Pluto is a dwarf planet and prototype of a new category of Trans-Neptunian Objects.",
+          "source_2_url": "https://www.loc.gov/everyday-mysteries/astronomy/item/why-is-pluto-no-longer-a-planet/",
+          "source_2_note": "Library of Congress: IAU downgraded Pluto to dwarf planet in August 2006, leaving eight planets."
+        },
+        {
+          "label": "Ceres",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://iauarchive.eso.org/public/themes/pluto/",
+          "source_1_note": "IAU names Ceres among the recognised dwarf planets alongside Pluto, Haumea, Makemake and Eris.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "The Moon",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://iauarchive.eso.org/static/resolutions/Resolution_GA26-5-6.pdf",
+          "source_1_note": "Not among the eight planets enumerated in footnote 1. The resolution treats satellites as a distinct category.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "The Sun",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://iauarchive.eso.org/static/resolutions/Resolution_GA26-5-6.pdf",
+          "source_1_note": "The definition requires a planet to orbit the Sun, which excludes the Sun itself. Not among the eight.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Halley's Comet",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://iauarchive.eso.org/static/resolutions/Resolution_GA26-5-6.pdf",
+          "source_1_note": "Footnote 3 places comets among Small Solar-System Bodies, a category distinct from planets.",
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
+      "category_title": "Foods that are botanically fruits",
+      "disambiguation_rule": "Develops from the flower's ovary and contains seeds.",
+      "disambiguation_detail": "Culinary category is irrelevant. A vegetable in the kitchen can be a fruit in botany. Judged on the part of the plant eaten as that food, not on other parts the same plant produces.",
+      "correct_count": 5,
+      "difficulty": 2,
+      "region_tag": "global",
+      "pinned": true,
+      "active": true,
+      "items": [
+        {
+          "label": "Tomato",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://www.britannica.com/science/fruit-plant-reproductive-body",
+          "source_1_note": "Names tomatoes among foods technically fruits under the ripened-ovary definition.",
+          "source_2_url": "https://flexbooks.ck12.org/cbook/ck-12-advanced-biology/section/13.47/primary/lesson/fruits-of-flowering-plants-advanced-bio-adv/",
+          "source_2_note": "Lists tomatoes as fruits and further as true berries."
+        },
+        {
+          "label": "Cucumber",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.britannica.com/science/fruit-plant-reproductive-body",
+          "source_1_note": "Names cucumbers among foods technically fruits.",
+          "source_2_url": "https://en.wikipedia.org/wiki/Berry_(botany)",
+          "source_2_note": "Includes cucumbers among botanical berries, a class of fruit."
+        },
+        {
+          "label": "Avocado",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.britannica.com/science/fruit-plant-reproductive-body",
+          "source_1_note": "Names avocados among foods technically fruits.",
+          "source_2_url": "https://flexbooks.ck12.org/cbook/ck-12-advanced-biology/section/13.47/primary/lesson/fruits-of-flowering-plants-advanced-bio-adv/",
+          "source_2_note": "States avocados are botanically berries."
+        },
+        {
+          "label": "Pumpkin",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://flexbooks.ck12.org/cbook/ck-12-advanced-biology/section/13.47/primary/lesson/fruits-of-flowering-plants-advanced-bio-adv/",
+          "source_1_note": "Lists pumpkin among fruits alongside squash, cucumber and tomato.",
+          "source_2_url": "https://wellnd.com/understanding-what-is-the-edible-part-of-a-plant-called",
+          "source_2_note": "Names pumpkins among botanical fruits under the mature-ovary definition."
+        },
+        {
+          "label": "Olive",
+          "is_correct": true,
+          "trap_tier": "trap",
+          "source_1_url": "https://en.wikipedia.org/wiki/Drupe",
+          "source_1_note": "Defines the drupe or stone fruit as a fruit type with fleshy exocarp and mesocarp around a hardened endocarp enclosing a seed.",
+          "source_2_url": "https://scienceinsights.org/what-makes-a-fruit-a-fruit-the-botanical-answer/",
+          "source_2_note": "Names olives explicitly among foods qualifying as botanical fruits."
+        },
+        {
+          "label": "Rhubarb",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://flexbooks.ck12.org/cbook/ck-12-advanced-biology/section/13.47/primary/lesson/fruits-of-flowering-plants-advanced-bio-adv/",
+          "source_1_note": "States rhubarb is not a fruit but the petiole of a poisonous leaf.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Broccoli",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.bbg.org/article/do_you_know_which_part_of_the_plant_youre_eating",
+          "source_1_note": "Brooklyn Botanic Garden: broccoli florets are unopened flower buds.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Potato",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://www.britannica.com/topic/vegetable",
+          "source_1_note": "Classifies potatoes among edible tubers, or underground stems.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Celery",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.britannica.com/topic/vegetable",
+          "source_1_note": "Classifies celery among leaf and leafstalk vegetables.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Lettuce",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://www.britannica.com/topic/vegetable",
+          "source_1_note": "Classifies lettuce among leaf and leafstalk vegetables.",
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
+      "category_title": "Chemical elements named after a place",
+      "disambiguation_rule": "Named after a geographic place on Earth.",
+      "disambiguation_detail": "Named after a person, a mythological figure, a celestial body, or a physical property does not count. Latinised and historical place names count.",
+      "correct_count": 3,
+      "difficulty": 3,
+      "region_tag": "global",
+      "pinned": false,
+      "active": true,
+      "items": [
+        {
+          "label": "Americium",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Listed; named after the United States of America.",
+          "source_2_url": "https://sciencenotes.org/elements-named-after-places/",
+          "source_2_note": "Names americium after America among elements named for countries."
+        },
+        {
+          "label": "Polonium",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Listed; named after Poland.",
+          "source_2_url": "https://www.mentalfloss.com/article/73855/meanings-behind-20-chemical-element-names",
+          "source_2_note": "Takes its name from Polonia, the Latin name for Poland."
+        },
+        {
+          "label": "Copper",
+          "is_correct": true,
+          "trap_tier": "trap",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Listed under Cyprus.",
+          "source_2_url": "https://www.mentalfloss.com/article/73855/meanings-behind-20-chemical-element-names",
+          "source_2_note": "Latin cuprum descends from Kyprios, the Greek name for Cyprus. Some sources hedge with probably."
+        },
+        {
+          "label": "Curium",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Absent from the place-named list. Honours Marie and Pierre Curie.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Einsteinium",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Absent from the place-named list. Honours Albert Einstein.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Titanium",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Absent from the place-named list. Named after the Titans, not the moon Titan.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Mercury",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Absent from the place-named list. Named after the god Mercury, not the planet.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Helium",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Absent from the place-named list. Named for the Sun, a celestial body.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Selenium",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Absent from the place-named list. Named for the Moon, a celestial body.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Uranium",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://en.wikipedia.org/wiki/List_of_chemical_elements_named_after_places",
+          "source_1_note": "Absent from the place-named list. Named for the planet Uranus, a celestial body.",
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
+      "category_title": "Sports that have been medal events at a Summer Olympics",
+      "disambiguation_rule": "Has been a medal event at a Summer Olympic Games through 2024.",
+      "disambiguation_detail": "Discontinued sports still count. Demonstration sports do not count. Winter Games do not count. Sports scheduled for future Games but not yet held do not count.",
+      "correct_count": 5,
+      "difficulty": 3,
+      "region_tag": "global",
+      "pinned": false,
+      "active": true,
+      "items": [
+        {
+          "label": "Race walking",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://www.britannica.com/list/7-canceled-or-reintroduced-olympic-sports",
+          "source_1_note": "Race walking is a continuing athletics event on the Summer Olympic programme.",
+          "source_2_url": "https://www.olympics.com/en/sports/athletics/",
+          "source_2_note": "Listed among current Olympic athletics events."
+        },
+        {
+          "label": "Trampoline",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.olympics.com/en/sports/gymnastics-trampoline/",
+          "source_1_note": "Trampoline gymnastics is a current Olympic discipline, medal event since 2000.",
+          "source_2_url": "https://www.britannica.com/list/7-canceled-or-reintroduced-olympic-sports",
+          "source_2_note": "Referenced among Olympic gymnastics disciplines."
+        },
+        {
+          "label": "Solo synchronised swimming",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.britannica.com/list/7-canceled-or-reintroduced-olympic-sports",
+          "source_1_note": "Medal event from the 1984 Los Angeles Games through 1992, replaced by the team event in 1996.",
+          "source_2_url": "https://spotcovery.com/discontinued-olympic-sports-14-events-dropped-from-the-summer-games/",
+          "source_2_note": "Confirms the event ran at Los Angeles, Seoul and Barcelona before becoming a team event."
+        },
+        {
+          "label": "Tug of war",
+          "is_correct": true,
+          "trap_tier": "trap",
+          "source_1_url": "https://www.britannica.com/list/7-canceled-or-reintroduced-olympic-sports",
+          "source_1_note": "Olympic event from 1900 to 1920 as part of the track and field programme, discontinued after Antwerp 1920.",
+          "source_2_url": "https://www.npr.org/2012/07/20/157129988/tug-of-war-bike-polo-among-retired-olympic-events",
+          "source_2_note": "Sports historian David Goldblatt confirms it was an Olympic sport from 1900 to 1920."
+        },
+        {
+          "label": "Croquet",
+          "is_correct": true,
+          "trap_tier": "trap",
+          "source_1_url": "https://spotcovery.com/discontinued-olympic-sports-14-events-dropped-from-the-summer-games/",
+          "source_1_note": "Played at the 1900 Paris Games; first Olympic sport in which women competed. France won gold in individual and doubles.",
+          "source_2_url": "https://www.nbc.com/nbc-insider/sports-removed-olympics-why-baseball-polo-cricket",
+          "source_2_note": "Confirms croquet's single appearance at the 1900 Paris Games including the first women competitors."
+        },
+        {
+          "label": "Darts",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://www.olympics.com/en/sports/",
+          "source_1_note": "Not among Olympic sports past or present.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Chess",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://www.olympics.com/en/sports/",
+          "source_1_note": "IOC-recognised but never a medal event at a Summer Olympics.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Netball",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.olympics.com/en/sports/",
+          "source_1_note": "IOC-recognised but never a medal event at a Summer Olympics.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Snooker",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.olympics.com/en/sports/",
+          "source_1_note": "Never a medal event at a Summer Olympics.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Squash",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://www.nbc.com/nbc-insider/sports-removed-olympics-why-baseball-polo-cricket",
+          "source_1_note": "Not yet a medal event. Scheduled to debut at Los Angeles 2028, which the through-2024 rule excludes.",
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
+      "category_title": "Marques that began producing automobiles before 1920",
+      "disambiguation_rule": "The company sold its first production automobile before 1 January 1920.",
+      "disambiguation_detail": "Company founding date does not count if the company made something else first. Trademark registration does not count. Prototypes and one-off vehicles do not count. What matters is the first automobile offered for sale.",
+      "correct_count": 5,
+      "difficulty": 4,
+      "region_tag": "global",
+      "pinned": true,
+      "active": true,
+      "items": [
+        {
+          "label": "Ford",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://en.wikipedia.org/wiki/Ford_Model_B_(1904)",
+          "source_1_note": "Names the 1903 Ford Model A as the Model B's predecessor; Ford Motor Company incorporated June 1903.",
+          "source_2_url": "https://www.carsforsale.com/pop-culture/ford-sells-its-first-car-1903-model-a/",
+          "source_2_note": "Ford Motor Company formed June 1903; first Model A sold to Chicago dentist Ernest Pfennig that year."
+        },
+        {
+          "label": "Cadillac",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://en.wikipedia.org/wiki/Cadillac_Runabout_and_Tonneau",
+          "source_1_note": "First Cadillac automobiles were the 1903 model, built in the last quarter of 1902.",
+          "source_2_url": "https://www.conceptcarz.com/vehicle/z13380/cadillac-model-a.aspx",
+          "source_2_note": "Cadillac Automobile Company established 22 August 1902; first automobile completed October 1902."
+        },
+        {
+          "label": "Buick",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/Buick_Model_B",
+          "source_1_note": "Model B was Buick's first model as an independent company, introduced 13 August 1904.",
+          "source_2_url": "https://www.conceptcarz.com/z22860/buick-model-b.aspx",
+          "source_2_note": "First production Buick was the 1904 Model B; first sale August 1904, 37 built that year."
+        },
+        {
+          "label": "Peugeot",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/Peugeot_Type_2",
+          "source_1_note": "Type 2, first petrol-powered Peugeot, produced 1890 to 1891 at Valentigney.",
+          "source_2_url": "http://www.peugeotdesignlab.com/en/studio/history/1890-birth-of-automobile",
+          "source_2_note": "Peugeot's own history: three Type 2 units produced March to July 1890."
+        },
+        {
+          "label": "Renault",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/Renault_Voiturette",
+          "source_1_note": "Voiturette was Renault's first produced automobile, first sold 24 December 1898 with twelve more orders that night.",
+          "source_2_url": "https://theoriginals.renault.com/en/type-a",
+          "source_2_note": "Renault's own museum: Type A ready by Christmas 1898; twelve friends ordered one after the Rue Lepic climb."
+        },
+        {
+          "label": "Volvo",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://en.wikipedia.org/wiki/Volvo",
+          "source_1_note": "First car, the Volvo OV 4, rolled off the line in 1927. Trademark registered 1915 for ball bearings, never used for cars.",
+          "source_2_url": "https://www.volvogroup.com/en/about-us/heritage/story-of-volvo.html",
+          "source_2_note": "Volvo Group's own history: first series-manufactured Volvo car, the OV4, in 1927."
+        },
+        {
+          "label": "Ferrari",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://en.wikipedia.org/wiki/Ferrari_125_S",
+          "source_1_note": "125 S was the first vehicle to bear the Ferrari name, debut 11 May 1947. Preceded by the 1940 Auto Avio Costruzioni 815, which did not carry the name.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Toyota",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.motoringresearch.com/slideshow/oldest-car-brands-ranked/",
+          "source_1_note": "Toyoda Spinning and Weaving founded 1918; first car the Model AA in 1936; Toyota Motor Company established 1937.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Subaru",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/Subaru_1500",
+          "source_1_note": "Subaru 1500, code name P-1, was the first car built by Fuji Heavy Industries. Produced 1954, twenty units.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Kia",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://www.autocarindia.com/car-news/the-first-cars-of-the-worlds-most-famous-carmakers-419536",
+          "source_1_note": "Founded 1944 as Kyungsung Precision Industry. Motorcycles from 1957, trucks from 1962. First car the Brisa in 1974.",
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
+      "category_title": "Films for which Tom Hanks was nominated for an acting Oscar",
+      "disambiguation_rule": "Tom Hanks personally received an Academy Award acting nomination for the film.",
+      "disambiguation_detail": "The film being nominated is not enough. Nominations for Best Picture, or for other people in the film, do not count. Wins and nominations both count. Through the 2025 ceremony.",
+      "correct_count": 2,
+      "difficulty": 5,
+      "region_tag": "us",
+      "pinned": false,
+      "active": true,
+      "items": [
+        {
+          "label": "Philadelphia",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://grokipedia.com/page/List_of_awards_and_nominations_received_by_Tom_Hanks",
+          "source_1_note": "Academy Award for Best Actor, 1993.",
+          "source_2_url": "https://www.goldderby.com/feature/tom-hanks-acting-oscar-races-1205251650/",
+          "source_2_note": "Won Best Actor for Philadelphia, first of two consecutive wins."
+        },
+        {
+          "label": "Forrest Gump",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://grokipedia.com/page/List_of_awards_and_nominations_received_by_Tom_Hanks",
+          "source_1_note": "Academy Award for Best Actor, 1994.",
+          "source_2_url": "https://www.goldderby.com/feature/tom-hanks-acting-oscar-races-1205251650/",
+          "source_2_note": "Won Best Actor for Forrest Gump, second consecutive win."
+        },
+        {
+          "label": "Apollo 13",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://grokipedia.com/page/List_of_awards_and_nominations_received_by_Tom_Hanks",
+          "source_1_note": "Not among his six acting nominations: Big, Philadelphia, Forrest Gump, Saving Private Ryan, Cast Away, A Beautiful Day in the Neighborhood.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Captain Phillips",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://www.aol.com/article/entertainment/2019/09/24/tom-hanks-to-receive-the-golden-globes-cecil-b-demille-award/23818882",
+          "source_1_note": "Explicitly named among films for which Hanks was not Oscar-nominated between Cast Away and 2019.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "The Post",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.aol.com/article/entertainment/2019/09/24/tom-hanks-to-receive-the-golden-globes-cecil-b-demille-award/23818882",
+          "source_1_note": "Named among films for which Hanks missed an Oscar nomination.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Bridge of Spies",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.aol.com/article/entertainment/2019/09/24/tom-hanks-to-receive-the-golden-globes-cecil-b-demille-award/23818882",
+          "source_1_note": "Named among films for which Hanks missed an Oscar nomination.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Road to Perdition",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.aol.com/article/entertainment/2019/09/24/tom-hanks-to-receive-the-golden-globes-cecil-b-demille-award/23818882",
+          "source_1_note": "Named among films for which Hanks missed an Oscar nomination.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Sully",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.aol.com/article/entertainment/2019/09/24/tom-hanks-to-receive-the-golden-globes-cecil-b-demille-award/23818882",
+          "source_1_note": "Named among films for which Hanks missed an Oscar nomination.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Sleepless in Seattle",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://grokipedia.com/page/List_of_awards_and_nominations_received_by_Tom_Hanks",
+          "source_1_note": "Not among his six acting Oscar nominations.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Toy Story",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://grokipedia.com/page/List_of_awards_and_nominations_received_by_Tom_Hanks",
+          "source_1_note": "Not among his six acting Oscar nominations.",
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
+      "category_title": "Super Bowl halftime show performers",
+      "disambiguation_rule": "Performed in a Super Bowl halftime show through Super Bowl LX.",
+      "disambiguation_detail": "Singing the national anthem does not count. Appearing in a commercial does not count. Pregame and postgame performances do not count. Headliners and named featured acts both count.",
+      "correct_count": 3,
+      "difficulty": 4,
+      "region_tag": "us",
+      "pinned": false,
+      "active": false,
+      "items": [
+        {
+          "label": "Up with People",
+          "is_correct": true,
+          "trap_tier": "trap",
+          "source_1_url": "https://www.history.com/articles/super-bowl-halftime-history-weird-moments",
+          "source_1_note": "Headlined four halftime shows in an eleven-year span.",
+          "source_2_url": "https://dknetwork.draftkings.com/2025/09/18/who-is-performing-at-the-super-bowl-halftime-show-a-list-of-every-act-in-history/",
+          "source_2_note": "Listed as headliner in 1976, 1980, 1982 and 1985."
+        },
+        {
+          "label": "George Burns",
+          "is_correct": true,
+          "trap_tier": "trap",
+          "source_1_url": "https://dknetwork.draftkings.com/2025/09/18/who-is-performing-at-the-super-bowl-halftime-show-a-list-of-every-act-in-history/",
+          "source_1_note": "1987 halftime, Salute to Hollywood's 100th Anniversary, with Mickey Rooney.",
+          "source_2_url": "https://worldstrides.com/en-us/teachers/how-it-works/blog/a-storied-past-the-super-bowl-halftime-show",
+          "source_2_note": "Confirms George Burns on the 1987 show."
+        },
+        {
+          "label": "Elvis Presto",
+          "is_correct": true,
+          "trap_tier": "trap",
+          "source_1_url": "https://www.kqed.org/arts/13873945/the-weird-and-not-very-wonderful-history-of-the-super-bowl-halftime-show",
+          "source_1_note": "Elvis-impersonating magician who headlined the 1989 halftime show performing a card trick.",
+          "source_2_url": "https://www.history.com/articles/super-bowl-halftime-history-weird-moments",
+          "source_2_note": "Confirms the 1989 3-D broadcast with an Elvis impersonator and audience-participation card trick."
+        },
+        {
+          "label": "Whitney Houston",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Sang the national anthem at Super Bowl XXV in 1991, not the halftime show.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Garth Brooks",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Sang the national anthem at Super Bowl XXVII in 1993, not the halftime show.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Mariah Carey",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Sang the national anthem, not the halftime show.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Elvis Presley",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://dknetwork.draftkings.com/2025/09/18/who-is-performing-at-the-super-bowl-halftime-show-a-list-of-every-act-in-history/",
+          "source_1_note": "Absent from the complete list of halftime headliners and featured acts.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Taylor Swift",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": "https://dknetwork.draftkings.com/2025/09/18/who-is-performing-at-the-super-bowl-halftime-show-a-list-of-every-act-in-history/",
+          "source_1_note": "Absent from the complete list of halftime headliners and featured acts.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Frank Sinatra",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://dknetwork.draftkings.com/2025/09/18/who-is-performing-at-the-super-bowl-halftime-show-a-list-of-every-act-in-history/",
+          "source_1_note": "Absent from the complete list of halftime headliners and featured acts.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Dolly Parton",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://dknetwork.draftkings.com/2025/09/18/who-is-performing-at-the-super-bowl-halftime-show-a-list-of-every-act-in-history/",
+          "source_1_note": "Absent from the complete list of halftime headliners and featured acts.",
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
+      "category_title": "Correct airport code and city pairings",
+      "disambiguation_rule": "The three-letter IATA code assigned to an airport serving the named city.",
+      "disambiguation_detail": "Judged on the code as officially assigned, not on how well the letters seem to fit the city. Cities with several airports have several codes; any correctly assigned one counts.",
+      "correct_count": 5,
+      "difficulty": 3,
+      "region_tag": "global",
+      "pinned": false,
+      "active": false,
+      "items": [
+        {
+          "label": "CDG — Paris",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": "https://en.wikipedia.org/wiki/Charles_de_Gaulle_Airport",
+          "source_1_note": "IATA CDG, primary international airport serving Paris.",
+          "source_2_url": "https://en.wikipedia.org/wiki/International_Air_Transport_Association_(IATA)_airport_code",
+          "source_2_note": "Lists Paris (PAR) with Charles de Gaulle (CDG) among its airports."
+        },
+        {
+          "label": "NRT — Tokyo",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.iata.org/contentassets/c33c192da39a42fcac34cb5ac81fd2ea/ads_ab_2022_02-joint-iata-atpco-notification-ccd-list.pdf",
+          "source_1_note": "IATA's own city code list gives NRT as Narita Intl serving Tokyo.",
+          "source_2_url": "https://www.going.com/glossary/airport-code",
+          "source_2_note": "NRT listed as Tokyo Narita."
+        },
+        {
+          "label": "YYZ — Toronto",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/Toronto_Pearson_International_Airport",
+          "source_1_note": "IATA YYZ, serving the Greater Toronto Area.",
+          "source_2_url": "https://en.wikipedia.org/wiki/International_Air_Transport_Association_(IATA)_airport_code",
+          "source_2_note": "Cites YYZ for Toronto among Canada's weather-station-derived codes."
+        },
+        {
+          "label": "GRU — São Paulo",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/S%C3%A3o_Paulo/Guarulhos_International_Airport",
+          "source_1_note": "IATA GRU, primary international airport serving São Paulo.",
+          "source_2_url": "https://www.going.com/glossary/airport-code",
+          "source_2_note": "GRU listed for São Paulo."
+        },
+        {
+          "label": "SVO — Moscow",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": "https://en.wikipedia.org/wiki/International_Air_Transport_Association_(IATA)_airport_code",
+          "source_1_note": "Lists Moscow (MOW) with Sheremetyevo (SVO) among its airports.",
+          "source_2_url": "https://www.iata.org/contentassets/c33c192da39a42fcac34cb5ac81fd2ea/ads_ab_2022_02-joint-iata-atpco-notification-ccd-list.pdf",
+          "source_2_note": "IATA's own list gives SVO Sheremetyevo under Moscow."
+        },
+        {
+          "label": "LAX — Lagos",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": null,
+          "source_1_note": "PENDING. LAX is Los Angeles International. Lagos is LOS.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "DUB — Dubai",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": "https://www.going.com/glossary/airport-code",
+          "source_1_note": "DUB is Dublin. Dubai is DXB.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "PEK — Perth",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": "PENDING. PEK is Beijing Capital. Perth is PER.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "BER — Bern",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": "https://en.wikipedia.org/wiki/International_Air_Transport_Association_(IATA)_airport_code",
+          "source_1_note": "Lists Berlin's self-named code as BER. Bern is BRN.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "BOM — Boston",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": "PENDING. BOM is Mumbai. Boston is BOS.",
+          "source_2_url": null,
+          "source_2_note": null
+        }
+      ]
+    },
+    {
       "category_title": "Real IKEA product names",
       "disambiguation_rule": "A name IKEA has actually used for a product.",
       "disambiguation_detail": "Invented Swedish-sounding words do not count, however plausible they look. Discontinued products still count.",
@@ -17,16 +833,7 @@
           "is_correct": true,
           "trap_tier": "gimme",
           "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "FLATPACKO",
-          "is_correct": false,
-          "trap_tier": "gimme",
-          "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Verified as a real range name in prior session; needs ikea.com citation.",
           "source_2_url": null,
           "source_2_note": null
         },
@@ -35,7 +842,7 @@
           "is_correct": true,
           "trap_tier": "graded",
           "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Verified as a real range name in prior session; needs ikea.com citation.",
           "source_2_url": null,
           "source_2_note": null
         },
@@ -44,7 +851,7 @@
           "is_correct": true,
           "trap_tier": "graded",
           "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Verified as a real range name in prior session; needs ikea.com citation.",
           "source_2_url": null,
           "source_2_note": null
         },
@@ -53,7 +860,16 @@
           "is_correct": true,
           "trap_tier": "graded",
           "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Verified as a real range name in prior session; needs ikea.com citation.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "FLATPACKO",
+          "is_correct": false,
+          "trap_tier": "gimme",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Needs documented null result on ikea.com product search, US/UK/SE storefronts.",
           "source_2_url": null,
           "source_2_note": null
         },
@@ -62,7 +878,7 @@
           "is_correct": false,
           "trap_tier": "graded",
           "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Needs documented null result on ikea.com product search, US/UK/SE storefronts.",
           "source_2_url": null,
           "source_2_note": null
         },
@@ -71,7 +887,7 @@
           "is_correct": false,
           "trap_tier": "graded",
           "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Needs documented null result on ikea.com product search, US/UK/SE storefronts.",
           "source_2_url": null,
           "source_2_note": null
         },
@@ -80,7 +896,7 @@
           "is_correct": false,
           "trap_tier": "graded",
           "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Needs documented null result on ikea.com product search, US/UK/SE storefronts.",
           "source_2_url": null,
           "source_2_note": null
         },
@@ -89,220 +905,118 @@
           "is_correct": false,
           "trap_tier": "trap",
           "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Needs documented null result on ikea.com product search, US/UK/SE storefronts.",
           "source_2_url": null,
           "source_2_note": null
         },
         {
-          "label": "LAGOM",
+          "label": "SKÄRVBO",
           "is_correct": false,
           "trap_tier": "trap",
           "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Replaces LAGOM, which was cut as contestable. Needs documented null result on ikea.com.",
           "source_2_url": null,
           "source_2_note": null
         }
       ]
     },
     {
-      "category_title": "Correct airport code and city pairings",
-      "disambiguation_rule": "The three-letter IATA code assigned to an airport serving the named city.",
-      "disambiguation_detail": "Judged on the code as officially assigned, not on how well the letters seem to fit the city.",
+      "category_title": "Countries that have hosted a Summer Olympics",
+      "disambiguation_rule": "Has hosted a Summer Olympic Games.",
+      "disambiguation_detail": "Winter Games do not count. Youth Olympic Games do not count. Awarded but not yet held does not count.",
       "correct_count": 5,
-      "difficulty": 3,
+      "difficulty": 2,
       "region_tag": "global",
       "pinned": false,
       "active": false,
       "items": [
         {
-          "label": "CDG — Paris",
+          "label": "Australia",
           "is_correct": true,
           "trap_tier": "gimme",
           "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Melbourne 1956, Sydney 2000.",
           "source_2_url": null,
           "source_2_note": null
         },
         {
-          "label": "LAX — Lagos",
+          "label": "Brazil",
+          "is_correct": true,
+          "trap_tier": "gimme",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Rio de Janeiro 2016.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Belgium",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Antwerp 1920.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Finland",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Helsinki 1952.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Mexico",
+          "is_correct": true,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Mexico City 1968.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Switzerland",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Winter Games only, St Moritz 1928 and 1948.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Norway",
+          "is_correct": false,
+          "trap_tier": "trap",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Winter Games only, Oslo 1952 and Lillehammer 1994.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "Argentina",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Buenos Aires hosted the 2018 Youth Olympics, which the rule excludes.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "New Zealand",
+          "is_correct": false,
+          "trap_tier": "graded",
+          "source_1_url": null,
+          "source_1_note": "PENDING. Never hosted a Summer Games.",
+          "source_2_url": null,
+          "source_2_note": null
+        },
+        {
+          "label": "India",
           "is_correct": false,
           "trap_tier": "gimme",
           "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "NRT — Tokyo",
-          "is_correct": true,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "YYZ — Toronto",
-          "is_correct": true,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "GRU — São Paulo",
-          "is_correct": true,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "SVO — Moscow",
-          "is_correct": true,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "DUB — Dubai",
-          "is_correct": false,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "PEK — Perth",
-          "is_correct": false,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "BER — Bern",
-          "is_correct": false,
-          "trap_tier": "trap",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "BOM — Boston",
-          "is_correct": false,
-          "trap_tier": "trap",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        }
-      ]
-    },
-    {
-      "category_title": "English words borrowed directly from Dutch",
-      "disambiguation_rule": "Entered English directly from Dutch.",
-      "disambiguation_detail": "Judged on the immediate source language given in a standard etymological dictionary, not the ultimate origin. A word that reached English through another language does not count.",
-      "correct_count": 3,
-      "difficulty": 4,
-      "region_tag": "intl",
-      "pinned": false,
-      "active": false,
-      "items": [
-        {
-          "label": "kindergarten",
-          "is_correct": false,
-          "trap_tier": "gimme",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "croissant",
-          "is_correct": false,
-          "trap_tier": "gimme",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "cookie",
-          "is_correct": true,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "yacht",
-          "is_correct": true,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "fjord",
-          "is_correct": false,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "pretzel",
-          "is_correct": false,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "sauna",
-          "is_correct": false,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "kayak",
-          "is_correct": false,
-          "trap_tier": "graded",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "waffle",
-          "is_correct": true,
-          "trap_tier": "trap",
-          "source_1_url": null,
-          "source_1_note": null,
-          "source_2_url": null,
-          "source_2_note": null
-        },
-        {
-          "label": "aardvark",
-          "is_correct": false,
-          "trap_tier": "trap",
-          "source_1_url": null,
-          "source_1_note": null,
+          "source_1_note": "PENDING. Never hosted a Summer Games.",
           "source_2_url": null,
           "source_2_note": null
         }

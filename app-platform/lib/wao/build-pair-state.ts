@@ -7,6 +7,7 @@ import "server-only";
 import type { createServiceClient } from "@/lib/supabase/admin";
 import type { WaoPair, WaoRound, WaoSession, WaoTap } from "@/lib/types/database";
 import { perspectiveSelections, reduceTaps } from "./reduce-taps";
+import { shuffleItemsForPair } from "./shuffle-items";
 import type { WaoPairPlayState, WaoPublicItem } from "./types";
 import { waoPairChannelName } from "./types";
 
@@ -43,17 +44,19 @@ export async function buildPairPlayState(args: {
   const { data: itemRows, error: itemsErr } = await admin
     .from("wao_question_items")
     .select("id, label")
-    .eq("question_id", round.question_id)
-    .order("label", { ascending: true });
+    .eq("question_id", round.question_id);
 
   if (itemsErr) {
     return { ok: false, error: itemsErr.message };
   }
 
-  const items: WaoPublicItem[] = (itemRows ?? []).map((row) => ({
-    id: row.id,
-    label: row.label,
-  }));
+  const items: WaoPublicItem[] = shuffleItemsForPair(
+    (itemRows ?? []).map((row) => ({
+      id: row.id,
+      label: row.label,
+    })),
+    pair.id
+  );
 
   const { data: tapRows, error: tapsErr } = await admin
     .from("wao_taps")
