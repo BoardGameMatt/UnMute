@@ -29,7 +29,7 @@ function formatConcurrence(rate: number | null): string {
 
 /**
  * Facilitator-only controls after a round reveal.
- * Start another round (reuse start-round) or end session → feedback.
+ * Start another round or end session → scoreboard → reflection.
  */
 export function WaoLeadAdvanceControls({
   status,
@@ -55,21 +55,13 @@ export function WaoLeadAdvanceControls({
       ) : null}
 
       {status ? (
-        <dl className="grid grid-cols-3 gap-3 text-center">
+        <dl className="grid grid-cols-2 gap-3 text-center">
           <div>
             <dt className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-              Round done
+              Rounds completed
             </dt>
             <dd className="mt-1 font-display text-2xl font-bold text-unmute-navy">
-              {status.finishedRoundNumber ?? "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-              Of planned
-            </dt>
-            <dd className="mt-1 font-display text-2xl font-bold text-unmute-navy">
-              {status.roundsCompleted}/{status.plannedRounds}
+              {status.roundsCompleted}
             </dd>
           </div>
           <div>

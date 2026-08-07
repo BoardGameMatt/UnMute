@@ -161,7 +161,7 @@ export function WaoRevealView({
             </p>
           )}
 
-          {!isSolo && reveal.hadSave ? (
+          {!isSolo && reveal.hadSave && reveal.score > 0 ? (
             <p className="font-body text-base text-charcoal">
               <span className="font-display font-semibold text-unmute-navy">
                 {partnerLabel}

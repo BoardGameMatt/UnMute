@@ -853,3 +853,35 @@ for timer lock + score first.
 **65. Participants never call start/end.** Those routes use
 `authorizeSessionLead` only. Participant reveal stays on
 `authorizePairMember`.
+
+## Session scoreboard before reflection
+
+Ending the session marks `sessions.status = completed`. For WAO, everyone
+(including participants still on a reveal) is sent to
+`/session/[id]/wao-scoreboard` first via `SessionCompletedRedirect`
+(Realtime plus a 4s status poll fallback). The scoreboard sums each
+participant's pair `wao_round_results.score` across locked rounds, lists
+highest first, and shows session `concurrence_rate`. **Continue to
+reflection** goes to the existing `/session/[id]/feedback` screen.
+
+`GET /api/wao/session/[sessionId]/scoreboard` uses
+`authorizeSessionParticipant` and requires `status === completed`.
+
+## Save display gate, facilitator counter, Season reflection
+
+**Save message** shows only when `had_save` is true **and** `score > 0`.
+`had_save` is still computed and stored whenever a solo-tapped correct item
+existed; a zero round does not claim a save.
+
+**Facilitator panel** shows rounds completed and concurrence only — no
+planned `/ 4` cap (v1 has none).
+
+**Season reflection** (after NPS; final screen on the WAO path):
+- Route: `/session/[id]/reflection`
+- Heading: “Further reflection”
+- Display-only prompts (exact): “What did you assume that turned out to be
+  wrong?” and “Where does that same assumption show up in how we work?”
+- Closes with “See you next week.” Nothing typed or stored.
+- Order: scoreboard → NPS (`/feedback`) → reflection. NPS thank-you is
+  skipped for WAO (redirect to reflection after submit / if already rated).
+  Other protocols’ NPS thank-you unchanged.

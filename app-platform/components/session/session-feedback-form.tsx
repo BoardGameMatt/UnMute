@@ -1,12 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type SessionFeedbackFormProps = {
   sessionId: string;
+  /** When set, navigate here after submit instead of showing the thank-you copy. */
+  afterSubmitHref?: string;
 };
 
-export const SessionFeedbackForm = ({ sessionId }: SessionFeedbackFormProps) => {
+export const SessionFeedbackForm = ({
+  sessionId,
+  afterSubmitHref,
+}: SessionFeedbackFormProps) => {
+  const router = useRouter();
   const [rating, setRating] = useState<number | null>(null);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -36,6 +43,10 @@ export const SessionFeedbackForm = ({ sessionId }: SessionFeedbackFormProps) => 
           if (raw) message = raw;
         }
         throw new Error(message);
+      }
+      if (afterSubmitHref) {
+        router.replace(afterSubmitHref);
+        return;
       }
       setDone(true);
     } catch (e) {

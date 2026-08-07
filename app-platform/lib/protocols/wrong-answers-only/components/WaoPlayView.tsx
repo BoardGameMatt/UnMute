@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { SessionParticipantRole } from "@/lib/types/database";
+import { WaoDisambiguationInfo } from "./WaoDisambiguationInfo";
 import { WaoItemButton } from "./WaoItemButton";
 import { WaoLeadAdvanceControls } from "./WaoLeadAdvanceControls";
 import { WaoPlayTimer } from "./WaoPlayTimer";
@@ -104,7 +105,7 @@ export function WaoPlayView({
                   void (async () => {
                     const ok = await play.endSession();
                     if (ok) {
-                      router.replace(`/session/${sessionId}/feedback`);
+                      router.replace(`/session/${sessionId}/wao-scoreboard`);
                     }
                   })();
                 }}
@@ -141,6 +142,7 @@ export function WaoPlayView({
   if (!state) return null;
 
   const showTimer = play.phase === "playing" || play.phase === "settling";
+  const partnerName = state.partnerDisplayName ?? "your partner";
 
   return (
     <main className="min-h-screen bg-warm-white">
@@ -149,36 +151,42 @@ export function WaoPlayView({
           <p className="font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-steel-blue">
             Wrong Answers Only
           </p>
+
           {state.isSolo ? (
             <p className="font-body text-sm text-slate">
               Solo round — half value. No partner this time.
             </p>
           ) : (
-            <p className="font-body text-base text-charcoal">
-              Paired with{" "}
-              <span className="font-display font-semibold text-unmute-navy">
-                {state.partnerDisplayName ?? "your partner"}
+            <p className="flex items-center justify-center gap-2 font-body text-base text-charcoal">
+              <span
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-unmute-navy font-mono text-[10px] font-medium text-unmute-navy"
+                aria-hidden
+              >
+                {play.partnerInitial}
+              </span>
+              <span>
+                Paired with{" "}
+                <span className="font-display font-semibold text-unmute-navy">
+                  {partnerName}
+                </span>
               </span>
             </p>
           )}
-          <h1 className="font-display text-2xl font-bold leading-tight text-unmute-navy sm:text-3xl">
-            {state.categoryTitle}
-          </h1>
-          <p className="font-body text-base font-semibold text-charcoal">
-            {state.disambiguationRule}
-          </p>
-          {state.disambiguationDetail ? (
-            <p className="font-body text-sm text-slate">
-              {state.disambiguationDetail}
-            </p>
-          ) : null}
-          <p className="font-body text-sm text-slate">
+
+          <div className="flex items-start justify-center gap-2">
+            <h1 className="font-display text-2xl font-bold leading-tight text-unmute-navy sm:text-3xl">
+              {state.categoryTitle}
+            </h1>
+            <WaoDisambiguationInfo
+              rule={state.disambiguationRule}
+              detail={state.disambiguationDetail}
+            />
+          </div>
+
+          <p className="font-display text-lg font-bold leading-snug text-unmute-navy sm:text-xl">
             {state.isSolo
               ? "Tap the answers you think are WRONG."
-              : "Tap the answers you think are WRONG. Only what you and your partner BOTH tap counts."}
-          </p>
-          <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
-            No searching. No chat.
+              : "Tap the answers you think are WRONG. Only what you and your partner BOTH tap counts as your answer."}
           </p>
         </header>
 
@@ -193,6 +201,9 @@ export function WaoPlayView({
           {play.phase === "settling" ? (
             <p className="font-body text-sm text-slate">Locking in…</p>
           ) : null}
+          <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
+            No searching. No chat.
+          </p>
         </div>
 
         {play.syncWarning ? (

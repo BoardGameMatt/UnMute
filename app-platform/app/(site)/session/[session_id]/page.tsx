@@ -122,6 +122,9 @@ export default async function SessionPage({ params }: SessionPageProps) {
 
   const sessionStatus = sessionRow.status as SessionStatus;
   if (sessionStatus === "completed") {
+    if (protocolSlug === "wrong-answers-only") {
+      redirect(`/session/${sessionId}/wao-scoreboard`);
+    }
     redirect(`/session/${sessionId}/feedback`);
   }
 
@@ -153,7 +156,14 @@ export default async function SessionPage({ params }: SessionPageProps) {
         roleInSession={role}
         protocolName={protocolName}
       >
-        <SessionCompletedRedirect sessionId={sessionId} />
+        <SessionCompletedRedirect
+          sessionId={sessionId}
+          href={
+            protocolSlug === "wrong-answers-only"
+              ? `/session/${sessionId}/wao-scoreboard`
+              : `/session/${sessionId}/feedback`
+          }
+        />
         {definition ? (
           <definition.component
             sessionId={sessionId}
