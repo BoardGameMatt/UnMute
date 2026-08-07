@@ -13,6 +13,13 @@ import {
 } from "@/lib/wao/types";
 import { perspectiveSelections } from "@/lib/wao/reduce-taps";
 import type { WaoFacilitatorStatus } from "@/lib/protocols/wrong-answers-only/components/WaoLeadAdvanceControls";
+import {
+  classifyPlayLoadStatus,
+  initialPreRoundPollState,
+  reducePreRoundPoll,
+  shouldPollPreRound,
+  type PreRoundPollState,
+} from "@/lib/wao/pre-round-poll";
 
 type PendingTap = {
   itemId: string;
@@ -75,53 +82,106 @@ export function useWaoPairPlay(
   const [advanceError, setAdvanceError] = useState<string | null>(null);
   const [startingNext, setStartingNext] = useState(false);
   const [endingSession, setEndingSession] = useState(false);
+  const [preRoundPoll, setPreRoundPoll] = useState<PreRoundPollState>(
+    initialPreRoundPollState
+  );
   const clientSeqRef = useRef(0);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closingTimerRef = useRef(false);
   const pairIdRef = useRef<string | null>(null);
   const revealFetchedForRef = useRef<string | null>(null);
+  const preRoundPollRef = useRef(preRoundPoll);
+  preRoundPollRef.current = preRoundPoll;
 
   const load = useCallback(async () => {
     setError(null);
-    const res = await fetch(`/api/wao/session/${sessionId}/play`, {
-      credentials: "same-origin",
-    });
-    if (!res.ok) {
-      const body = (await res.json().catch(() => null)) as { error?: string } | null;
-      setPhase(res.status === 404 ? "waiting" : "error");
-      setError(body?.error ?? "Could not load play state.");
-      setState(null);
-      pairIdRef.current = null;
-      return;
+    try {
+      const res = await fetch(`/api/wao/session/${sessionId}/play`, {
+        credentials: "same-origin",
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        const message = body?.error ?? "Could not load play state.";
+        const kind = classifyPlayLoadStatus(res.status);
+
+        if (kind === "not_found") {
+          setPreRoundPoll((prev) => reducePreRoundPoll(prev, { type: "not_found" }));
+          setPhase("waiting");
+          setError(message);
+          setState(null);
+          pairIdRef.current = null;
+          return;
+        }
+
+        if (kind === "terminal") {
+          setPreRoundPoll((prev) => reducePreRoundPoll(prev, { type: "terminal" }));
+          setPhase("error");
+          setError(message);
+          setState(null);
+          pairIdRef.current = null;
+          return;
+        }
+
+        // Transient (5xx, etc.): keep pre-round polling alive.
+        setPreRoundPoll((prev) => reducePreRoundPoll(prev, { type: "transient" }));
+        if (!preRoundPollRef.current.hasEverLoaded) {
+          setPhase("waiting");
+          setError(message);
+          setState(null);
+          pairIdRef.current = null;
+        } else {
+          setPhase("error");
+          setError(message);
+        }
+        return;
+      }
+
+      const next = (await res.json()) as WaoPairPlayState;
+      setPreRoundPoll((prev) => reducePreRoundPoll(prev, { type: "success" }));
+      setState(next);
+      pairIdRef.current = next.pairId;
+      const abs = perspectiveToAbsolute(next);
+      setSelectionA(abs.selectionA);
+      setSelectionB(abs.selectionB);
+      clientSeqRef.current = 0;
+      setPending([]);
+      closingTimerRef.current = false;
+      setReveal(null);
+      setRevealError(null);
+      revealFetchedForRef.current = null;
+      if (next.lockedAt) setPhase("locked");
+      else if (next.startedAt) setPhase("playing");
+      else setPhase("waiting");
+    } catch {
+      // Network / abort — transient.
+      setPreRoundPoll((prev) => reducePreRoundPoll(prev, { type: "transient" }));
+      if (!preRoundPollRef.current.hasEverLoaded) {
+        setPhase("waiting");
+        setError("Could not reach the server. Still trying…");
+        setState(null);
+        pairIdRef.current = null;
+      } else {
+        setPhase("error");
+        setError("Could not reach the server.");
+      }
     }
-    const next = (await res.json()) as WaoPairPlayState;
-    setState(next);
-    pairIdRef.current = next.pairId;
-    const abs = perspectiveToAbsolute(next);
-    setSelectionA(abs.selectionA);
-    setSelectionB(abs.selectionB);
-    clientSeqRef.current = 0;
-    setPending([]);
-    closingTimerRef.current = false;
-    setReveal(null);
-    setRevealError(null);
-    revealFetchedForRef.current = null;
-    if (next.lockedAt) setPhase("locked");
-    else if (next.startedAt) setPhase("playing");
-    else setPhase("waiting");
   }, [sessionId]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  // Pre-round poll: continues through transient failures until first success
+  // or a terminal status (e.g. 403). Interval widens on consecutive failures.
   useEffect(() => {
-    if (phase !== "waiting") return;
+    if (!shouldPollPreRound(preRoundPoll)) return;
     const id = setInterval(() => {
       void load();
-    }, 3000);
+    }, preRoundPoll.pollIntervalMs);
     return () => clearInterval(id);
-  }, [phase, load]);
+  }, [preRoundPoll, load]);
 
   const startRound = useCallback(async () => {
     if (!isLead || starting) return;
@@ -521,6 +581,8 @@ export function useWaoPairPlay(
     startError,
     isLead,
     settleSeconds: WAO_SETTLE_SECONDS,
+    /** Quiet waiting-screen hint after repeated transient load failures. */
+    stillTrying: preRoundPoll.showStillTrying,
     reveal,
     revealError,
     revealLoading,

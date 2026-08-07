@@ -48,6 +48,11 @@ export function WaoPlayView({
               ? "Start the round when everyone is in the room."
               : "Your pair will appear here once the facilitator starts play.")}
         </p>
+        {play.stillTrying ? (
+          <p className="max-w-sm text-center font-body text-xs text-slate">
+            Still connecting… we&apos;ll keep trying.
+          </p>
+        ) : null}
         {play.startError ? (
           <p className="max-w-sm text-center font-body text-sm text-signal-red" role="alert">
             {play.startError}
