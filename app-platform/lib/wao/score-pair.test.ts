@@ -43,13 +43,18 @@ describe("scoreEliminationSet — zero rule", () => {
 
 describe("scorePair", () => {
   const correct = ["c1", "c2"];
+  const paired = {
+    isSolo: false as const,
+    correctItemIds: correct,
+    participantA: "alice",
+    participantB: "bob",
+  };
 
   it("uses intersection as the submitted set for a real pair", () => {
     const out = scorePair({
       selectionA: ["w1", "w2", "c1"],
       selectionB: ["w1", "w2", "w3"],
-      isSolo: false,
-      correctItemIds: correct,
+      ...paired,
     });
     assert.deepEqual(out.submittedItemIds, ["w1", "w2"]);
     assert.equal(out.score, 3);
@@ -60,8 +65,7 @@ describe("scorePair", () => {
     const out = scorePair({
       selectionA: ["w1", "c1"],
       selectionB: ["w1", "c1", "w2"],
-      isSolo: false,
-      correctItemIds: correct,
+      ...paired,
     });
     assert.deepEqual(out.submittedItemIds, ["c1", "w1"]);
     assert.equal(out.score, 0);
@@ -79,6 +83,7 @@ describe("scorePair", () => {
     assert.equal(out.score, 5);
     assert.equal(out.lott, 0);
     assert.equal(out.hadSave, false);
+    assert.equal(out.saverParticipantId, null);
     assert.equal(out.exactMatch, false);
   });
 
@@ -100,12 +105,12 @@ describe("scorePair", () => {
     const out = scorePair({
       selectionA: ["w1", "w2", "w3"],
       selectionB: ["w1", "w2", "w4"],
-      isSolo: false,
-      correctItemIds: correct,
+      ...paired,
     });
     assert.equal(out.score, 3);
     assert.equal(out.lott, 7);
     assert.equal(out.hadSave, false);
+    assert.equal(out.saverParticipantId, null);
   });
 
   it("LOTT is 0 when solo_wrong would not improve a zeroed submitted set", () => {
@@ -113,38 +118,68 @@ describe("scorePair", () => {
     const out = scorePair({
       selectionA: ["c1", "w1"],
       selectionB: ["c1", "w2"],
-      isSolo: false,
-      correctItemIds: correct,
+      ...paired,
     });
     assert.equal(out.score, 0);
     assert.equal(out.lott, 0);
   });
 
-  it("sets had_save when either partner alone tapped a correct item", () => {
+  it("names the partner who declined a correct item as saver", () => {
+    // A tapped c1 alone; B declined → B saved the round
     const out = scorePair({
       selectionA: ["w1", "c1"],
       selectionB: ["w1"],
-      isSolo: false,
+      ...paired,
+    });
+    assert.equal(out.score, 1);
+    assert.equal(out.hadSave, true);
+    assert.equal(out.saverParticipantId, "bob");
+  });
+
+  it("shows no save when neither partner alone tapped a correct item", () => {
+    const out = scorePair({
+      selectionA: ["w1", "w2", "w3"],
+      selectionB: ["w1", "w2", "w4"],
+      ...paired,
+    });
+    assert.equal(out.score, 3);
+    assert.equal(out.hadSave, false);
+    assert.equal(out.saverParticipantId, null);
+  });
+
+  it("attributes save to A when B alone tapped a correct item", () => {
+    const out = scorePair({
+      selectionA: ["w1", "w2"],
+      selectionB: ["w1", "c1"],
+      ...paired,
+    });
+    assert.equal(out.saverParticipantId, "alice");
+    assert.equal(out.hadSave, true);
+  });
+
+  it("never produces a save on a solo round", () => {
+    const out = scorePair({
+      selectionA: ["w1", "c1"],
+      selectionB: [],
+      isSolo: true,
       correctItemIds: correct,
     });
-    assert.equal(out.hadSave, true);
-    assert.equal(out.score, 1);
+    assert.equal(out.saverParticipantId, null);
+    assert.equal(out.hadSave, false);
   });
 
   it("exact_match when full selection sets are identical", () => {
     const match = scorePair({
       selectionA: ["w1", "w2"],
       selectionB: ["w2", "w1"],
-      isSolo: false,
-      correctItemIds: correct,
+      ...paired,
     });
     assert.equal(match.exactMatch, true);
 
     const miss = scorePair({
       selectionA: ["w1", "w2"],
       selectionB: ["w1"],
-      isSolo: false,
-      correctItemIds: correct,
+      ...paired,
     });
     assert.equal(miss.exactMatch, false);
   });
@@ -157,6 +192,63 @@ describe("scorePair", () => {
       correctItemIds: correct,
     });
     assert.equal(out.exactMatch, false);
+  });
+});
+
+/**
+ * Reveal payloads must name the same saver for both viewers.
+ * Mirrors build-reveal-state resolution without I/O.
+ */
+function revealSaveFields(
+  saverParticipantId: string | null,
+  viewerId: string,
+  names: Record<string, string>
+): { saverDisplayName: string | null; viewerIsSaver: boolean } {
+  if (saverParticipantId === null) {
+    return { saverDisplayName: null, viewerIsSaver: false };
+  }
+  return {
+    saverDisplayName: names[saverParticipantId] ?? "Player",
+    viewerIsSaver: saverParticipantId === viewerId,
+  };
+}
+
+describe("Save reveal attribution (both viewers)", () => {
+  const names = { alice: "Alice", bob: "Bob" };
+
+  it("names B as saver in both viewers' payloads when A alone tapped correct", () => {
+    const scored = scorePair({
+      selectionA: ["w1", "w2", "w3", "w4", "w5", "c1"],
+      selectionB: ["w1", "w2", "w3", "w4", "w5"],
+      isSolo: false,
+      correctItemIds: ["c1"],
+      participantA: "alice",
+      participantB: "bob",
+    });
+    assert.equal(scored.score, 15);
+    assert.equal(scored.saverParticipantId, "bob");
+
+    const forAlice = revealSaveFields(scored.saverParticipantId, "alice", names);
+    const forBob = revealSaveFields(scored.saverParticipantId, "bob", names);
+
+    assert.equal(forAlice.saverDisplayName, "Bob");
+    assert.equal(forBob.saverDisplayName, "Bob");
+    assert.equal(forAlice.viewerIsSaver, false);
+    assert.equal(forBob.viewerIsSaver, true);
+  });
+
+  it("shows no saver name when nobody alone tapped a correct item", () => {
+    const scored = scorePair({
+      selectionA: ["w1", "w2"],
+      selectionB: ["w1", "w2"],
+      isSolo: false,
+      correctItemIds: ["c1"],
+      participantA: "alice",
+      participantB: "bob",
+    });
+    assert.equal(scored.saverParticipantId, null);
+    const forAlice = revealSaveFields(scored.saverParticipantId, "alice", names);
+    assert.equal(forAlice.saverDisplayName, null);
   });
 });
 

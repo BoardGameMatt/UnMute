@@ -86,6 +86,8 @@ export async function ensureRoundScored(args: {
       selectionB: sets.selectionB,
       isSolo: pair.is_solo,
       correctItemIds,
+      participantA: pair.participant_a,
+      participantB: pair.participant_b,
     });
 
     const { error: insertErr } = await admin.from("wao_round_results").insert({
@@ -95,6 +97,7 @@ export async function ensureRoundScored(args: {
       bonus: outcome.bonus,
       lott: outcome.lott,
       had_save: outcome.hadSave,
+      saver_participant_id: outcome.saverParticipantId,
       exact_match: outcome.exactMatch,
     });
 

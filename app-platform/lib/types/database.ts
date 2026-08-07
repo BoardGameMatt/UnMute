@@ -420,6 +420,8 @@ export interface WaoRoundResult {
   bonus: number;
   lott: number;
   had_save: boolean;
+  /** Participant who declined a correct item; null when no Save. */
+  saver_participant_id: string | null;
   exact_match: boolean;
   created_at: string;
 }

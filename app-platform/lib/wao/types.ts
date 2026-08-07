@@ -103,7 +103,13 @@ export type WaoRevealState = {
   score: number;
   bonus: number;
   lott: number;
-  hadSave: boolean;
+  /**
+   * Display name of the participant who declined a correct item.
+   * Identical for both pair members; null when there was no Save.
+   */
+  saverDisplayName: string | null;
+  /** True when this viewer is the saver (for copy branching). */
+  viewerIsSaver: boolean;
   exactMatch: boolean;
   submittedItemIds: string[];
   buckets: WaoRevealBuckets;

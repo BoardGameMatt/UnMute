@@ -56,6 +56,9 @@ export type ScorePairInput = {
   selectionB: readonly string[];
   isSolo: boolean;
   correctItemIds: ReadonlySet<string> | readonly string[];
+  /** Required for paired rounds so Save can name who declined. */
+  participantA?: string;
+  participantB?: string | null;
 };
 
 export type ScorePairOutcome = {
@@ -65,7 +68,13 @@ export type ScorePairOutcome = {
   /** Always 0 in v1 — Lock It In withdrawn. */
   bonus: 0;
   lott: number;
+  /**
+   * True when saverParticipantId is set. Kept for the had_save column and
+   * callers that only need the flag.
+   */
   hadSave: boolean;
+  /** Participant who declined a correct item the partner alone had tapped. */
+  saverParticipantId: string | null;
   exactMatch: boolean;
 };
 
@@ -92,25 +101,47 @@ export function scorePair(input: ScorePairInput): ScorePairOutcome {
       bonus: 0,
       lott: 0,
       hadSave: false,
+      saverParticipantId: null,
       exactMatch: false,
     };
+  }
+
+  const participantA = input.participantA;
+  const participantB = input.participantB;
+  if (!participantA || !participantB) {
+    throw new Error(
+      "scorePair requires participantA and participantB for paired rounds"
+    );
   }
 
   const aSet = new Set(selectionA);
   const bSet = new Set(selectionB);
   const soloWrong: string[] = [];
-  let hadSave = false;
+  /** Saver per solo-tapped correct item; sorted by item id for stability. */
+  const saveEvents: { itemId: string; saverId: string }[] = [];
 
   for (const id of selectionA) {
     if (bSet.has(id)) continue;
-    if (correct.has(id)) hadSave = true;
-    else soloWrong.push(id);
+    if (correct.has(id)) {
+      // A tapped a belonger; B declined → B is the saver.
+      saveEvents.push({ itemId: id, saverId: participantB });
+    } else {
+      soloWrong.push(id);
+    }
   }
   for (const id of selectionB) {
     if (aSet.has(id)) continue;
-    if (correct.has(id)) hadSave = true;
-    else soloWrong.push(id);
+    if (correct.has(id)) {
+      saveEvents.push({ itemId: id, saverId: participantA });
+    } else {
+      soloWrong.push(id);
+    }
   }
+
+  saveEvents.sort((left, right) =>
+    left.itemId < right.itemId ? -1 : left.itemId > right.itemId ? 1 : 0
+  );
+  const saverParticipantId = saveEvents[0]?.saverId ?? null;
 
   const lottSet = Array.from(
     new Set([...submittedItemIds, ...soloWrong])
@@ -126,7 +157,8 @@ export function scorePair(input: ScorePairInput): ScorePairOutcome {
     score,
     bonus: 0,
     lott,
-    hadSave,
+    hadSave: saverParticipantId !== null,
+    saverParticipantId,
     exactMatch: setsEqual(selectionA, selectionB),
   };
 }

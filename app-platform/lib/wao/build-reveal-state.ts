@@ -133,6 +133,11 @@ export async function buildPairRevealState(args: {
   const partnerDisplayName =
     partnerId !== null ? await displayName(admin, partnerId) : null;
 
+  const saverId = result.saver_participant_id;
+  const saverDisplayName =
+    saverId !== null ? await displayName(admin, saverId) : null;
+  const viewerIsSaver = saverId !== null && saverId === participantId;
+
   const state: WaoRevealState = {
     pairId: pair.id,
     roundId: round.id,
@@ -147,7 +152,8 @@ export async function buildPairRevealState(args: {
     score: result.score,
     bonus: result.bonus,
     lott: result.lott,
-    hadSave: result.had_save,
+    saverDisplayName,
+    viewerIsSaver,
     exactMatch: result.exact_match,
     submittedItemIds: result.submitted_item_ids,
     buckets,

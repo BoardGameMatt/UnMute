@@ -161,12 +161,18 @@ export function WaoRevealView({
             </p>
           )}
 
-          {!isSolo && reveal.hadSave && reveal.score > 0 ? (
+          {!isSolo && reveal.saverDisplayName ? (
             <p className="font-body text-base text-charcoal">
-              <span className="font-display font-semibold text-unmute-navy">
-                {partnerLabel}
-              </span>
-              &apos;s caution saved you from a zero.
+              {reveal.viewerIsSaver ? (
+                <>Your caution saved the round from a zero.</>
+              ) : (
+                <>
+                  <span className="font-display font-semibold text-unmute-navy">
+                    {reveal.saverDisplayName}
+                  </span>
+                  &apos;s caution saved you from a zero.
+                </>
+              )}
             </p>
           ) : null}
 
