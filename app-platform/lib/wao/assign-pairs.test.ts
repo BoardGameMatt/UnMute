@@ -16,6 +16,17 @@ function emptyHistory(): PairHistory {
   return { pairs: [], sitOuts: [] };
 }
 
+/** Deterministic RNG for reproducible tests (mulberry32). */
+function seededRandom(seed: number): () => number {
+  let t = seed >>> 0;
+  return () => {
+    t = (t + 0x6d2b79f5) >>> 0;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function assertSuccess(
   result: ReturnType<typeof assignPairs>
 ): RoundAssignmentSuccess {
@@ -30,14 +41,15 @@ function assertFailure(result: ReturnType<typeof assignPairs>): void {
 /** Accumulate history across successive successful rounds. */
 function playRounds(
   roster: string[],
-  roundCount: number
+  roundCount: number,
+  random: () => number = seededRandom(1)
 ): { assignments: RoundAssignmentSuccess[]; history: PairHistory } {
   const pairs: Pairing[] = [];
   const sitOuts: string[] = [];
   const assignments: RoundAssignmentSuccess[] = [];
 
   for (let r = 0; r < roundCount; r++) {
-    const result = assignPairs(roster, { pairs, sitOuts });
+    const result = assignPairs(roster, { pairs, sitOuts }, { random });
     const success = assertSuccess(result);
     assignments.push(success);
     for (const pair of success.pairs) {
@@ -115,7 +127,7 @@ function assertSitOutRotation(
 }
 
 describe("assignPairs", () => {
-  it("is deterministic for the same inputs", () => {
+  it("is deterministic for the same inputs and RNG", () => {
     const roster = ids(8);
     const history: PairHistory = {
       pairs: [
@@ -124,8 +136,8 @@ describe("assignPairs", () => {
       ],
       sitOuts: [],
     };
-    const a = assignPairs(roster, history);
-    const b = assignPairs(roster, history);
+    const a = assignPairs(roster, history, { random: seededRandom(42) });
+    const b = assignPairs(roster, history, { random: seededRandom(42) });
     assert.deepEqual(a, b);
   });
 
@@ -165,35 +177,70 @@ describe("assignPairs", () => {
     assertSitOutRotation(roster, assignments);
   });
 
-  it("4 participants over 4 rounds: round 4 fails rather than repeating", () => {
+  it("4 participants over 5 rounds: always succeeds; novel pairs first", () => {
     const roster = ids(4);
-    // K_4 has exactly three perfect matchings; the fourth round must fail.
-    const { assignments, history } = playRounds(roster, 3);
-    assert.equal(assignments.length, 3);
-    assertNoRepeatPairs(assignments);
-
-    const fourth = assignPairs(roster, history);
-    assertFailure(fourth);
-    if (!fourth.ok) {
-      assert.match(fourth.reason, /no valid pairing/i);
+    const { assignments } = playRounds(roster, 5);
+    assert.equal(assignments.length, 5);
+    for (const a of assignments) {
+      assert.equal(a.ok, true);
+      assert.equal(a.sitOut, null);
+      assert.equal(a.pairs.length, 2);
+      assertRosterCovered(roster, a);
     }
+    // K4 has three perfect matchings / six edges; first three rounds use
+    // each edge once — no repeats until the novel set is exhausted.
+    assertNoRepeatPairs(assignments.slice(0, 3));
   });
 
-  it("two participants: first round pairs them, second fails", () => {
-    const roster = ids(2);
-    const first = assertSuccess(assignPairs(roster, emptyHistory()));
-    assert.equal(first.pairs.length, 1);
-    assert.equal(first.sitOut, null);
-    assert.deepEqual(first.pairs[0], {
-      participantA: "p1",
-      participantB: "p2",
-    });
+  it("4 participants over 6 rounds: always ok; repeats spread evenly", () => {
+    const roster = ids(4);
+    const { assignments } = playRounds(roster, 6, seededRandom(7));
+    for (const a of assignments) {
+      assert.equal(a.ok, true);
+      assertRosterCovered(roster, a);
+    }
 
-    const history: PairHistory = {
-      pairs: [["p1", "p2"]],
-      sitOuts: [],
-    };
-    assertFailure(assignPairs(roster, history));
+    // Six rounds × two pairs = twelve pair-instances across six edges of K4.
+    // Minimum-cost matching should leave every edge used the same number of
+    // times (twice), not concentrate repeats on one pair.
+    const counts = new Map<string, number>();
+    for (const key of allPairKeys(assignments)) {
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const values = Array.from(counts.values());
+    assert.equal(counts.size, 6, `expected all 6 edges, got ${[...counts.keys()]}`);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    assert.equal(min, 2);
+    assert.equal(max, 2);
+  });
+
+  it("5 participants over 5 rounds: sit-out rotates once each", () => {
+    const roster = ids(5);
+    const { assignments } = playRounds(roster, 5);
+    for (const a of assignments) {
+      assert.notEqual(a.sitOut, null);
+      assert.equal(a.pairs.length, 2);
+      assertRosterCovered(roster, a);
+    }
+    assertSitOutRotation(roster, assignments);
+    const sitOuts = assignments.map((a) => a.sitOut!);
+    assert.equal(new Set(sitOuts).size, 5);
+  });
+
+  it("2 participants over 3 rounds: same pair every round, no error", () => {
+    const roster = ids(2);
+    const { assignments } = playRounds(roster, 3);
+    assert.equal(assignments.length, 3);
+    for (const a of assignments) {
+      assert.equal(a.ok, true);
+      assert.equal(a.sitOut, null);
+      assert.equal(a.pairs.length, 1);
+      assert.deepEqual(a.pairs[0], {
+        participantA: "p1",
+        participantB: "p2",
+      });
+    }
   });
 
   it("one participant: solo sit-out every round", () => {
@@ -202,7 +249,6 @@ describe("assignPairs", () => {
     assert.deepEqual(first.pairs, []);
     assert.equal(first.sitOut, "p1");
 
-    // Everyone has sat out once, so sitting out again is allowed.
     const second = assertSuccess(
       assignPairs(roster, { pairs: [], sitOuts: ["p1"] })
     );
@@ -215,9 +261,8 @@ describe("assignPairs", () => {
     assertFailure(assignPairs([], emptyHistory()));
   });
 
-  it("unordered pairing equivalence: {A,B} in history blocks {B,A}", () => {
+  it("prefers never-paired edges over repeating when both are possible", () => {
     const roster = ["a", "b", "c", "d"];
-    // Seed history with the reverse of the only matching that uses a-b.
     const history: PairHistory = {
       pairs: [
         ["b", "a"],
@@ -225,9 +270,10 @@ describe("assignPairs", () => {
       ],
       sitOuts: [],
     };
-    const result = assignPairs(roster, history);
-    const success = assertSuccess(result);
-    const keys = success.pairs.map((p) =>
+    const result = assertSuccess(
+      assignPairs(roster, history, { random: seededRandom(1) })
+    );
+    const keys = result.pairs.map((p) =>
       pairKey(p.participantA, p.participantB)
     );
     assert.ok(!keys.includes(pairKey("a", "b")));
@@ -248,7 +294,9 @@ describe("assignPairs", () => {
       ],
       sitOuts: ["p1"],
     };
-    const result = assertSuccess(assignPairs(roster, history));
+    const result = assertSuccess(
+      assignPairs(roster, history, { random: seededRandom(99) })
+    );
     assert.notEqual(result.sitOut, "p1");
     assert.ok(roster.includes(result.sitOut!));
   });

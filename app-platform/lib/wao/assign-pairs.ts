@@ -1,8 +1,9 @@
 /**
  * Wrong Answers Only pairing (spec §5 as amended by §17, plus §3.6 sit-outs).
  *
- * Pure function: no I/O, no randomness. Same inputs always produce the same
- * result. History is passed in by the caller.
+ * Pure aside from optional randomness for tie-breaks. History is passed in
+ * by the caller. Always returns a pairing for a non-empty roster; repeats
+ * are preferred by least-recent (minimum total prior-pair cost), not banned.
  */
 
 /** Unordered pairing. Callers may pass either order; comparisons normalise. */
@@ -34,6 +35,11 @@ export type RoundAssignmentFailure = {
 
 export type RoundAssignment = RoundAssignmentSuccess | RoundAssignmentFailure;
 
+export type AssignPairsOptions = {
+  /** Returns a float in [0, 1). Defaults to Math.random. */
+  random?: () => number;
+};
+
 const emptyHistory = (): PairHistory => ({ pairs: [], sitOuts: [] });
 
 /** Canonical key so {A,B} and {B,A} compare equal. */
@@ -41,13 +47,19 @@ export function pairKey(a: string, b: string): string {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
 }
 
-function buildForbidden(history: PairHistory): Set<string> {
-  const forbidden = new Set<string>();
+/** Prior occurrence count per unordered pair. Missing key ⇒ cost 0. */
+function buildPairCosts(history: PairHistory): Map<string, number> {
+  const costs = new Map<string, number>();
   for (const [a, b] of history.pairs) {
     if (a === b) continue;
-    forbidden.add(pairKey(a, b));
+    const key = pairKey(a, b);
+    costs.set(key, (costs.get(key) ?? 0) + 1);
   }
-  return forbidden;
+  return costs;
+}
+
+function edgeCost(costs: ReadonlyMap<string, number>, a: string, b: string): number {
+  return costs.get(pairKey(a, b)) ?? 0;
 }
 
 /**
@@ -67,7 +79,7 @@ function sitOutCounts(
 
 /**
  * Eligible sit-outs: everyone at the current minimum sit-out count.
- * Preserves input order so the search is deterministic.
+ * Preserves input order until the caller shuffles.
  */
 function eligibleSitOuts(
   participantIds: readonly string[],
@@ -82,39 +94,79 @@ function eligibleSitOuts(
   return participantIds.filter((id) => (counts.get(id) ?? 0) === min);
 }
 
+function shuffleInPlace<T>(items: T[], random: () => number): void {
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    const tmp = items[i]!;
+    items[i] = items[j]!;
+    items[j] = tmp;
+  }
+}
+
 /**
- * Perfect matching on an even-sized ordered list, avoiding forbidden edges.
- * Tries partners in list order and backtracks. Deterministic.
+ * Perfect matching on an even-sized list that minimises total prior-pair cost.
+ * Among minimum-cost matchings, picks one at random via `random`.
  */
-function findMatching(
+function findMinCostMatching(
   ids: readonly string[],
-  forbidden: ReadonlySet<string>
-): Pairing[] | null {
+  costs: ReadonlyMap<string, number>,
+  random: () => number
+): Pairing[] {
   if (ids.length === 0) return [];
-  if (ids.length % 2 !== 0) return null;
-
-  const first = ids[0];
-  if (first === undefined) return [];
-
-  for (let i = 1; i < ids.length; i++) {
-    const partner = ids[i];
-    if (partner === undefined) continue;
-    if (forbidden.has(pairKey(first, partner))) continue;
-
-    const remaining: string[] = [];
-    for (let j = 1; j < ids.length; j++) {
-      if (j === i) continue;
-      const id = ids[j];
-      if (id !== undefined) remaining.push(id);
-    }
-
-    const rest = findMatching(remaining, forbidden);
-    if (rest !== null) {
-      return [[first, partner], ...rest];
-    }
+  if (ids.length % 2 !== 0) {
+    throw new Error("findMinCostMatching requires an even-sized list");
   }
 
-  return null;
+  let bestCost = Number.POSITIVE_INFINITY;
+  const bestMatchings: Pairing[][] = [];
+
+  const dfs = (
+    remaining: readonly string[],
+    current: Pairing[],
+    costSoFar: number
+  ): void => {
+    if (remaining.length === 0) {
+      if (costSoFar < bestCost) {
+        bestCost = costSoFar;
+        bestMatchings.length = 0;
+        bestMatchings.push(current.map((p) => [p[0], p[1]] as Pairing));
+      } else if (costSoFar === bestCost) {
+        bestMatchings.push(current.map((p) => [p[0], p[1]] as Pairing));
+      }
+      return;
+    }
+    if (costSoFar > bestCost) return;
+
+    const first = remaining[0];
+    if (first === undefined) return;
+
+    for (let i = 1; i < remaining.length; i += 1) {
+      const partner = remaining[i];
+      if (partner === undefined) continue;
+      const nextCost = costSoFar + edgeCost(costs, first, partner);
+      if (nextCost > bestCost) continue;
+
+      const nextRemaining: string[] = [];
+      for (let j = 1; j < remaining.length; j += 1) {
+        if (j === i) continue;
+        const id = remaining[j];
+        if (id !== undefined) nextRemaining.push(id);
+      }
+
+      current.push([first, partner]);
+      dfs(nextRemaining, current, nextCost);
+      current.pop();
+    }
+  };
+
+  dfs(ids, [], 0);
+
+  if (bestMatchings.length === 0) {
+    throw new Error("No perfect matching found for even roster");
+  }
+
+  const pick = Math.floor(random() * bestMatchings.length);
+  return bestMatchings[pick] ?? bestMatchings[0]!;
 }
 
 function toAssignedPairs(
@@ -141,17 +193,18 @@ function toAssignedPairs(
 /**
  * Assign pairs (and optional sit-out) for the next round.
  *
- * Constraints (spec §17):
- * 1. No repeat pairings within the session.
- * 2. Even sit-out distribution: nobody sits out twice until everyone has once.
- *
- * No relaxation. If no valid assignment exists, returns `{ ok: false, reason }`.
- * Deterministic: no randomness; candidates are tried in input order.
+ * Among all complete pairings of the present roster, chooses one that
+ * minimises the total number of prior pairings across pairs. Ties break
+ * randomly. Sit-out prefers whoever has sat out fewest times; ties break
+ * randomly. Always succeeds for a non-empty roster.
  */
 export function assignPairs(
   participantIds: readonly string[],
-  history: PairHistory = emptyHistory()
+  history: PairHistory = emptyHistory(),
+  options?: AssignPairsOptions
 ): RoundAssignment {
+  const random = options?.random ?? Math.random;
+
   if (participantIds.length === 0) {
     return { ok: false, reason: "No participants to pair." };
   }
@@ -167,17 +220,10 @@ export function assignPairs(
   }
 
   const orderIndex = new Map(roster.map((id, i) => [id, i]));
-  const forbidden = buildForbidden(history);
+  const costs = buildPairCosts(history);
 
   if (roster.length % 2 === 0) {
-    const matching = findMatching(roster, forbidden);
-    if (matching === null) {
-      return {
-        ok: false,
-        reason:
-          "No valid pairing exists without repeating a pair from earlier in this session.",
-      };
-    }
+    const matching = findMinCostMatching(roster, costs, random);
     return {
       ok: true,
       pairs: toAssignedPairs(matching, orderIndex),
@@ -185,23 +231,20 @@ export function assignPairs(
     };
   }
 
-  // Odd headcount: one sit-out, then a perfect matching on the rest.
+  // Odd headcount: pick sit-out first (fewest prior sit-outs, random among
+  // ties), then min-cost match the rest.
   const candidates = eligibleSitOuts(roster, history);
-  for (const sitOut of candidates) {
-    const remaining = roster.filter((id) => id !== sitOut);
-    const matching = findMatching(remaining, forbidden);
-    if (matching !== null) {
-      return {
-        ok: true,
-        pairs: toAssignedPairs(matching, orderIndex),
-        sitOut,
-      };
-    }
+  shuffleInPlace(candidates, random);
+  const sitOut = candidates[0];
+  if (sitOut === undefined) {
+    return { ok: false, reason: "No participants to pair." };
   }
 
+  const remaining = roster.filter((id) => id !== sitOut);
+  const matching = findMinCostMatching(remaining, costs, random);
   return {
-    ok: false,
-    reason:
-      "No valid pairing and sit-out exists under the no-repeat and sit-out rotation rules.",
+    ok: true,
+    pairs: toAssignedPairs(matching, orderIndex),
+    sitOut,
   };
 }
