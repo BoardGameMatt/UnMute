@@ -94,12 +94,24 @@ function validateItem(
     }
   }
 
-  if (questionIsActive && (item.source_1_url === null || item.source_2_url === null)) {
-    fail(
-      questionName,
-      name,
-      "question is active but this item is missing source_1_url or source_2_url"
-    );
+  if (questionIsActive) {
+    if (item.is_correct === true) {
+      if (item.source_1_url === null || item.source_2_url === null) {
+        fail(
+          questionName,
+          name,
+          "question is active and this item is correct, so it needs two independent sources"
+        );
+      }
+    } else {
+      if (item.source_1_url === null) {
+        fail(
+          questionName,
+          name,
+          "question is active but this item is missing source_1_url"
+        );
+      }
+    }
   }
 }
 
