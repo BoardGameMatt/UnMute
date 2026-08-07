@@ -29,6 +29,7 @@ export {
   deriveItemState,
   waoPairChannelName,
   WAO_SETTLE_SECONDS,
+  WAO_ROUND_SECONDS,
   type WaoBroadcastPayload,
   type WaoItemVisualState,
   type WaoPairPlayState,

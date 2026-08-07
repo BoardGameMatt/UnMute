@@ -5,6 +5,8 @@
 import type { WaoLockReason, WaoTapAction as DbTapAction } from "@/lib/types/database";
 
 export const WAO_SETTLE_SECONDS = 3;
+/** Authoritative play duration written onto new wao_sessions rows. */
+export const WAO_ROUND_SECONDS = 60;
 
 export type WaoTapAction = DbTapAction;
 

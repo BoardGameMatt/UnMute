@@ -8,6 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { assignPairs, type PairHistory } from "./assign-pairs";
 import { drawQuestion, mayDrawInactiveQuestions } from "./draw-question";
 import type { WaoPair, WaoQuestion, WaoRound, WaoSession } from "@/lib/types/database";
+import { WAO_ROUND_SECONDS } from "./types";
 
 export type StartRoundSuccess = {
   ok: true;
@@ -64,7 +65,7 @@ export async function startWaoRound(args: {
       .from("wao_sessions")
       .insert({
         session_id: args.sessionId,
-        timer_seconds: 90,
+        timer_seconds: WAO_ROUND_SECONDS,
       })
       .select("*")
       .maybeSingle();
