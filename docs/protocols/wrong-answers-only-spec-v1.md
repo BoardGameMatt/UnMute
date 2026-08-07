@@ -327,6 +327,12 @@ Fade and slide only. State transitions on tap should be immediate and quiet. No 
 
 ## 9. Content specification
 
+**Normative question design and verification** live in
+[`wao-question-contract-v1.md`](./wao-question-contract-v1.md). That contract
+supersedes Section 9.5 below and is the authority for how questions are
+structured, verified, and shipped. Sections 9.1–9.4 remain useful summary;
+where they conflict with the contract, the contract wins.
+
 ### 9.1 Hard content rules
 
 1. **No single canonical list.** If one search resolves all ten items simultaneously, the question is dead. This disqualifies "the seven deadly sins," "Monopoly properties," "characters who survive Hamlet," and any question whose category maps to one Wikipedia page. **Categories must require ten separate lookups.** This is the single most important content constraint and it is not intuitive.
@@ -360,6 +366,11 @@ Without this template, authored questions land either trivially easy or as coin 
 Target 50/50 across the 20-question library between US-anchored and internationally legible categories. Tag each question `us`, `intl`, or `global`.
 
 ### 9.5 Category slate
+
+> **Superseded for selection and verification rules** by
+> [`wao-question-contract-v1.md`](./wao-question-contract-v1.md) (arbiter test,
+> concentration check, asymmetric source requirements, contested-item rule).
+> The examples below remain historical working notes, not a shipping checklist.
 
 **Strong format: real-or-fake name templates.** Ten items each requiring an independent check. Highly lookup-resistant. This is what the IKEA idea actually is, and it generalizes.
 - IKEA product names vs plausible Swedish-sounding inventions

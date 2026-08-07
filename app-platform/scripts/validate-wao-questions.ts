@@ -4,6 +4,10 @@
  *
  * Reads the JSON library and reports every rule violation it finds.
  * Never connects to a database and never writes anything.
+ *
+ * Normative question design (structure, verification, shipping checklist):
+ * docs/protocols/wao-question-contract-v1.md
+ * This script enforces the machine-checkable subset of that contract.
  */
 
 import { readFileSync } from "node:fs";

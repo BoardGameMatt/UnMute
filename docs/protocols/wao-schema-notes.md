@@ -212,6 +212,11 @@ separate pre-halving column, because the raw value is recomputable from
 
 ## Step 2: the question library file and its validator
 
+**How questions must be structured and verified** is normative in
+[`wao-question-contract-v1.md`](./wao-question-contract-v1.md). The JSON shape
+and `validate:wao` script below encode the machine-checkable subset of that
+contract; authoring and shipping still follow the full checklist there.
+
 `app-platform/supabase/seed-data/wao-questions.json` is the versioned source of
 truth for the library, per spec 6.2. Its shape maps one to one onto the two
 library tables: the top level carries `schema_version` and `protocol`, then a
