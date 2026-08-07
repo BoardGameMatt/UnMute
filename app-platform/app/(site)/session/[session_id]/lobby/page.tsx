@@ -2,6 +2,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SessionLobbyView } from "@/components/session/session-lobby-view";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
+import { getProtocol } from "@/lib/protocols";
 import { buildJoinUrl, resolveAppOrigin } from "@/lib/session/app-origin";
 import { mapSessionParticipantRows } from "@/lib/session/map-lobby-participants";
 import { createClient } from "@/lib/supabase/server";
@@ -10,21 +11,26 @@ type SessionLobbyPageProps = {
   params: { session_id: string };
 };
 
-function protocolNameFromSession(session: unknown): string {
-  if (!session || typeof session !== "object") return "Session";
-  const protocols = (session as { protocols?: unknown }).protocols;
-  if (protocols == null) return "Session";
-  if (Array.isArray(protocols)) {
-    const p = protocols[0];
-    if (p && typeof p === "object" && "name" in p) {
-      return String((p as { name: string }).name) || "Session";
-    }
-    return "Session";
+type ProtocolEmbed = {
+  slug: string;
+  name: string;
+};
+
+function protocolFromSession(session: {
+  protocols: ProtocolEmbed | ProtocolEmbed[] | null;
+}): { slug: string; name: string } {
+  const raw = session.protocols;
+  if (raw == null) {
+    return { slug: "", name: "Session" };
   }
-  if (typeof protocols === "object" && "name" in protocols) {
-    return String((protocols as { name: string }).name) || "Session";
+  const row = Array.isArray(raw) ? raw[0] : raw;
+  if (!row || typeof row !== "object") {
+    return { slug: "", name: "Session" };
   }
-  return "Session";
+  return {
+    slug: row.slug ?? "",
+    name: row.name ?? "Session",
+  };
 }
 
 export default async function SessionLobbyPage({ params }: SessionLobbyPageProps) {
@@ -33,7 +39,7 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
 
   const { data: session, error: sessionErr } = await supabase
     .from("sessions")
-    .select("id, join_code, status, protocols ( name )")
+    .select("id, join_code, status, protocols ( slug, name )")
     .eq("id", sessionId)
     .maybeSingle();
 
@@ -44,13 +50,16 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
   const sessionRecord = session as {
     join_code: string;
     status: string;
+    protocols: ProtocolEmbed | ProtocolEmbed[] | null;
   };
 
   if (sessionRecord.status !== "lobby") {
     redirect(`/session/${sessionId}`);
   }
 
-  const protocolName = protocolNameFromSession(session);
+  const { slug: protocolSlug, name: protocolName } =
+    protocolFromSession(sessionRecord);
+  const LobbyExplainer = getProtocol(protocolSlug)?.lobbyExplainer;
 
   const { data: spRows, error: spErr } = await supabase
     .from("session_participants")
@@ -120,6 +129,7 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
         initialParticipants={participants}
         currentRole={currentRole}
         currentParticipantId={participantId}
+        LobbyExplainer={LobbyExplainer}
       />
     </main>
   );

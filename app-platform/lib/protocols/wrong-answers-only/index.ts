@@ -1,4 +1,5 @@
 import WrongAnswersOnlyProtocol from "./WrongAnswersOnlyProtocol";
+import { WaoLobbyExplainer } from "./components/WaoLobbyExplainer";
 import { registerProtocol } from "../registry";
 
 registerProtocol({
@@ -10,4 +11,5 @@ registerProtocol({
   minPlayers: 2,
   maxPlayers: 24,
   component: WrongAnswersOnlyProtocol,
+  lobbyExplainer: WaoLobbyExplainer,
 });

@@ -21,6 +21,11 @@ export interface ProtocolDefinition {
   minPlayers: number;
   maxPlayers: number;
   component: ComponentType<SessionProtocolProps>;
+  /**
+   * Optional lobby teaching slot. Rendered below the join QR and above the
+   * participant roster. Protocols that omit this leave the lobby unchanged.
+   */
+  lobbyExplainer?: ComponentType;
   /** Optional JSON-schema-shaped or app-specific config metadata */
   configSchema?: Json;
 }

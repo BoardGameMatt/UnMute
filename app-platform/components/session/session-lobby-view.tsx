@@ -1,7 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+  type ComponentType,
+} from "react";
 import {
   startSessionAction,
   transferLeadAction,
@@ -23,6 +29,8 @@ type SessionLobbyViewProps = {
   initialParticipants: LobbyParticipant[];
   currentRole: "lead" | "member" | null;
   currentParticipantId: string | null;
+  /** Optional per-protocol teaching slot (below QR, above roster). */
+  LobbyExplainer?: ComponentType;
 };
 
 export function SessionLobbyView({
@@ -33,6 +41,7 @@ export function SessionLobbyView({
   initialParticipants,
   currentRole,
   currentParticipantId,
+  LobbyExplainer,
 }: SessionLobbyViewProps) {
   const router = useRouter();
   const participants = useSessionParticipants(sessionId, initialParticipants);
@@ -139,7 +148,7 @@ export function SessionLobbyView({
         className="rounded-lg border border-cloud-grey bg-warm-white p-6 shadow-sm sm:p-7"
         aria-label="Join code for projector"
       >
-        <p className="mb-4 text-center font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-steel-blue">
+        <p className="mb-4 text-center font-mono text-[10px] font-medium uppercase tracking-widest text-steel-blue">
           Join code: show on projector
         </p>
         <SessionJoinQr joinUrl={joinUrl} />
@@ -159,6 +168,8 @@ export function SessionLobbyView({
           <span className="font-body"> and enter this code</span>
         </p>
       </section>
+
+      {LobbyExplainer ? <LobbyExplainer /> : null}
 
       <section aria-label="Participants">
         <h2 className="mb-4 font-mono text-xs font-medium uppercase tracking-widest text-steel-blue">
