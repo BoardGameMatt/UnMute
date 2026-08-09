@@ -31,17 +31,23 @@ sudo chmod 666 "$DOCKER_LOG"
 # inside this unprivileged nested environment.
 sudo bash -c "nohup dockerd --storage-driver=fuse-overlayfs >>'$DOCKER_LOG' 2>&1 &"
 
-echo "Waiting for the Docker daemon to become ready..."
-for _ in $(seq 1 90); do
+# Cold boots must validate every cached image layer through fuse-overlayfs (a
+# slow userspace driver), so the daemon can take minutes to reach "API listen"
+# the first time. Wait generously and log a heartbeat.
+echo "Waiting for the Docker daemon to become ready (up to 600s)..."
+for i in $(seq 1 600); do
   sudo chmod 666 /var/run/docker.sock 2>/dev/null || true
   if docker info >/dev/null 2>&1; then
-    echo "Docker daemon is ready"
+    echo "Docker daemon is ready after ${i}s"
     exit 0
+  fi
+  if [ $((i % 20)) -eq 0 ]; then
+    echo "  ...still waiting (${i}s); dockerd pid=$(pgrep -x dockerd || echo none)"
   fi
   sleep 1
 done
 
-echo "Docker daemon failed to start after 90s. Diagnostics:" >&2
+echo "Docker daemon failed to start after 600s. Diagnostics:" >&2
 echo "--- dockerd process ---" >&2
 pgrep -a dockerd >&2 || echo "(no dockerd process)" >&2
 echo "--- full daemon log ---" >&2
