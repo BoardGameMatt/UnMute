@@ -41,7 +41,7 @@ echo "==> Writing app-platform/.env.local (local Supabase dev keys)"
 "$REPO_ROOT/.cursor/write-env-local.sh"
 
 echo "==> Booting local Supabase stack (pulls images, applies migrations + seed.sql grants)"
-supabase start
+"$REPO_ROOT/.cursor/supabase-up.sh"
 
 echo "==> Seeding demo data"
 npm run seed

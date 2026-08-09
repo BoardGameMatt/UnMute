@@ -19,7 +19,7 @@ echo "==> Ensuring app-platform/.env.local exists"
 
 echo "==> Bringing up the local Supabase stack"
 cd "$APP_DIR"
-supabase start
+"$REPO_ROOT/.cursor/supabase-up.sh"
 
 echo "==> Seeding demo data (idempotent)"
 npm run seed
