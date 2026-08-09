@@ -40,11 +40,16 @@ npm ci
 echo "==> Writing app-platform/.env.local (local Supabase dev keys)"
 "$REPO_ROOT/.cursor/write-env-local.sh"
 
-echo "==> Booting local Supabase stack (pulls images, applies migrations + seed.sql grants)"
+echo "==> Booting local Supabase stack once to pull images and validate migrations"
+# This bakes the Supabase container images into the snapshot and confirms the
+# migrations + seed.sql grants apply cleanly.
 "$REPO_ROOT/.cursor/supabase-up.sh"
 
-echo "==> Seeding demo data"
-npm run seed
-npm run load:wao
+echo "==> Tearing the stack down so the snapshot bakes images only (no containers)"
+# The environment build snapshots the VM after install runs. Leaving containers
+# running would force dockerd to restore them on every future boot (slow and
+# fragile in this nested VM), so we keep only the cached images. start.sh
+# recreates the stack and seeds demo data on each boot.
+supabase stop --no-backup >/dev/null 2>&1 || true
 
 echo "==> install.sh complete"
