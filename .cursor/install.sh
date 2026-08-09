@@ -14,10 +14,6 @@ export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -qq
 sudo apt-get install -y -qq docker.io fuse-overlayfs uidmap postgresql-client
 
-echo "==> Selecting legacy iptables (nftables backend breaks Docker bridge networking in this nested VM)"
-sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
-sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
-
 echo "==> Installing the Supabase CLI"
 if ! command -v supabase >/dev/null 2>&1; then
   ARCH="$(dpkg --print-architecture)"

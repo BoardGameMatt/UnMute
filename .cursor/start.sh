@@ -7,10 +7,6 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_DIR="$REPO_ROOT/app-platform"
 
-echo "==> Ensuring legacy iptables backend"
-sudo update-alternatives --set iptables /usr/sbin/iptables-legacy >/dev/null 2>&1 || true
-sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy >/dev/null 2>&1 || true
-
 echo "==> Starting the Docker daemon"
 "$REPO_ROOT/.cursor/docker-up.sh"
 

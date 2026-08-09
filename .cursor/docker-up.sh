@@ -41,6 +41,9 @@ for _ in $(seq 1 90); do
   sleep 1
 done
 
-echo "Docker daemon failed to start; last log lines:" >&2
-sudo tail -n 60 "$DOCKER_LOG" >&2 || true
+echo "Docker daemon failed to start after 90s. Diagnostics:" >&2
+echo "--- dockerd process ---" >&2
+pgrep -a dockerd >&2 || echo "(no dockerd process)" >&2
+echo "--- full daemon log ---" >&2
+sudo cat "$DOCKER_LOG" >&2 || true
 exit 1
