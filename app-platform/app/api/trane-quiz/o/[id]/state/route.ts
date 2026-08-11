@@ -9,6 +9,9 @@ import type {
   TraneResponse,
 } from "@/lib/types/database";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function parseOptions(raw: unknown): TraneQuestionOption[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(

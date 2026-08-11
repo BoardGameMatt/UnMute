@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { requireHostOffering } from "@/lib/trane-quiz/auth";
 import type { TraneParticipant } from "@/lib/types/database";
 
+/** Must not be statically cached — counts change as people join. */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(
   _req: Request,
   { params }: { params: { token: string } }
@@ -42,10 +46,11 @@ export async function GET(
       postCompleted,
       paired,
       endOnly,
+      serverTime: new Date().toISOString(),
     },
     {
       headers: {
-        "Cache-Control": "no-store, max-age=0",
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
       },
     }
   );

@@ -5,6 +5,7 @@ import {
   buildTraneJoinUrl,
 } from "@/lib/trane-quiz/join-code";
 import { resolveAppOrigin } from "@/lib/session/app-origin";
+import type { TraneParticipant } from "@/lib/types/database";
 import { TraneHostConsole } from "./trane-host-console";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,25 @@ export default async function TraneHostPage({ params }: PageProps) {
     .eq("id", auth.offering.course_id)
     .maybeSingle();
 
+  const { data: participants } = await auth.admin
+    .from("trane_participants")
+    .select("*")
+    .eq("offering_id", auth.offering.id);
+
+  const rows = (participants ?? []) as TraneParticipant[];
+  const initialStatus = {
+    phase: auth.offering.phase,
+    joined: rows.length,
+    preCompleted: rows.filter((p) => p.pre_completed_at).length,
+    postCompleted: rows.filter((p) => p.post_completed_at).length,
+    paired: rows.filter(
+      (p) => p.pre_completed_at && p.post_completed_at && !p.post_unpaired
+    ).length,
+    endOnly: rows.filter(
+      (p) => p.post_completed_at && (!p.pre_completed_at || p.post_unpaired)
+    ).length,
+  };
+
   const origin = resolveAppOrigin(headers());
   const joinUrl = buildTraneJoinUrl(origin, auth.offering.join_code);
   const hostUrl = buildTraneHostUrl(origin, auth.offering.host_token);
@@ -43,6 +63,7 @@ export default async function TraneHostPage({ params }: PageProps) {
         joinUrl={joinUrl}
         hostUrl={hostUrl}
         initialPhase={auth.offering.phase}
+        initialStatus={initialStatus}
       />
     </main>
   );
