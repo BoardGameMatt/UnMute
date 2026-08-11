@@ -431,6 +431,113 @@ export type WaoRoundResultInsert = Omit<WaoRoundResult, "id" | "created_at"> & {
   created_at?: string;
 };
 
+/** Trane Quiz — isolated side product (migration 013). */
+
+export type TraneOfferingPhase =
+  | "waiting"
+  | "pre_open"
+  | "pre_closed"
+  | "post_open"
+  | "closed";
+
+export type TraneResponsePhase = "pre" | "post";
+
+export type TraneQuestionOption = {
+  key: string;
+  label: string;
+};
+
+export interface TraneCourse {
+  id: string;
+  slug: string;
+  title: string;
+  revision_label: string;
+  created_at: string;
+}
+
+export type TraneCourseInsert = Omit<TraneCourse, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export interface TraneQuestion {
+  id: string;
+  course_id: string;
+  sort_order: number;
+  stem: string;
+  options: TraneQuestionOption[];
+  correct_option: string;
+  created_at: string;
+}
+
+export type TraneQuestionInsert = Omit<TraneQuestion, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  options: Json;
+};
+
+export interface TraneOffering {
+  id: string;
+  course_id: string;
+  class_date: string;
+  label: string | null;
+  phase: TraneOfferingPhase;
+  join_code: string;
+  host_token: string;
+  created_at: string;
+  closed_at: string | null;
+}
+
+export type TraneOfferingInsert = Omit<
+  TraneOffering,
+  "id" | "created_at" | "join_code" | "host_token" | "phase" | "closed_at"
+> & {
+  id?: string;
+  created_at?: string;
+  join_code?: string;
+  host_token?: string;
+  phase?: TraneOfferingPhase;
+  closed_at?: string | null;
+  label?: string | null;
+};
+
+export interface TraneParticipant {
+  id: string;
+  offering_id: string;
+  token: string;
+  pre_completed_at: string | null;
+  post_completed_at: string | null;
+  post_unpaired: boolean;
+  post_unpaired_confirmed_at: string | null;
+  created_at: string;
+}
+
+export type TraneParticipantInsert = Omit<TraneParticipant, "id" | "created_at" | "token"> & {
+  id?: string;
+  created_at?: string;
+  token?: string;
+  pre_completed_at?: string | null;
+  post_completed_at?: string | null;
+  post_unpaired?: boolean;
+  post_unpaired_confirmed_at?: string | null;
+};
+
+export interface TraneResponse {
+  id: string;
+  offering_id: string;
+  participant_id: string;
+  question_id: string;
+  phase: TraneResponsePhase;
+  selected_option: string;
+  submitted_at: string;
+}
+
+export type TraneResponseInsert = Omit<TraneResponse, "id" | "submitted_at"> & {
+  id?: string;
+  submitted_at?: string;
+};
+
+
 export type Database = {
   public: {
     Tables: {
@@ -548,12 +655,46 @@ export type Database = {
         Update: Partial<WaoRoundResultInsert>;
         Relationships: [];
       };
+      trane_courses: {
+        Row: TraneCourse;
+        Insert: TraneCourseInsert;
+        Update: Partial<TraneCourseInsert>;
+        Relationships: [];
+      };
+      trane_questions: {
+        Row: TraneQuestion;
+        Insert: TraneQuestionInsert;
+        Update: Partial<TraneQuestionInsert>;
+        Relationships: [];
+      };
+      trane_offerings: {
+        Row: TraneOffering;
+        Insert: TraneOfferingInsert;
+        Update: Partial<TraneOfferingInsert>;
+        Relationships: [];
+      };
+      trane_participants: {
+        Row: TraneParticipant;
+        Insert: TraneParticipantInsert;
+        Update: Partial<TraneParticipantInsert>;
+        Relationships: [];
+      };
+      trane_responses: {
+        Row: TraneResponse;
+        Insert: TraneResponseInsert;
+        Update: Partial<TraneResponseInsert>;
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
       generate_join_code: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+      generate_trane_join_code: {
         Args: Record<string, never>;
         Returns: string;
       };

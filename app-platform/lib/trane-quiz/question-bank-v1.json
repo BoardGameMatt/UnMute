@@ -1,0 +1,1454 @@
+{
+  "courses": [
+    {
+      "slug": "intro-to-pm",
+      "title": "Introduction to Product Management",
+      "revision_label": "January 2024",
+      "questions": [
+        {
+          "sort_order": 1,
+          "stem": "Which of the following is NOT a part of the Trane Technologies Product Management Framework?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Generating, Developing, and Launching Offerings"
+            },
+            {
+              "key": "b",
+              "label": "Product Strategy"
+            },
+            {
+              "key": "c",
+              "label": "Sales, Inventory, and Operations Planning"
+            },
+            {
+              "key": "d",
+              "label": "In-Line Product Management"
+            },
+            {
+              "key": "e",
+              "label": "Fact Base and Analytics"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 2,
+          "stem": "What are the 3 core functions that make up a typical Product Growth Team (PGT)?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Product Management, Engineering, and Marketing"
+            },
+            {
+              "key": "b",
+              "label": "Product Management, Marketing, and Sales"
+            },
+            {
+              "key": "c",
+              "label": "Product Management, Operations, and Sales"
+            },
+            {
+              "key": "d",
+              "label": "Product Management, Operations, and Engineering"
+            },
+            {
+              "key": "e",
+              "label": "Engineering, Operations, and SBU Leadership"
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 3,
+          "stem": "What are the “3 Cs” of a Fact-Base Analysis?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Communication, Cooperation, Credibility"
+            },
+            {
+              "key": "b",
+              "label": "Corporate, Company, Customer"
+            },
+            {
+              "key": "c",
+              "label": "Company, Customers, Competition"
+            },
+            {
+              "key": "d",
+              "label": "Customer Needs, Customer Trends, Customer Data"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 4,
+          "stem": "Customer segmentation should be based primarily on:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Geography"
+            },
+            {
+              "key": "b",
+              "label": "Financials"
+            },
+            {
+              "key": "c",
+              "label": "Industry Verticals"
+            },
+            {
+              "key": "d",
+              "label": "Customer Needs"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 5,
+          "stem": "Which of the following is NOT a part of the Trane Product Strategy Framework?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Fact Base"
+            },
+            {
+              "key": "b",
+              "label": "Product Development"
+            },
+            {
+              "key": "c",
+              "label": "Where To Play"
+            },
+            {
+              "key": "d",
+              "label": "How To Win"
+            },
+            {
+              "key": "e",
+              "label": "Execution"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 6,
+          "stem": "In product strategy, the term “Where to Play” primarily refers to:",
+          "options": [
+            {
+              "key": "a",
+              "label": "The location of your company"
+            },
+            {
+              "key": "b",
+              "label": "The location of your manufacturing facilities"
+            },
+            {
+              "key": "c",
+              "label": "Your targeted customers"
+            },
+            {
+              "key": "d",
+              "label": "Your targeted competitors"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 7,
+          "stem": "TRUE or FALSE: GDLO and PDP are the same thing.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 8,
+          "stem": "How many decision gates are there in Trane Technologies’ new product development process?",
+          "options": [
+            {
+              "key": "a",
+              "label": "1"
+            },
+            {
+              "key": "b",
+              "label": "2"
+            },
+            {
+              "key": "c",
+              "label": "3"
+            },
+            {
+              "key": "d",
+              "label": "4"
+            },
+            {
+              "key": "e",
+              "label": "5"
+            },
+            {
+              "key": "f",
+              "label": "6"
+            }
+          ],
+          "correct_option": "f"
+        },
+        {
+          "sort_order": 9,
+          "stem": "What are the “4 Ps” of Marketing?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Product, Price, Promotion, Process"
+            },
+            {
+              "key": "b",
+              "label": "Product, Price, Promotion, Place"
+            },
+            {
+              "key": "c",
+              "label": "Product, People, Promotion, Process"
+            },
+            {
+              "key": "d",
+              "label": "Product, Process, Positioning, Place"
+            },
+            {
+              "key": "e",
+              "label": "Product, People, Positioning, Place"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 10,
+          "stem": "Which of the following are NOT one of the five stages of a typical in-line product life cycle?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Development"
+            },
+            {
+              "key": "b",
+              "label": "Introduction"
+            },
+            {
+              "key": "c",
+              "label": "Growth"
+            },
+            {
+              "key": "d",
+              "label": "Maturity"
+            },
+            {
+              "key": "e",
+              "label": "Decline"
+            },
+            {
+              "key": "f",
+              "label": "Exit"
+            }
+          ],
+          "correct_option": "a"
+        }
+      ]
+    },
+    {
+      "slug": "product-line-strategy",
+      "title": "Product Line Strategy",
+      "revision_label": "January 2024",
+      "questions": [
+        {
+          "sort_order": 1,
+          "stem": "Which of the following is NOT a part of the Trane Technologies Product Strategy Framework?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Fact Base"
+            },
+            {
+              "key": "b",
+              "label": "Where To Play"
+            },
+            {
+              "key": "c",
+              "label": "How To Win"
+            },
+            {
+              "key": "d",
+              "label": "GDLO"
+            },
+            {
+              "key": "e",
+              "label": "Execution"
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 2,
+          "stem": "TRUE or FALSE: A product strategy is designed to guarantee funding of future investments.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 3,
+          "stem": "Which of the following is NOT part of a PESTLE Analysis?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Political Trends"
+            },
+            {
+              "key": "b",
+              "label": "Executive Trends"
+            },
+            {
+              "key": "c",
+              "label": "Social Trends"
+            },
+            {
+              "key": "d",
+              "label": "Technological Trends"
+            },
+            {
+              "key": "e",
+              "label": "Legal Trends"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 4,
+          "stem": "Which of the following is NOT a part of a competitive value chain analysis?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Inbound Logistics"
+            },
+            {
+              "key": "b",
+              "label": "Operations"
+            },
+            {
+              "key": "f",
+              "label": "Outbound Logistics"
+            },
+            {
+              "key": "g",
+              "label": "Marketing and Sales"
+            },
+            {
+              "key": "h",
+              "label": "Service"
+            },
+            {
+              "key": "i",
+              "label": "Financial Goals"
+            }
+          ],
+          "correct_option": "i"
+        },
+        {
+          "sort_order": 5,
+          "stem": "Strategic Objectives are defined as:",
+          "options": [
+            {
+              "key": "a",
+              "label": "The key market segments you want to target"
+            },
+            {
+              "key": "b",
+              "label": "The measurable goals you want to achieve"
+            },
+            {
+              "key": "c",
+              "label": "Your segment activation plan"
+            },
+            {
+              "key": "d",
+              "label": "Your strategic growth roadmap"
+            },
+            {
+              "key": "e",
+              "label": "All of the above"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 6,
+          "stem": "Which tool is primarily used to determine which customer segments you wish to target with your strategy?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Market Attractiveness and Relative Competitive Position"
+            },
+            {
+              "key": "b",
+              "label": "Voice of Customer"
+            },
+            {
+              "key": "c",
+              "label": "Customer Segmentation"
+            },
+            {
+              "key": "d",
+              "label": "Buying and Usage Process"
+            },
+            {
+              "key": "e",
+              "label": "Ecosystem Portrait"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 7,
+          "stem": "What is a segment activation plan?",
+          "options": [
+            {
+              "key": "a",
+              "label": "A targeted product launch plan"
+            },
+            {
+              "key": "b",
+              "label": "A customer segmentation plan"
+            },
+            {
+              "key": "c",
+              "label": "A customer-based SWOT analysis"
+            },
+            {
+              "key": "d",
+              "label": "Strategic initiatives for your targeted customer segments"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 8,
+          "stem": "TRUE or FALSE: A strategic gap analysis determines what gaps exist between your current capabilities and whatever future capabilities you may require.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 9,
+          "stem": "When developing your Strategic Growth Roadmap, you should categorize your investment activities by:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Product, Technology, and Channel"
+            },
+            {
+              "key": "b",
+              "label": "Product, Pricing, and Promotion"
+            },
+            {
+              "key": "c",
+              "label": "Product, Sales, and Operations"
+            },
+            {
+              "key": "d",
+              "label": "Engineering, Marketing, and Operations"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 10,
+          "stem": "TRUE or FALSE: A product strategy and a strategy A3 are essentially the same thing.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        }
+      ]
+    },
+    {
+      "slug": "gdlo-commercialization",
+      "title": "GDLO and Commercialization",
+      "revision_label": "January 2024",
+      "questions": [
+        {
+          "sort_order": 1,
+          "stem": "Which of the following best describes the relationship between GDLO and the Product Development Process (PDP)?",
+          "options": [
+            {
+              "key": "a",
+              "label": "GDLO and PDP are the same thing"
+            },
+            {
+              "key": "b",
+              "label": "GDLO is used for commercial projects and PDP is used for engineering projects"
+            },
+            {
+              "key": "c",
+              "label": "GDLO is a set of tools used within the PDP process"
+            },
+            {
+              "key": "d",
+              "label": "PDP applies to waterfall development projects while GDLO applies to agile development projects"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 2,
+          "stem": "Which of the following is NOT a phase of the GDLO process?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Concept Development"
+            },
+            {
+              "key": "b",
+              "label": "Concept Validation"
+            },
+            {
+              "key": "c",
+              "label": "Agile Development"
+            },
+            {
+              "key": "d",
+              "label": "Launch Preparation"
+            },
+            {
+              "key": "e",
+              "label": "Launch and Support"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 3,
+          "stem": "TRUE or FALSE: You are expected to fully answer all of the 13 Commercial Questions at Gate 1.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 4,
+          "stem": "TRUE or FALSE: The 13 Commercial Questions correspond to the “Where to Play” and “How to Win” sections of your Product Strategy",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 5,
+          "stem": "Which of the following is NOT a part of your Commercial Hypothesis?",
+          "options": [
+            {
+              "key": "a",
+              "label": "A Clear Customer"
+            },
+            {
+              "key": "b",
+              "label": "A Specific Offering"
+            },
+            {
+              "key": "c",
+              "label": "A Value Proposition"
+            },
+            {
+              "key": "d",
+              "label": "A Competitive Advantage"
+            },
+            {
+              "key": "e",
+              "label": "A Detailed Business Case"
+            }
+          ],
+          "correct_option": "e"
+        },
+        {
+          "sort_order": 6,
+          "stem": "At which Gate are you expected to present your Commercial Hypothesis?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Gate 0"
+            },
+            {
+              "key": "b",
+              "label": "Gate 1"
+            },
+            {
+              "key": "c",
+              "label": "Gate 2"
+            },
+            {
+              "key": "d",
+              "label": "Gate 3"
+            },
+            {
+              "key": "e",
+              "label": "Gate 4"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 7,
+          "stem": "At which Gate are you expected to present your validated Business Case?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Gate 0"
+            },
+            {
+              "key": "b",
+              "label": "Gate 1"
+            },
+            {
+              "key": "c",
+              "label": "Gate 2"
+            },
+            {
+              "key": "d",
+              "label": "Gate 3"
+            },
+            {
+              "key": "e",
+              "label": "Gate 4"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 8,
+          "stem": "TRUE or FALSE: Good product requirements should specify exactly how a product should be designed.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 9,
+          "stem": "The Market Activation Toolkit is used to manage your:",
+          "options": [
+            {
+              "key": "opt_1",
+              "label": "Product Development Process"
+            },
+            {
+              "key": "opt_2",
+              "label": "Product Launch"
+            },
+            {
+              "key": "opt_3",
+              "label": "Product Strategy"
+            },
+            {
+              "key": "opt_4",
+              "label": "Product Life Cycle"
+            },
+            {
+              "key": "opt_5",
+              "label": "Pricing"
+            }
+          ],
+          "correct_option": "opt_2"
+        },
+        {
+          "sort_order": 10,
+          "stem": "The purpose of a Gate 5 review is to:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Determine how your product performed against design requirements"
+            },
+            {
+              "key": "b",
+              "label": "Determine how your product performed against business case commitments"
+            },
+            {
+              "key": "c",
+              "label": "Analyze lessons learned so they can be applied to future development projects"
+            },
+            {
+              "key": "d",
+              "label": "Close a product development project"
+            },
+            {
+              "key": "e",
+              "label": "All of the above"
+            }
+          ],
+          "correct_option": "e"
+        }
+      ]
+    },
+    {
+      "slug": "in-line-action-planning",
+      "title": "In-Line Action Planning",
+      "revision_label": "July 2025",
+      "questions": [
+        {
+          "sort_order": 1,
+          "stem": "Which of the following is NOT one of the In-Line life cycle stages of a product?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Development"
+            },
+            {
+              "key": "b",
+              "label": "Introduction"
+            },
+            {
+              "key": "c",
+              "label": "Growth"
+            },
+            {
+              "key": "d",
+              "label": "Maturity"
+            },
+            {
+              "key": "e",
+              "label": "Decline"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 2,
+          "stem": "TRUE or FALSE: The y-axis (vertical axis) of a product life cycle map represents time.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 3,
+          "stem": "The Vitality Index is a measurement of:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Projects in the pipeline"
+            },
+            {
+              "key": "b",
+              "label": "Margin realization"
+            },
+            {
+              "key": "c",
+              "label": "Return on investment"
+            },
+            {
+              "key": "d",
+              "label": "New product revenue"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 4,
+          "stem": "With respect to the 3 Levels of a Product, which of the following is NOT a part of the Augmented Product?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Delivery"
+            },
+            {
+              "key": "b",
+              "label": "Packaging"
+            },
+            {
+              "key": "c",
+              "label": "Support"
+            },
+            {
+              "key": "d",
+              "label": "Warranty"
+            },
+            {
+              "key": "e",
+              "label": "Service"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 5,
+          "stem": "TRUE or FALSE: The Top Line Margin Expansion (TLME) Toolkit is primarily designed to help you manage your pricing in the marketplace.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 6,
+          "stem": "Pricing a product above its perceived value will likely have what effect in the marketplace?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Loss of Share"
+            },
+            {
+              "key": "b",
+              "label": "Gain of Share"
+            },
+            {
+              "key": "c",
+              "label": "No Effect"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 7,
+          "stem": "TRUE or FALSE: Inbound Marketing involves telling people about your company, product, or service when they weren’t necessarily looking for it.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 8,
+          "stem": "Which of the following pricing actions is typically taken during the Introduction life cycle stage?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Price Normalization"
+            },
+            {
+              "key": "b",
+              "label": "Sequential Skimming"
+            },
+            {
+              "key": "c",
+              "label": "“Fire Sale” Pricing"
+            },
+            {
+              "key": "d",
+              "label": "Cost Plus Pricing"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 9,
+          "stem": "A Strategy A3 is...",
+          "options": [
+            {
+              "key": "a",
+              "label": "Executed on a single sheet of 11\" x 17\" sized paper"
+            },
+            {
+              "key": "b",
+              "label": "A problem-solving methodology"
+            },
+            {
+              "key": "c",
+              "label": "Used to track progress against a PGT's AOP targets"
+            },
+            {
+              "key": "d",
+              "label": "All of the above"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 10,
+          "stem": "TRUE or FALSE: When discontinuing a product, you should form a project team to help you manage your exit from the marketplace.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "a"
+        }
+      ]
+    },
+    {
+      "slug": "value-based-pricing",
+      "title": "Value-Based Pricing",
+      "revision_label": "December 2025",
+      "questions": [
+        {
+          "sort_order": 1,
+          "stem": "Which of the following is NOT one of the 4 parts of the Value-Based Pricing Framework?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Fact Base"
+            },
+            {
+              "key": "b",
+              "label": "Value Assessment"
+            },
+            {
+              "key": "c",
+              "label": "Offer and Price Structure"
+            },
+            {
+              "key": "d",
+              "label": "Price Setting"
+            },
+            {
+              "key": "e",
+              "label": "Value Communication"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 2,
+          "stem": "Pricing based on a product’s cost is referred to as:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Value-Based Pricing"
+            },
+            {
+              "key": "b",
+              "label": "Value-Cost Pricing"
+            },
+            {
+              "key": "c",
+              "label": "Cost-Plus Pricing"
+            },
+            {
+              "key": "d",
+              "label": "Margin-Based Pricing"
+            },
+            {
+              "key": "e",
+              "label": "Competitive Pricing"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 3,
+          "stem": "Pricing based on the delivered customer value is referred to as:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Value-Based Pricing"
+            },
+            {
+              "key": "b",
+              "label": "Value-Cost Pricing"
+            },
+            {
+              "key": "c",
+              "label": "Cost-Plus Pricing"
+            },
+            {
+              "key": "d",
+              "label": "Margin-Based Pricing"
+            },
+            {
+              "key": "e",
+              "label": "Competitive Pricing"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 4,
+          "stem": "Which of the following is an example of a revenue value driver?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Lower Fuel Costs"
+            },
+            {
+              "key": "b",
+              "label": "Labor Savings"
+            },
+            {
+              "key": "c",
+              "label": "Lower Repair Costs"
+            },
+            {
+              "key": "d",
+              "label": "Higher Resale Value"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 5,
+          "stem": "In the Economic Value Estimation model, Total Economic Value equals:",
+          "options": [
+            {
+              "key": "a",
+              "label": "[Competitive Reference Value]"
+            },
+            {
+              "key": "b",
+              "label": "[Positive Differentiation Value]"
+            },
+            {
+              "key": "c",
+              "label": "[Competitive Reference Value] + [Positive Differentiation Value]"
+            },
+            {
+              "key": "d",
+              "label": "[Positive Differentiation Value] – [Negative Differentiation Value]"
+            },
+            {
+              "key": "e",
+              "label": "[Competitive Reference Value] + [Positive Differentiation Value] – [Negative Differentiation Value]"
+            }
+          ],
+          "correct_option": "e"
+        },
+        {
+          "sort_order": 6,
+          "stem": "TRUE or FALSE: A good pricing metric should track with EITHER the value delivered OR the cost to serve, but not both.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 7,
+          "stem": "TRUE or FALSE: Price Sensitivity Factors provide guidance on setting an emotionally acceptable price band.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 8,
+          "stem": "Which of the following pricing strategies involves going to market at high prices with the intention of potentially lowering prices as your market share grows?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Penetration Pricing"
+            },
+            {
+              "key": "b",
+              "label": "Price Skimming"
+            },
+            {
+              "key": "c",
+              "label": "Neutral Pricing"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 9,
+          "stem": "Which of the following pricing strategies involves not using price to gain share, but also not allowing price alone to restrict your market share?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Penetration Pricing"
+            },
+            {
+              "key": "b",
+              "label": "Price Skimming"
+            },
+            {
+              "key": "c",
+              "label": "Neutral Pricing"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 10,
+          "stem": "Price Elasticity is a measurement of:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Price vs. Value"
+            },
+            {
+              "key": "b",
+              "label": "Price vs. Quantity"
+            },
+            {
+              "key": "c",
+              "label": "Price vs Market Share"
+            },
+            {
+              "key": "d",
+              "label": "Price vs. Revenue"
+            },
+            {
+              "key": "e",
+              "label": "Price vs. Margin"
+            }
+          ],
+          "correct_option": "b"
+        }
+      ]
+    },
+    {
+      "slug": "pgt-foundations",
+      "title": "PGT Foundations",
+      "revision_label": "January 2026",
+      "questions": [
+        {
+          "sort_order": 1,
+          "stem": "Which of the following is NOT one of the 3 core functions that make up a typical Product Growth Team (PGT)?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Product Management"
+            },
+            {
+              "key": "b",
+              "label": "Engineering"
+            },
+            {
+              "key": "c",
+              "label": "Sales"
+            },
+            {
+              "key": "d",
+              "label": "Operations"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 2,
+          "stem": "What is the main purpose of a Product Growth Team (PGT)?",
+          "options": [
+            {
+              "key": "a",
+              "label": "To remove functional silos"
+            },
+            {
+              "key": "b",
+              "label": "To align goals among different functional areas"
+            },
+            {
+              "key": "c",
+              "label": "To drive profitable growth"
+            },
+            {
+              "key": "d",
+              "label": "All of the above"
+            },
+            {
+              "key": "e",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 3,
+          "stem": "Which of the following is NOT a part of a PGT’s Team Charter?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Members"
+            },
+            {
+              "key": "b",
+              "label": "Goals"
+            },
+            {
+              "key": "c",
+              "label": "Scope"
+            },
+            {
+              "key": "d",
+              "label": "Values"
+            },
+            {
+              "key": "e",
+              "label": "Meeting Cadence"
+            }
+          ],
+          "correct_option": "e"
+        },
+        {
+          "sort_order": 4,
+          "stem": "TRUE or FALSE: There is no limit to how many functions can be a part of a PGT’s Supporting Team.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 5,
+          "stem": "Which of the following is NOT a part of a RASCI framework?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Responsible"
+            },
+            {
+              "key": "b",
+              "label": "Contacted"
+            },
+            {
+              "key": "c",
+              "label": "Accountable"
+            },
+            {
+              "key": "d",
+              "label": "Informed"
+            },
+            {
+              "key": "e",
+              "label": "Supportive"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 6,
+          "stem": "TRUE or FALSE: A product business can only ever consist of one singular value stream.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 7,
+          "stem": "What does VMS stand for in relation to Product Growth Teams?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Virtual Management System"
+            },
+            {
+              "key": "b",
+              "label": "Visual Management System"
+            },
+            {
+              "key": "c",
+              "label": "Value-Based Management System"
+            },
+            {
+              "key": "d",
+              "label": "None of the above"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 8,
+          "stem": "TRUE or FALSE: Gemba Walks can only occur within manufacturing facilities.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 9,
+          "stem": "Product Growth Teams should ideally meet:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Daily"
+            },
+            {
+              "key": "b",
+              "label": "Weekly"
+            },
+            {
+              "key": "c",
+              "label": "Monthly"
+            },
+            {
+              "key": "d",
+              "label": "Annually"
+            },
+            {
+              "key": "e",
+              "label": "Never"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 10,
+          "stem": "Which of the following are NOT a part of the standard recommended Product Growth Team (PGT) meeting schedule?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Weekly Execution and Performance Review Meetings"
+            },
+            {
+              "key": "b",
+              "label": "Monthly Product Line Performance Review Meetings"
+            },
+            {
+              "key": "c",
+              "label": "Portfolio Balance Review Meetings"
+            },
+            {
+              "key": "d",
+              "label": "Engineering Project Review Meetings"
+            },
+            {
+              "key": "e",
+              "label": "Strategy and AOP Review Meetings"
+            }
+          ],
+          "correct_option": "d"
+        }
+      ]
+    }
+  ]
+}
