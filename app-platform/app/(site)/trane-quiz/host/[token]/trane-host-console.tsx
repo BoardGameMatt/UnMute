@@ -238,8 +238,12 @@ export function TraneHostConsole({
           </button>
         ))}
         <a
-          href={`/api/trane-quiz/host/${encodeURIComponent(hostToken)}/report.pdf`}
+          href={`/api/trane-quiz/host/${encodeURIComponent(hostToken)}/report.pdf?t=${Date.now()}`}
           className="rounded-md border-2 border-trane-deep px-5 py-3.5 text-center text-base font-bold text-trane-deep"
+          onClick={(e) => {
+            // Bust CDN/browser cache on every click
+            e.currentTarget.href = `/api/trane-quiz/host/${encodeURIComponent(hostToken)}/report.pdf?t=${Date.now()}`;
+          }}
         >
           Download PDF report
         </a>

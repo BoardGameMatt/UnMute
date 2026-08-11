@@ -48,4 +48,34 @@ describe("computeScoringSummary", () => {
     assert.equal(summary.byQuestion[1]?.prePercent, 0);
     assert.equal(summary.byQuestion[1]?.postPercent, 100);
   });
+
+  it("fills per-question % from phase completers when no paired cohort", () => {
+    const participants = [
+      {
+        id: "p1",
+        pre_completed_at: "t",
+        post_completed_at: null,
+        post_unpaired: false,
+      },
+      {
+        id: "p2",
+        pre_completed_at: null,
+        post_completed_at: "t",
+        post_unpaired: true,
+      },
+    ];
+    const responses = [
+      { participant_id: "p1", question_id: "q1", phase: "pre" as const, selected_option: "a" },
+      { participant_id: "p1", question_id: "q2", phase: "pre" as const, selected_option: "b" },
+      { participant_id: "p2", question_id: "q1", phase: "post" as const, selected_option: "a" },
+      { participant_id: "p2", question_id: "q2", phase: "post" as const, selected_option: "a" },
+    ];
+    const summary = computeScoringSummary({ participants, responses, questions });
+    assert.equal(summary.paired, 0);
+    assert.equal(summary.joined, 2);
+    assert.equal(summary.byQuestion[0]?.prePercent, 100);
+    assert.equal(summary.byQuestion[0]?.postPercent, 100);
+    assert.equal(summary.byQuestion[1]?.prePercent, 100);
+    assert.equal(summary.byQuestion[1]?.postPercent, 0);
+  });
 });

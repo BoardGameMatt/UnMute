@@ -57,6 +57,10 @@ function mean(values: number[]): number | null {
 /**
  * Headline learning delta uses the paired cohort only.
  * End-only (POST without PRE) is counted but excluded from PRE/POST/Δ.
+ *
+ * Per-question % when paired is empty: fall back to all PRE completers /
+ * all POST completers so the table is not blank when someone finished only
+ * one phase.
  */
 export function computeScoringSummary(input: {
   participants: ScoringParticipant[];
@@ -74,12 +78,19 @@ export function computeScoringSummary(input: {
       .map((p) => p.id)
   );
 
+  const preCompleters = new Set(
+    participants.filter((p) => p.pre_completed_at).map((p) => p.id)
+  );
+  const postCompleters = new Set(
+    participants.filter((p) => p.post_completed_at).map((p) => p.id)
+  );
+
   const endOnly = participants.filter(
     (p) => p.post_completed_at && (!p.pre_completed_at || p.post_unpaired)
   ).length;
 
-  const preCompleted = participants.filter((p) => p.pre_completed_at).length;
-  const postCompleted = participants.filter((p) => p.post_completed_at).length;
+  const preCompleted = preCompleters.size;
+  const postCompleted = postCompleters.size;
 
   const correctByParticipantPhase = new Map<string, number>();
   for (const r of responses) {
@@ -111,28 +122,33 @@ export function computeScoringSummary(input: {
       ? Math.round((meanPostPercent - meanPrePercent) * 10) / 10
       : null;
 
+  const preCohort = paired.size > 0 ? paired : preCompleters;
+  const postCohort = paired.size > 0 ? paired : postCompleters;
+
   const byQuestion: QuestionScoreRow[] = sortedQuestions.map((q) => {
     let preCorrect = 0;
     let postCorrect = 0;
     let preN = 0;
     let postN = 0;
-    for (const id of Array.from(paired)) {
+    for (const id of Array.from(preCohort)) {
       const pre = responses.find(
         (r) =>
           r.participant_id === id &&
           r.question_id === q.id &&
           r.phase === "pre"
       );
+      if (pre) {
+        preN += 1;
+        if (pre.selected_option === q.correct_option) preCorrect += 1;
+      }
+    }
+    for (const id of Array.from(postCohort)) {
       const post = responses.find(
         (r) =>
           r.participant_id === id &&
           r.question_id === q.id &&
           r.phase === "post"
       );
-      if (pre) {
-        preN += 1;
-        if (pre.selected_option === q.correct_option) preCorrect += 1;
-      }
       if (post) {
         postN += 1;
         if (post.selected_option === q.correct_option) postCorrect += 1;
