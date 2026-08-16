@@ -49,6 +49,28 @@ export async function joinSessionAsGuestCore(input: {
     return { ok: false, error: "This session is no longer accepting joins." };
   }
 
+  const { data: protocolRow } = await supabase
+    .from("sessions")
+    .select("protocols ( slug )")
+    .eq("id", sessionId)
+    .maybeSingle();
+  const protocolEmbed = protocolRow?.protocols as
+    | { slug?: string }
+    | { slug?: string }[]
+    | null
+    | undefined;
+  const protocolSlug = Array.isArray(protocolEmbed)
+    ? protocolEmbed[0]?.slug
+    : protocolEmbed?.slug;
+
+  if (protocolSlug === "cover-story" && session.status === "active") {
+    return {
+      ok: false,
+      error:
+        "This Cover Story session already started. Tap your name to rejoin, or ask the facilitator to admit you.",
+    };
+  }
+
   const { data: team, error: teamErr } = await supabase
     .from("teams")
     .select("id, require_auth")

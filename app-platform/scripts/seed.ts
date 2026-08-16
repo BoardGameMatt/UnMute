@@ -163,6 +163,16 @@ async function main(): Promise<void> {
       max_players: 20,
       config_schema: {},
     },
+    {
+      slug: "cover-story",
+      name: "Cover Story",
+      description:
+        "A short reading, then weeks of spoken cover words, then a scored reveal.",
+      type: "async",
+      min_players: 2,
+      max_players: 15,
+      config_schema: {},
+    },
   ];
 
   const { error: protocolsError } = await supabase

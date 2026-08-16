@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,7 +40,7 @@ export async function GET(request: Request, context: RouteContext) {
   const supabase = createClient();
   const { data: row, error } = await supabase
     .from("session_participants")
-    .select("id")
+    .select("id, role_in_session")
     .eq("session_id", sessionId)
     .eq("participant_id", participantId)
     .maybeSingle();
@@ -53,9 +54,35 @@ export async function GET(request: Request, context: RouteContext) {
 
   const { data: session } = await supabase
     .from("sessions")
-    .select("status")
+    .select("status, host_token, protocols ( slug )")
     .eq("id", sessionId)
     .maybeSingle();
+
+  const protocolEmbed = session?.protocols as
+    | { slug?: string }
+    | { slug?: string }[]
+    | null
+    | undefined;
+  const protocolSlug = Array.isArray(protocolEmbed)
+    ? protocolEmbed[0]?.slug
+    : protocolEmbed?.slug;
+
+  // Cover Story: lead may only be claimed via the host token (or when this
+  // browser is already the lead). Join-code / tap-name must not steal lead.
+  if (protocolSlug === "cover-story" && row.role_in_session === "lead") {
+    const existing = cookies().get(PARTICIPANT_COOKIE)?.value;
+    const hostProof = url.searchParams.get("ht")?.trim() ?? "";
+    const hostOk =
+      hostProof.length >= 32 &&
+      typeof session?.host_token === "string" &&
+      hostProof === session.host_token;
+    if (existing !== participantId && !hostOk) {
+      return NextResponse.json(
+        { error: "Use the facilitator host link to take the lead." },
+        { status: 403 }
+      );
+    }
+  }
 
   // Active sessions skip the lobby — late joiners land in the protocol
   // (spectator if the roster was already snapshotted).

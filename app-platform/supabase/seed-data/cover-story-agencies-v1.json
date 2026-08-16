@@ -1,0 +1,2501 @@
+{
+  "version": 1,
+  "slug": "cover-story",
+  "playable_count": 50,
+  "agencies": [
+    {
+      "id": 1,
+      "source_id": "1",
+      "slug": "green-vegetables",
+      "official_name": "Green Vegetables",
+      "aliases": [
+        "vegetables",
+        "veggies",
+        "greens",
+        "green veggies",
+        "leafy greens",
+        "green vegetable",
+        "leafy vegetables"
+      ],
+      "kind": "natural_taxonomy",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "spinach",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "cabbage",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "broccoli",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 4,
+          "phrase": "watercress",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "kohlrabi",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "The reference case from the spec. Kohlrabi is unmistakably a vegetable so the room has a route."
+    },
+    {
+      "id": 2,
+      "source_id": "4",
+      "slug": "chess",
+      "official_name": "Chess",
+      "aliases": [
+        "chess game",
+        "chess pieces",
+        "chessboard",
+        "playing chess",
+        "game of chess"
+      ],
+      "kind": "abstract_vocabulary",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "bishop",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "rook",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "checkmate",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "castling",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "en passant",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Removed opening, exchange, endgame. All three are business-native. Replaced with chess-only pieces and moves.",
+      "notes": "First three are native business metaphors. En passant is fully diagnostic."
+    },
+    {
+      "id": 3,
+      "source_id": "5",
+      "slug": "sewing-and-tailoring",
+      "official_name": "Sewing and Tailoring",
+      "aliases": [
+        "sewing",
+        "tailoring",
+        "needlework",
+        "dressmaking",
+        "seamstress",
+        "tailor",
+        "sewing tailoring"
+      ],
+      "kind": "procedural_terms",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "thread",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "seam",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "hem",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "bobbin",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "pinking shears",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Thread and seam are common in software and process talk which makes the ramp steep."
+    },
+    {
+      "id": 4,
+      "source_id": "10",
+      "slug": "card-games",
+      "official_name": "Card Games",
+      "aliases": [
+        "cards",
+        "playing cards",
+        "card game",
+        "games with cards",
+        "poker"
+      ],
+      "kind": "abstract_vocabulary",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "face cards",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "full house",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "solitaire",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "five card draw",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "cribbage",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Kept as Card Games. Added poker terms (full house, five card draw) and removed deal, shuffle, bluff as too common.",
+      "notes": "Cribbage and solitaire carry the category. No gambling framing since the card is not poker-only."
+    },
+    {
+      "id": 5,
+      "source_id": "13",
+      "slug": "astronomy",
+      "official_name": "Astronomy",
+      "aliases": [
+        "space",
+        "stars and planets",
+        "the cosmos",
+        "astrophysics",
+        "astronomy and space",
+        "celestial"
+      ],
+      "kind": "abstract_vocabulary",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "orbit",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "eclipse",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "comet",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "constellation",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 5,
+          "phrase": "supernova",
+          "difficulty": 4
+        }
+      ],
+      "change_log": "",
+      "notes": "Orbit and eclipse are common. Constellation of is a consulting cliche which helps."
+    },
+    {
+      "id": 6,
+      "source_id": "14",
+      "slug": "pasta-shapes",
+      "official_name": "Pasta Shapes",
+      "aliases": [
+        "pasta",
+        "pasta types",
+        "types of pasta",
+        "italian pasta",
+        "pasta noodles"
+      ],
+      "kind": "food_drink",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "spaghetti",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "penne",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "ravioli",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "orzo",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "orecchiette",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "All five are lunch talk. Easy end is not truly easy."
+    },
+    {
+      "id": 7,
+      "source_id": "15",
+      "slug": "spices",
+      "official_name": "Spices",
+      "aliases": [
+        "spice",
+        "seasoning",
+        "seasonings",
+        "spice rack",
+        "cooking spices",
+        "spice cabinet"
+      ],
+      "kind": "food_drink",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "pepper",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "cinnamon",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "paprika",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "cardamom",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "sumac",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Pepper is the only genuinely low-friction word."
+    },
+    {
+      "id": 8,
+      "source_id": "16",
+      "slug": "fruit",
+      "official_name": "Fruit",
+      "aliases": [
+        "fruits",
+        "fruit names",
+        "types of fruit",
+        "fresh fruit",
+        "fruit bowl"
+      ],
+      "kind": "natural_taxonomy",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "apple",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "cherry",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 3,
+          "phrase": "mango",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "papaya",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "lychee",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Apple and cherry pick both have work uses. Lychee is the tell."
+    },
+    {
+      "id": 9,
+      "source_id": "18",
+      "slug": "dog-breeds",
+      "official_name": "Dog Breeds",
+      "aliases": [
+        "dogs",
+        "dog breed",
+        "types of dogs",
+        "canine",
+        "puppies",
+        "dog"
+      ],
+      "kind": "natural_taxonomy",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "shepherd",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "poodle",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "beagle",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "dachshund",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "schnauzer",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Shepherd plants easily. Pet talk gives the rest a natural home in a distributed team."
+    },
+    {
+      "id": 10,
+      "source_id": "19",
+      "slug": "seafood",
+      "official_name": "Seafood",
+      "aliases": [
+        "fish",
+        "fish and seafood",
+        "shellfish",
+        "sea food",
+        "ocean fish"
+      ],
+      "kind": "food_drink",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "salmon",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "tuna",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "halibut",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "anchovy",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "monkfish",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Salmon and tuna are lunch words. Monkfish is diagnostic."
+    },
+    {
+      "id": 11,
+      "source_id": "20",
+      "slug": "workshop-tools",
+      "official_name": "Workshop Tools",
+      "aliases": [
+        "tools",
+        "hand tools",
+        "hardware tools",
+        "workshop",
+        "tool bench",
+        "garage tools"
+      ],
+      "kind": "manufactured_object",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "level",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "wrench",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "chisel",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "plumb line",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "lathe",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Level and wrench are metaphor-ready. Plumb line is a strong tell."
+    },
+    {
+      "id": 12,
+      "source_id": "24",
+      "slug": "dance-styles",
+      "official_name": "Dance Styles",
+      "aliases": [
+        "dance",
+        "dancing",
+        "dances",
+        "types of dance",
+        "ballroom",
+        "ballroom dance"
+      ],
+      "kind": "abstract_vocabulary",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "swing",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "tango",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "waltz",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "flamenco",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "foxtrot",
+          "difficulty": 4
+        }
+      ],
+      "change_log": "",
+      "notes": "It takes two to tango is a business cliche which does real camouflage work."
+    },
+    {
+      "id": 13,
+      "source_id": "28",
+      "slug": "sailing",
+      "official_name": "Sailing",
+      "aliases": [
+        "sailboats",
+        "sailboat",
+        "boating",
+        "nautical sailing",
+        "yachting",
+        "sail boat"
+      ],
+      "kind": "procedural_terms",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "capsize",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "harbor",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "starboard",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "sextant",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "spinnaker",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Removed mast as instructed and added sextant. Also dropped anchor, which is a business metaphor.",
+      "notes": "Anchor is an anchoring metaphor. Spinnaker is unmistakable."
+    },
+    {
+      "id": 14,
+      "source_id": "30",
+      "slug": "rivers-of-the-world",
+      "official_name": "Rivers of the World",
+      "aliases": [
+        "rivers",
+        "river",
+        "world rivers",
+        "famous rivers",
+        "river names",
+        "major rivers"
+      ],
+      "kind": "proper_noun_set",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "Amazon",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "Thames",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "Nile",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "Danube",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "Yangtze",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Amazon is nearly free to say. The rest need construction which is the point."
+    },
+    {
+      "id": 15,
+      "source_id": "31",
+      "slug": "us-national-parks",
+      "official_name": "US National Parks",
+      "aliases": [
+        "national parks",
+        "us parks",
+        "american national parks",
+        "national park",
+        "nps",
+        "national park service"
+      ],
+      "kind": "proper_noun_set",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "Yellowstone",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "Yosemite",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "Zion",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "Everglades",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "Acadia",
+          "difficulty": 4
+        }
+      ],
+      "change_log": "",
+      "notes": "Vacation talk is the natural cover. Weak easy end."
+    },
+    {
+      "id": 16,
+      "source_id": "32",
+      "slug": "capital-cities",
+      "official_name": "Capital Cities",
+      "aliases": [
+        "capitals",
+        "capital city",
+        "world capitals",
+        "capitals of the world",
+        "country capitals"
+      ],
+      "kind": "proper_noun_set",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "Paris",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "Lisbon",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "Nairobi",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "Canberra",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "Reykjavik",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Ulaanbaatar replaced with Reykjavik. Same category signal, plantable in travel talk.",
+      "notes": "Travel talk cover. Ulaanbaatar is one of the hardest single words in the library."
+    },
+    {
+      "id": 17,
+      "source_id": "38",
+      "slug": "gemstones",
+      "official_name": "Gemstones",
+      "aliases": [
+        "gems",
+        "jewels",
+        "gemstone",
+        "precious stones",
+        "birthstones",
+        "gem stones"
+      ],
+      "kind": "natural_taxonomy",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "diamond",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "pearl",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "jade",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "garnet",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "tourmaline",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Diamond and pearl have idioms attached. Tourmaline is diagnostic."
+    },
+    {
+      "id": 18,
+      "source_id": "39",
+      "slug": "flowers",
+      "official_name": "Flowers",
+      "aliases": [
+        "flower",
+        "flower names",
+        "types of flowers",
+        "florist",
+        "blooming flowers",
+        "garden flowers"
+      ],
+      "kind": "natural_taxonomy",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "rose",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "lily",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "tulip",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "orchid",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 5,
+          "phrase": "delphinium",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Common enough to be low-risk. Low ceiling of interest."
+    },
+    {
+      "id": 19,
+      "source_id": "40",
+      "slug": "herbs",
+      "official_name": "Herbs",
+      "aliases": [
+        "herb",
+        "culinary herbs",
+        "cooking herbs",
+        "fresh herbs",
+        "herb garden",
+        "kitchen herbs"
+      ],
+      "kind": "natural_taxonomy",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "mint",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "basil",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "thyme",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "tarragon",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "lovage",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Mint condition and thyme homophone give two easy routes."
+    },
+    {
+      "id": 20,
+      "source_id": "41",
+      "slug": "teas",
+      "official_name": "Teas",
+      "aliases": [
+        "tea",
+        "types of tea",
+        "tea varieties",
+        "tea types",
+        "hot tea",
+        "loose leaf tea"
+      ],
+      "kind": "food_drink",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "green tea",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "chamomile",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "earl grey",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "oolong",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "rooibos",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Beverage talk cover. Overlaps with the coffee agency conceptually."
+    },
+    {
+      "id": 21,
+      "source_id": "46",
+      "slug": "pottery",
+      "official_name": "Pottery",
+      "aliases": [
+        "ceramics",
+        "ceramic",
+        "pottery making",
+        "clay pottery",
+        "pots and ceramics",
+        "studio pottery"
+      ],
+      "kind": "procedural_terms",
+      "pop_culture": false,
+      "tier": 3,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "clay",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "glaze",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "kiln",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 4,
+          "phrase": "earthenware",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "slipcasting",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Clay is the only easy word. Hard end may be too hard."
+    },
+    {
+      "id": 22,
+      "source_id": "50",
+      "slug": "ancient-egypt",
+      "official_name": "Ancient Egypt",
+      "aliases": [
+        "egypt",
+        "egyptian",
+        "egyptians",
+        "ancient egyptian",
+        "pharaonic egypt",
+        "egyptology"
+      ],
+      "kind": "proper_noun_set",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "pyramid",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "pharaoh",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 3,
+          "phrase": "hieroglyph",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 4,
+          "phrase": "papyrus",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "sarcophagus",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Pyramid is free. Steep jump after that."
+    },
+    {
+      "id": 23,
+      "source_id": "51",
+      "slug": "castles",
+      "official_name": "Castles",
+      "aliases": [
+        "castle",
+        "medieval castles",
+        "fortress",
+        "fortresses",
+        "castle architecture",
+        "medieval fortress"
+      ],
+      "kind": "manufactured_object",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "tower",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "moat",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "drawbridge",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 4,
+          "phrase": "turret",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "portcullis",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Moat is a standard strategy term. Portcullis is unmistakable."
+    },
+    {
+      "id": 24,
+      "source_id": "55",
+      "slug": "beekeeping",
+      "official_name": "Beekeeping",
+      "aliases": [
+        "bees",
+        "bee keeping",
+        "honeybees",
+        "apiculture",
+        "beekeeper",
+        "honey bees",
+        "keeping bees"
+      ],
+      "kind": "procedural_terms",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "hive",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "honey",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "pollen",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "swarm",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 5,
+          "phrase": "apiary",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Hive mind and swarm are agile vocabulary. Apiary is the tell."
+    },
+    {
+      "id": 25,
+      "source_id": "58",
+      "slug": "dinosaurs",
+      "official_name": "Dinosaurs",
+      "aliases": [
+        "dinosaur",
+        "dino",
+        "dinos",
+        "prehistoric animals",
+        "prehistoric creatures",
+        "dinosauria"
+      ],
+      "kind": "proper_noun_set",
+      "pop_culture": false,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "fossil",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "extinct",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 3,
+          "phrase": "raptor",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "triceratops",
+          "difficulty": 5
+        },
+        {
+          "ordinal": 5,
+          "phrase": "stegosaurus",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Fossil and extinct are business words. Very steep jump to the hard end."
+    },
+    {
+      "id": 26,
+      "source_id": "76",
+      "slug": "star-wars",
+      "official_name": "Star Wars",
+      "aliases": [
+        "starwars",
+        "star wars movies",
+        "star wars film",
+        "a galaxy far away",
+        "george lucas",
+        "lucasfilm",
+        "jedi universe"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "Death Star",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "jedi",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "lightsaber",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "Ewok",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "wookiee",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Removed force and droid. No genuinely easy word survives. Floor is 2.",
+      "notes": "Force multiplier and may the force are already business speech. Broadest recognition of any property here."
+    },
+    {
+      "id": 27,
+      "source_id": "77",
+      "slug": "harry-potter",
+      "official_name": "Harry Potter",
+      "aliases": [
+        "potter",
+        "hogwarts",
+        "jk rowling",
+        "j k rowling",
+        "harry potter books",
+        "wizarding world",
+        "the wizarding world"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "spell",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "wand",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "muggle",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "quidditch",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "horcrux",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Spell out is free. Wide but not universal recognition."
+    },
+    {
+      "id": 28,
+      "source_id": "78",
+      "slug": "lord-of-the-rings",
+      "official_name": "Lord of the Rings",
+      "aliases": [
+        "lotr",
+        "the lord of the rings",
+        "tolkien",
+        "jrr tolkien",
+        "middle earth",
+        "middleearth",
+        "the hobbit"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "hobbit",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "Frodo",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "Gandalf",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "Mordor",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "Rivendell",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Removed precious as instructed. Also removed ring and fellowship, both of which have ordinary work meanings.",
+      "notes": "Ring and precious plant easily. One does not simply is a known meme which helps guessers."
+    },
+    {
+      "id": 29,
+      "source_id": "80",
+      "slug": "the-office",
+      "official_name": "The Office",
+      "aliases": [
+        "the office us",
+        "office tv show",
+        "the office tv",
+        "dunder mifflin",
+        "michael scott show",
+        "nbc the office"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "Michael Scott",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "Dunder Mifflin",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "Scranton",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "beets",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "dundies",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Removed conference room and branch manager.",
+      "notes": "First two are literal office vocabulary which is an excellent trap."
+    },
+    {
+      "id": 30,
+      "source_id": "87",
+      "slug": "the-wizard-of-oz",
+      "official_name": "The Wizard of Oz",
+      "aliases": [
+        "wizard of oz",
+        "oz",
+        "the wizard of oz movie",
+        "judy garland",
+        "oz movie",
+        "wizard oz"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "yellow brick road",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "tin man",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "emerald city",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 4,
+          "phrase": "ruby slippers",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "munchkin",
+          "difficulty": 4
+        }
+      ],
+      "change_log": "",
+      "notes": "Yellow brick road and no place like home are common idioms. Very broad recognition."
+    },
+    {
+      "id": 31,
+      "source_id": "88",
+      "slug": "willy-wonka",
+      "official_name": "Willy Wonka",
+      "aliases": [
+        "wonka",
+        "charlie and the chocolate factory",
+        "chocolate factory",
+        "roald dahl",
+        "willy wonka and the chocolate factory",
+        "wonka factory"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "golden ticket",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "chocolate factory",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "glass elevator",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 4,
+          "phrase": "oompa loompa",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "fizzy lifting",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Golden ticket is standard business speech."
+    },
+    {
+      "id": 32,
+      "source_id": "90",
+      "slug": "disney-princesses",
+      "official_name": "Disney Princesses",
+      "aliases": [
+        "disney princess",
+        "princesses",
+        "disney",
+        "disney fairy tales",
+        "fairy tale princesses"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "glass slipper",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 2,
+          "phrase": "tiara",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "fairy godmother",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "mermaid",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "poison apple",
+          "difficulty": 4
+        }
+      ],
+      "change_log": "",
+      "notes": "Fairy godmother is a usable metaphor. Flat difficulty curve."
+    },
+    {
+      "id": 33,
+      "source_id": "93",
+      "slug": "back-to-the-future",
+      "official_name": "Back to the Future",
+      "aliases": [
+        "bttf",
+        "back to the future movies",
+        "back to the future film",
+        "marty mcfly",
+        "doc brown",
+        "hill valley"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "hoverboard",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "DeLorean",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 3,
+          "phrase": "great scott",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 4,
+          "phrase": "flux capacitor",
+          "difficulty": 5
+        },
+        {
+          "ordinal": 5,
+          "phrase": "1.21 gigawatts",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Difficult across the board. Recognition is high but planting is hard."
+    },
+    {
+      "id": 34,
+      "source_id": "94",
+      "slug": "jaws",
+      "official_name": "Jaws",
+      "aliases": [
+        "jaws movie",
+        "the shark movie",
+        "jaws the movie",
+        "spielberg shark",
+        "jaws film"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "fin",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "bigger boat",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "shark cage",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 4,
+          "phrase": "Orca",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "Amity",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Removed beach and chum. Bigger boat retained since it is the guessing route.",
+      "notes": "Gonna need a bigger boat is a business cliche which does the guessing work."
+    },
+    {
+      "id": 35,
+      "source_id": "95",
+      "slug": "monopoly",
+      "official_name": "Monopoly",
+      "aliases": [
+        "monopoly game",
+        "the game monopoly",
+        "monopoly board game",
+        "boardwalk game",
+        "monopoly board"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "free parking",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "boardwalk",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "park place",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "get out of jail",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 5,
+          "phrase": "thimble",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Get out of jail free is ordinary speech. Universal recognition."
+    },
+    {
+      "id": 36,
+      "source_id": "98",
+      "slug": "sesame-street",
+      "official_name": "Sesame Street",
+      "aliases": [
+        "sesame",
+        "sesame st",
+        "sesame street show",
+        "sesame street muppets",
+        "jim henson sesame"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 2,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "letter of the day",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "big bird",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "elmo",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 4,
+          "phrase": "cookie monster",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "snuffleupagus",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "",
+      "notes": "Broad multigenerational recognition. Snuffleupagus is the tell."
+    },
+    {
+      "id": 37,
+      "source_id": "99",
+      "slug": "peanuts",
+      "official_name": "Peanuts",
+      "aliases": [
+        "peanuts comic",
+        "charlie brown",
+        "peanuts cartoon",
+        "charles schulz",
+        "peanuts strip",
+        "snoopy comic"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "good grief",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "snoopy",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "security blanket",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 4,
+          "phrase": "Linus",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 5,
+          "phrase": "great pumpkin",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Blockhead replaced with Linus.",
+      "notes": "Good grief and security blanket are ordinary speech. Excellent camouflage."
+    },
+    {
+      "id": 38,
+      "source_id": "100",
+      "slug": "sherlock-holmes",
+      "official_name": "Sherlock Holmes",
+      "aliases": [
+        "sherlock",
+        "holmes",
+        "sherlock holmes stories",
+        "arthur conan doyle",
+        "conan doyle",
+        "detective holmes",
+        "221b baker street"
+      ],
+      "kind": "pop_culture_property",
+      "pop_culture": true,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "Watson",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 2,
+          "phrase": "Moriarty",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 3,
+          "phrase": "Baker Street",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 4,
+          "phrase": "the game is afoot",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "deerstalker",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Removed elementary and deduction.",
+      "notes": "Elementary and deduction are fully business-native. Deerstalker is diagnostic."
+    },
+    {
+      "id": 39,
+      "source_id": "new",
+      "slug": "cheese",
+      "official_name": "Cheese",
+      "aliases": [
+        "cheeses",
+        "types of cheese",
+        "cheese types",
+        "cheese board",
+        "fromage",
+        "cheese names"
+      ],
+      "kind": "food_drink",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "cheddar",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "parmesan",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "brie",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "gorgonzola",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "raclette",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Food talk cover. Every word is unmistakably cheese. Raclette is the tell."
+    },
+    {
+      "id": 40,
+      "source_id": "new",
+      "slug": "sushi",
+      "official_name": "Sushi",
+      "aliases": [
+        "sushi rolls",
+        "japanese sushi",
+        "sushi types",
+        "sushi restaurant",
+        "nigiri and rolls"
+      ],
+      "kind": "food_drink",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "california roll",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "wasabi",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "sashimi",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "nigiri",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "toro",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Lunch talk cover. No word has a second meaning."
+    },
+    {
+      "id": 41,
+      "source_id": "new",
+      "slug": "whales-and-dolphins",
+      "official_name": "Whales and Dolphins",
+      "aliases": [
+        "whales",
+        "dolphins",
+        "whale",
+        "dolphin",
+        "cetaceans",
+        "marine mammals",
+        "whales dolphins"
+      ],
+      "kind": "natural_taxonomy",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "dolphin",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "humpback",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "blowhole",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "narwhal",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "baleen",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Documentary and vacation talk cover. Baleen is fully diagnostic."
+    },
+    {
+      "id": 42,
+      "source_id": "new",
+      "slug": "horse-breeds",
+      "official_name": "Horse Breeds",
+      "aliases": [
+        "horses",
+        "horse",
+        "horse breed",
+        "types of horses",
+        "equine",
+        "horse types"
+      ],
+      "kind": "natural_taxonomy",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "mustang",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "thoroughbred",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "clydesdale",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "palomino",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "appaloosa",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Mustang and thoroughbred have mild metaphor use, everything else is horse-only."
+    },
+    {
+      "id": 43,
+      "source_id": "new",
+      "slug": "volcanoes",
+      "official_name": "Volcanoes",
+      "aliases": [
+        "volcano",
+        "volcanic",
+        "volcano names",
+        "volcanos",
+        "volcanic eruptions"
+      ],
+      "kind": "natural_taxonomy",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "lava",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "crater",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "Vesuvius",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "caldera",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "pyroclastic flow",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Sits next to Geology in the library. Keep only one if both survive review."
+    },
+    {
+      "id": 44,
+      "source_id": "new",
+      "slug": "lighthouses",
+      "official_name": "Lighthouses",
+      "aliases": [
+        "lighthouse",
+        "lighthouse keeping",
+        "maritime lighthouses",
+        "coastal lighthouses",
+        "light houses"
+      ],
+      "kind": "manufactured_object",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "lighthouse",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "foghorn",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "shipwreck",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "lightkeeper",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "Fresnel lens",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Shipwreck has mild metaphor use. The rest are single-meaning."
+    },
+    {
+      "id": 45,
+      "source_id": "new",
+      "slug": "clocks-and-watches",
+      "official_name": "Clocks and Watches",
+      "aliases": [
+        "clocks",
+        "watches",
+        "timepieces",
+        "clock",
+        "watch",
+        "horology",
+        "clocks watches"
+      ],
+      "kind": "manufactured_object",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "wristwatch",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "pendulum",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "sundial",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "grandfather clock",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "escapement",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Pendulum swing is a mild business phrase. Escapement is the diagnostic."
+    },
+    {
+      "id": 46,
+      "source_id": "new",
+      "slug": "scuba-diving",
+      "official_name": "Scuba Diving",
+      "aliases": [
+        "scuba",
+        "diving",
+        "scuba dive",
+        "underwater diving",
+        "dive gear"
+      ],
+      "kind": "procedural_terms",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "wetsuit",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "snorkel",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "flippers",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "decompression stop",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "nitrogen narcosis",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Vacation talk cover. Avoided regulator, which reads as regulatory in a business meeting."
+    },
+    {
+      "id": 47,
+      "source_id": "new",
+      "slug": "glassblowing",
+      "official_name": "Glassblowing",
+      "aliases": [
+        "glass blowing",
+        "blown glass",
+        "glass art",
+        "glassblower",
+        "glass blowing studio"
+      ],
+      "kind": "procedural_terms",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "furnace",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "molten glass",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "blowpipe",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "annealing",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "gaffer",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Craft talk cover. Gaffer is also a film term, which is a useful misdirection."
+    },
+    {
+      "id": 48,
+      "source_id": "new",
+      "slug": "cartography",
+      "official_name": "Cartography",
+      "aliases": [
+        "maps",
+        "mapmaking",
+        "map making",
+        "map maker",
+        "making maps",
+        "cartographer"
+      ],
+      "kind": "procedural_terms",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "atlas",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "compass rose",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "contour lines",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "cartographer",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "Mercator projection",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Newly authored under the revised rule.",
+      "notes": "Avoided map and projection, both business-native. Everything retained is map-only."
+    },
+    {
+      "id": 49,
+      "source_id": "reserve",
+      "slug": "photography",
+      "official_name": "Photography",
+      "aliases": [
+        "photos",
+        "cameras",
+        "taking photos",
+        "photography terms",
+        "camera work",
+        "photo"
+      ],
+      "kind": "procedural_terms",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "tripod",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "aperture",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "darkroom",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "f-stop",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "daguerreotype",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Rebuilt. Removed focus, exposure and shutter, all three business-native. Every retained word is camera-only.",
+      "notes": "Hobby talk cover. Daguerreotype is the tell and is still guessable as photography."
+    },
+    {
+      "id": 50,
+      "source_id": "reserve",
+      "slug": "climbing",
+      "official_name": "Climbing",
+      "aliases": [
+        "rock climbing",
+        "mountaineering",
+        "climbers",
+        "rock climbing gear",
+        "alpine climbing",
+        "rockclimb"
+      ],
+      "kind": "procedural_terms",
+      "pop_culture": false,
+      "tier": 1,
+      "playable": true,
+      "active": true,
+      "hr_safe": true,
+      "status": "final",
+      "words": [
+        {
+          "ordinal": 1,
+          "phrase": "carabiner",
+          "difficulty": 1
+        },
+        {
+          "ordinal": 2,
+          "phrase": "switchback",
+          "difficulty": 2
+        },
+        {
+          "ordinal": 3,
+          "phrase": "rappel",
+          "difficulty": 3
+        },
+        {
+          "ordinal": 4,
+          "phrase": "belay",
+          "difficulty": 4
+        },
+        {
+          "ordinal": 5,
+          "phrase": "crampons",
+          "difficulty": 5
+        }
+      ],
+      "change_log": "Rebuilt. Removed altitude as instructed and ridge for the same reason.",
+      "notes": "Weekend talk cover. No word has a second meaning in an office."
+    }
+  ]
+}

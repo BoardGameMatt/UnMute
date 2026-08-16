@@ -537,6 +537,187 @@ export type TraneResponseInsert = Omit<TraneResponse, "id" | "submitted_at"> & {
   submitted_at?: string;
 };
 
+// ---------------------------------------------------------------------------
+// Cover Story (migrations 014 + 015 + 016)
+// ---------------------------------------------------------------------------
+
+export type CoverStoryPhase =
+  | "lobby"
+  | "reading"
+  | "discuss"
+  | "insights"
+  | "deal"
+  | "field"
+  | "reveal"
+  | "complete";
+
+export type CoverStoryRevealSubphase =
+  | "mission"
+  | "guess"
+  | "gallery"
+  | "mark"
+  | "board"
+  | "points"
+  | "final";
+
+export type CoverStoryAgencyKind =
+  | "natural_taxonomy"
+  | "food_drink"
+  | "procedural_terms"
+  | "manufactured_object"
+  | "proper_noun_set"
+  | "abstract_vocabulary"
+  | "pop_culture_property";
+
+export type CoverStoryWordLogStatus = "open" | "planted" | "not_planted";
+
+export interface CoverStoryAgency {
+  id: number;
+  slug: string;
+  official_name: string;
+  aliases: string[];
+  kind: CoverStoryAgencyKind;
+  pop_culture: boolean;
+  tier: number;
+  playable: boolean;
+  active: boolean;
+  hr_safe: boolean;
+  notes: string | null;
+  created_at: string;
+}
+
+export type CoverStoryAgencyInsert = Omit<CoverStoryAgency, "created_at"> & {
+  created_at?: string;
+  aliases?: string[];
+  pop_culture?: boolean;
+  playable?: boolean;
+  active?: boolean;
+  hr_safe?: boolean;
+};
+
+export interface CoverStoryAgencyWord {
+  id: string;
+  agency_id: number;
+  ordinal: number;
+  phrase: string;
+  difficulty: number;
+  created_at: string;
+}
+
+export type CoverStoryAgencyWordInsert = Omit<
+  CoverStoryAgencyWord,
+  "id" | "created_at"
+> & {
+  id?: string;
+  created_at?: string;
+};
+
+export interface CoverStorySession {
+  id: string;
+  session_id: string;
+  reveal_on: string | null;
+  phase: CoverStoryPhase;
+  reveal_order: string[];
+  reveal_index: number;
+  guess_started_at: string | null;
+  guess_duration_seconds: number;
+  reveal_subphase: CoverStoryRevealSubphase;
+  created_at: string;
+}
+
+export type CoverStorySessionInsert = Omit<
+  CoverStorySession,
+  "id" | "created_at"
+> & {
+  id?: string;
+  created_at?: string;
+  reveal_on?: string | null;
+  phase?: CoverStoryPhase;
+  reveal_order?: string[];
+  reveal_index?: number;
+  guess_started_at?: string | null;
+  guess_duration_seconds?: number;
+  reveal_subphase?: CoverStoryRevealSubphase;
+};
+
+export interface CoverStoryDeal {
+  id: string;
+  cover_story_session_id: string;
+  participant_id: string;
+  shown_agency_ids: number[];
+  locked_agency_id: number | null;
+  locked_at: string | null;
+  created_at: string;
+}
+
+export type CoverStoryDealInsert = Omit<CoverStoryDeal, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  locked_agency_id?: number | null;
+  locked_at?: string | null;
+};
+
+export interface CoverStoryWordLog {
+  id: string;
+  deal_id: string;
+  word_id: string;
+  status: CoverStoryWordLogStatus;
+  planted_on: string | null;
+  witness_ids: string[];
+  note: string;
+  updated_at: string;
+}
+
+export type CoverStoryWordLogInsert = Omit<
+  CoverStoryWordLog,
+  "id" | "updated_at"
+> & {
+  id?: string;
+  updated_at?: string;
+  status?: CoverStoryWordLogStatus;
+  planted_on?: string | null;
+  witness_ids?: string[];
+  note?: string;
+};
+
+export interface CoverStoryGuess {
+  id: string;
+  cover_story_session_id: string;
+  target_participant_id: string;
+  guesser_participant_id: string;
+  agency_text: string;
+  evidence_text: string;
+  submitted_at: string;
+  suggested_correct: boolean;
+  marked_correct: boolean | null;
+}
+
+export type CoverStoryGuessInsert = Omit<CoverStoryGuess, "id" | "submitted_at"> & {
+  id?: string;
+  submitted_at?: string;
+  evidence_text?: string;
+  suggested_correct?: boolean;
+  marked_correct?: boolean | null;
+};
+
+export interface CoverStoryTargetResult {
+  id: string;
+  cover_story_session_id: string;
+  target_participant_id: string;
+  n: number;
+  k: number;
+  type1_score: number;
+  mission_score: number;
+  finalized_at: string;
+}
+
+export type CoverStoryTargetResultInsert = Omit<
+  CoverStoryTargetResult,
+  "id" | "finalized_at"
+> & {
+  id?: string;
+  finalized_at?: string;
+};
 
 export type Database = {
   public: {
@@ -683,6 +864,48 @@ export type Database = {
         Row: TraneResponse;
         Insert: TraneResponseInsert;
         Update: Partial<TraneResponseInsert>;
+        Relationships: [];
+      };
+      cover_story_agencies: {
+        Row: CoverStoryAgency;
+        Insert: CoverStoryAgencyInsert;
+        Update: Partial<CoverStoryAgencyInsert>;
+        Relationships: [];
+      };
+      cover_story_agency_words: {
+        Row: CoverStoryAgencyWord;
+        Insert: CoverStoryAgencyWordInsert;
+        Update: Partial<CoverStoryAgencyWordInsert>;
+        Relationships: [];
+      };
+      cover_story_sessions: {
+        Row: CoverStorySession;
+        Insert: CoverStorySessionInsert;
+        Update: Partial<CoverStorySessionInsert>;
+        Relationships: [];
+      };
+      cover_story_deals: {
+        Row: CoverStoryDeal;
+        Insert: CoverStoryDealInsert;
+        Update: Partial<CoverStoryDealInsert>;
+        Relationships: [];
+      };
+      cover_story_word_logs: {
+        Row: CoverStoryWordLog;
+        Insert: CoverStoryWordLogInsert;
+        Update: Partial<CoverStoryWordLogInsert>;
+        Relationships: [];
+      };
+      cover_story_guesses: {
+        Row: CoverStoryGuess;
+        Insert: CoverStoryGuessInsert;
+        Update: Partial<CoverStoryGuessInsert>;
+        Relationships: [];
+      };
+      cover_story_target_results: {
+        Row: CoverStoryTargetResult;
+        Insert: CoverStoryTargetResultInsert;
+        Update: Partial<CoverStoryTargetResultInsert>;
         Relationships: [];
       };
     };

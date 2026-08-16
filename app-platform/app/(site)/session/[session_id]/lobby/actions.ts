@@ -3,6 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
+import { resetCoverStorySessionToLobby } from "@/lib/cover-story/session";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 async function requireLead(
@@ -81,6 +83,48 @@ export async function startSessionAction(
     return { error: "This session has already started." };
   }
 
+  const { data: protocolRow } = await supabase
+    .from("sessions")
+    .select("protocols ( slug )")
+    .eq("id", sessionId)
+    .maybeSingle();
+  const protocolEmbed = protocolRow?.protocols as
+    | { slug?: string }
+    | { slug?: string }[]
+    | null
+    | undefined;
+  const protocolSlug = Array.isArray(protocolEmbed)
+    ? protocolEmbed[0]?.slug
+    : protocolEmbed?.slug;
+
+  if (protocolSlug === "cover-story") {
+    let revealOn: string | null = null;
+    try {
+      const admin = createServiceClient();
+      const cs = await admin
+        .from("cover_story_sessions")
+        .select("reveal_on")
+        .eq("session_id", sessionId)
+        .maybeSingle();
+      revealOn = (cs.data as { reveal_on?: string | null } | null)?.reveal_on ?? null;
+    } catch {
+      return { error: "Could not verify Cover Story settings." };
+    }
+    if (!revealOn) {
+      return { error: "Set the reveal date before starting." };
+    }
+    const { data: memberRows } = await supabase
+      .from("session_participants")
+      .select("role_in_session")
+      .eq("session_id", sessionId);
+    const playerCount = (memberRows ?? []).filter(
+      (row) => row.role_in_session !== "lead"
+    ).length;
+    if (playerCount < 2) {
+      return { error: "Need at least 2 players plus the facilitator." };
+    }
+  }
+
   // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
@@ -135,6 +179,31 @@ export async function returnToLobbyAction(
 
   if (upErr) {
     return { error: upErr.message };
+  }
+
+  const { data: sessionMeta } = await supabase
+    .from("sessions")
+    .select("protocols ( slug )")
+    .eq("id", sessionId)
+    .maybeSingle();
+  const protocolEmbed = sessionMeta?.protocols as
+    | { slug?: string }
+    | { slug?: string }[]
+    | null
+    | undefined;
+  const protocolSlug = Array.isArray(protocolEmbed)
+    ? protocolEmbed[0]?.slug
+    : protocolEmbed?.slug;
+
+  if (protocolSlug === "cover-story") {
+    try {
+      const admin = createServiceClient();
+      await resetCoverStorySessionToLobby(admin, sessionId);
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not reset Cover Story.",
+      };
+    }
   }
 
   return { ok: true };

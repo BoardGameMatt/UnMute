@@ -41,6 +41,7 @@ export async function POST(request: Request, context: RouteContext) {
     origin
   );
   claimUrl.searchParams.set("pid", result.participantId);
+  claimUrl.searchParams.set("ht", token);
 
   return NextResponse.redirect(claimUrl, 303);
 }

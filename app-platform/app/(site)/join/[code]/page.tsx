@@ -2,6 +2,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { ActiveSessionRejoin } from "@/components/join/active-session-rejoin";
+import { CoverStoryTapNameRoster } from "@/components/join/cover-story-tap-name-roster";
 import { LobbyGuestJoinForm } from "@/components/join/lobby-guest-join-form";
 import { RequireAuthPanel } from "@/components/join/require-auth-panel";
 import { createClient } from "@/lib/supabase/server";
@@ -42,7 +43,7 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
 
   const { data: session, error: sessionError } = await supabase
     .from("sessions")
-    .select("id, status, team_id")
+    .select("id, status, team_id, protocols ( slug )")
     .eq("join_code", code)
     .maybeSingle();
 
@@ -93,6 +94,16 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
     );
   }
 
+  const protocolEmbed = (
+    session as {
+      protocols?: { slug?: string } | { slug?: string }[] | null;
+    }
+  ).protocols;
+  const protocolSlug = Array.isArray(protocolEmbed)
+    ? protocolEmbed[0]?.slug
+    : protocolEmbed?.slug;
+  const isCoverStory = protocolSlug === "cover-story";
+
   const cookieStore = cookies();
   const participantCookie = cookieStore.get(PARTICIPANT_COOKIE)?.value ?? null;
 
@@ -107,9 +118,35 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
     showRejoin = !!link;
   }
 
-  const acceptingJoins =
-    (session.status === "lobby" || session.status === "active") &&
-    !team.require_auth;
+  const { data: rosterRows } =
+    isCoverStory && session.status === "active"
+      ? await supabase
+          .from("session_participants")
+          .select("participant_id, role_in_session, participants ( display_name )")
+          .eq("session_id", session.id)
+      : { data: [] };
+
+  const tapRoster = (rosterRows ?? [])
+    .map((row) => {
+    const nested = row.participants as
+      | { display_name?: string }
+      | { display_name?: string }[]
+      | null;
+    const person = Array.isArray(nested) ? nested[0] : nested;
+    return {
+      participantId: row.participant_id as string,
+      displayName: person?.display_name ?? "Player",
+      isLead: row.role_in_session === "lead",
+    };
+  })
+    .filter((person) => !person.isLead);
+
+  const acceptingNameJoin =
+    !team.require_auth &&
+    (session.status === "lobby" ||
+      (!isCoverStory && session.status === "active"));
+  const showTapRoster =
+    isCoverStory && session.status === "active" && !team.require_auth;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
@@ -125,7 +162,7 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
           </div>
         ) : null}
 
-        {session.status === "active" && showRejoin ? (
+        {session.status === "active" && showRejoin && !isCoverStory ? (
           <ActiveSessionRejoin sessionId={session.id} showRejoin />
         ) : null}
 
@@ -134,21 +171,21 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
           <RequireAuthPanel />
         ) : null}
 
-        {acceptingJoins && !showRejoin ? (
+        {showTapRoster ? (
+          <CoverStoryTapNameRoster sessionId={session.id} people={tapRoster} />
+        ) : null}
+
+        {acceptingNameJoin && !showRejoin ? (
           <div className="flex w-full flex-col items-center gap-8">
             <div className="space-y-2 text-center">
               <p className="font-mono text-xs uppercase tracking-widest text-steel-blue">
-                {session.status === "active"
-                  ? "Session in progress"
-                  : "You're joining"}
+                You&apos;re joining
               </p>
               <h1 className="font-display text-3xl font-bold text-unmute-navy">
                 Welcome
               </h1>
               <p className="font-body text-lg text-slate">
-                {session.status === "active"
-                  ? "Choose a display name to join. If the session is already underway, you may watch as a spectator."
-                  : "Choose a display name your team will see in the room."}
+                Choose a display name your team will see in the room.
               </p>
             </div>
             <LobbyGuestJoinForm

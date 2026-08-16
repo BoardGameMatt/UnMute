@@ -18,12 +18,11 @@ import { useSessionParticipants } from "@/hooks/useSessionParticipants";
 import { createClient } from "@/lib/supabase/client";
 import type { LobbyParticipant } from "@/lib/types/lobby";
 
-/** Matches the floor the protocol enforces at initializeGame. */
-const MIN_PARTICIPANTS_TO_START = 3;
-
 type SessionLobbyViewProps = {
   sessionId: string;
   protocolName: string;
+  protocolSlug?: string;
+  minPlayers?: number;
   joinCode: string;
   joinUrl: string;
   initialParticipants: LobbyParticipant[];
@@ -31,17 +30,21 @@ type SessionLobbyViewProps = {
   currentParticipantId: string | null;
   /** Optional per-protocol teaching slot (below QR, above roster). */
   LobbyExplainer?: ComponentType;
+  LobbyLeadControls?: ComponentType<{ sessionId: string }>;
 };
 
 export function SessionLobbyView({
   sessionId,
   protocolName,
+  protocolSlug,
+  minPlayers = 3,
   joinCode,
   joinUrl,
   initialParticipants,
   currentRole,
   currentParticipantId,
   LobbyExplainer,
+  LobbyLeadControls,
 }: SessionLobbyViewProps) {
   const router = useRouter();
   const participants = useSessionParticipants(sessionId, initialParticipants);
@@ -52,10 +55,12 @@ export function SessionLobbyView({
   const [isStarting, setIsStarting] = useState(false);
   const [transferringId, setTransferringId] = useState<string | null>(null);
 
-  // Same population the protocol counts at initializeGame: every
-  // session_participants row for this session, lead included.
-  const participantCount = participants.length;
-  const hasEnoughToStart = participantCount >= MIN_PARTICIPANTS_TO_START;
+  // Cover Story: floor is 2 members plus the facilitator (who also plays).
+  const participantCount =
+    protocolSlug === "cover-story"
+      ? participants.filter((p) => p.roleInSession !== "lead").length
+      : participants.length;
+  const hasEnoughToStart = participantCount >= minPlayers;
   const canStart =
     currentRole === "lead" && !isPending && !isStarting && hasEnoughToStart;
   const hasLead = participants.some((p) => p.roleInSession === "lead");
@@ -171,6 +176,10 @@ export function SessionLobbyView({
 
       {LobbyExplainer ? <LobbyExplainer /> : null}
 
+      {currentRole === "lead" && LobbyLeadControls ? (
+        <LobbyLeadControls sessionId={sessionId} />
+      ) : null}
+
       <section aria-label="Participants">
         <h2 className="mb-4 font-mono text-xs font-medium uppercase tracking-widest text-steel-blue">
           In the room
@@ -230,7 +239,9 @@ export function SessionLobbyView({
           <p className="max-w-md text-center font-body text-sm text-slate">
             {hasEnoughToStart
               ? "Do not press Start until everyone has joined."
-              : `Start unlocks when at least ${MIN_PARTICIPANTS_TO_START} people have joined. ${participantCount} here so far.`}
+              : `Start unlocks when at least ${minPlayers} ${
+                  protocolSlug === "cover-story" ? "players" : "people"
+                } have joined. ${participantCount} here so far.`}
           </p>
         </div>
       ) : !hasLead ? (

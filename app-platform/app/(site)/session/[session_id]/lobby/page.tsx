@@ -59,7 +59,9 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
 
   const { slug: protocolSlug, name: protocolName } =
     protocolFromSession(sessionRecord);
-  const LobbyExplainer = getProtocol(protocolSlug)?.lobbyExplainer;
+  const protocolDef = getProtocol(protocolSlug);
+  const LobbyExplainer = protocolDef?.lobbyExplainer;
+  const LobbyLeadControls = protocolDef?.lobbyLeadControls;
 
   const { data: spRows, error: spErr } = await supabase
     .from("session_participants")
@@ -124,12 +126,15 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
       <SessionLobbyView
         sessionId={sessionId}
         protocolName={protocolName}
+        protocolSlug={protocolSlug}
+        minPlayers={protocolDef?.minPlayers}
         joinCode={sessionRecord.join_code}
         joinUrl={buildJoinUrl(resolveAppOrigin(headers()), sessionRecord.join_code)}
         initialParticipants={participants}
         currentRole={currentRole}
         currentParticipantId={participantId}
         LobbyExplainer={LobbyExplainer}
+        LobbyLeadControls={LobbyLeadControls}
       />
     </main>
   );

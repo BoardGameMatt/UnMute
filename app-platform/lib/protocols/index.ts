@@ -7,6 +7,7 @@ import "./placeholder";
 import "./the-truth-is";
 import "./draw-it-by-ear";
 import "./wrong-answers-only";
+import "./cover-story";
 
 export {
   getProtocol,

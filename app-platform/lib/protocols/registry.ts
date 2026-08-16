@@ -26,6 +26,11 @@ export interface ProtocolDefinition {
    * participant roster. Protocols that omit this leave the lobby unchanged.
    */
   lobbyExplainer?: ComponentType;
+  /**
+   * Optional lead-only lobby slot (below explainer). Used for Cover Story
+   * reveal-date capture before Start.
+   */
+  lobbyLeadControls?: ComponentType<{ sessionId: string }>;
   /** Optional JSON-schema-shaped or app-specific config metadata */
   configSchema?: Json;
 }

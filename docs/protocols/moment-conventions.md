@@ -241,7 +241,27 @@ Customize items 3–4 per protocol; items 1, 2, 5, 6, 7 are platform-standard.
 
 ---
 
-## 15. Spec checklist (copy into every new spec)
+## 15. Content packs (required unless pack-none)
+
+The mechanic of a Moment is stable. The payload (questions, images, agencies, prompt banks) is a **content pack**. Teams that run the same Moment again get a different pack so the interaction is familiar and the items are not.
+
+Full model, console defaulting, and usage rules: [`docs/unmute-console-spec-v1.md`](../unmute-console-spec-v1.md) §8.4.
+
+Every new protocol spec must declare:
+
+| Field | Options |
+|-------|---------|
+| Pack mode | `required` (has a staff-swappable library) or `none` (payload is player-authored / not worth swapping) |
+| Pack A | What the first library is, where it lives, how many items |
+| Intra-session uniqueness | Still required where it already is (no repeat question in one sitting). That is **not** a pack |
+
+Existing libraries (WAO questions, DIBE images, Cover Story agencies) are Pack A. Do not add a second unversioned global pool.
+
+Protocol engines load content **through `sessions.content_pack_id`**. A query that ignores the session’s pack is a bug.
+
+---
+
+## 16. Spec checklist (copy into every new spec)
 
 Before marking a spec "locked for v1":
 
@@ -256,6 +276,7 @@ Before marking a spec "locked for v1":
 - [ ] § Degraded fallback
 - [ ] § Acceptance bar
 - [ ] § Authorization boundary (if service-role routes)
+- [ ] § Content pack — pack-required or pack-none, and what Pack A is
 - [ ] § Build sequence — one step at a time, independently testable
 
 ---
