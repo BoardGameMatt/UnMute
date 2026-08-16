@@ -11,7 +11,7 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 /**
- * Season reflection close — final screen after NPS on the WAO path.
+ * Season reflection close — final screen after NPS (WAO, Cover Story).
  * Display-only prompts; nothing stored.
  */
 export default async function SessionReflectionPage({ params }: PageProps) {

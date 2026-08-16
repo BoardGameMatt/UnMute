@@ -48,10 +48,11 @@ export default async function SessionFeedbackPage({ params }: FeedbackPageProps)
     redirect(`/session/${sessionId}`);
   }
 
-  const isWao =
-    protocolSlugFrom(
-      session.protocols as { slug: string } | { slug: string }[] | null
-    ) === "wrong-answers-only";
+  const protocolSlug = protocolSlugFrom(
+    session.protocols as { slug: string } | { slug: string }[] | null
+  );
+  const goesToReflection =
+    protocolSlug === "wrong-answers-only" || protocolSlug === "cover-story";
 
   const { data: link, error: linkErr } = await supabase
     .from("session_participants")
@@ -79,8 +80,8 @@ export default async function SessionFeedbackPage({ params }: FeedbackPageProps)
     redirect("/join");
   }
 
-  // WAO: reflection is the final screen — never park on the NPS thank-you.
-  if (isWao && existing) {
+  // Season Moments: reflection is the final screen — never park on NPS thank-you.
+  if (goesToReflection && existing) {
     redirect(`/session/${sessionId}/reflection`);
   }
 
@@ -100,7 +101,7 @@ export default async function SessionFeedbackPage({ params }: FeedbackPageProps)
             <SessionFeedbackForm
               sessionId={sessionId}
               afterSubmitHref={
-                isWao ? `/session/${sessionId}/reflection` : undefined
+                goesToReflection ? `/session/${sessionId}/reflection` : undefined
               }
             />
           )}

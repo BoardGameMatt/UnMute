@@ -6,7 +6,7 @@ const PROMPT_2 =
 
 /**
  * Season reflection close — display-only discussion prompts.
- * Final screen after NPS on the WAO path. Nothing is typed or stored.
+ * Final screen after NPS (WAO, Cover Story). Nothing is typed or stored.
  */
 export function SessionReflectionView() {
   return (

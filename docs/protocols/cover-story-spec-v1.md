@@ -143,7 +143,7 @@ Product does not email. Facilitator copy-paste T−7 and T−2.
 
 ## 12. Progress / NPS
 
-No session progress bar. NPS + reflection only after Sitting B completes.
+No session progress bar. NPS + reflection only after Sitting B completes (same Season end path as WAO: final board → NPS → reflection close).
 
 ---
 
