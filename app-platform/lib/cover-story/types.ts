@@ -78,6 +78,10 @@ export type CoverStoryPlayState = {
     id: string;
     displayName: string;
     locked: boolean;
+    lockedAgencyName: string | null;
+    hasDeal: boolean;
+    pickUrl: string | null;
+    pickCards: { agencyId: number; name: string; words: string[] }[] | null;
     plantedCount: number;
     missionSubmitted: boolean;
   }[];
@@ -160,6 +164,7 @@ export type CoverStoryAction =
   | { type: "openDeal" }
   | { type: "ensureDeal" }
   | { type: "lockAgency"; agencyId: number }
+  | { type: "lockAgencyOnBehalf"; participantId: string; agencyId: number }
   | { type: "openField" }
   | {
       type: "submitMissionReport";
@@ -185,5 +190,6 @@ export type CoverStoryAction =
   | { type: "skipTarget" }
   | { type: "scoreWithoutStory" }
   | { type: "showFinal" }
-  | { type: "completeSession" };
+  | { type: "completeSession" }
+  | { type: "skipToReflection" };
 

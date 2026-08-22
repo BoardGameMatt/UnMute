@@ -161,7 +161,9 @@ export default async function SessionPage({ params }: SessionPageProps) {
           href={
             protocolSlug === "wrong-answers-only"
               ? `/session/${sessionId}/wao-scoreboard`
-              : `/session/${sessionId}/feedback`
+              : protocolSlug === "cover-story"
+                ? `/session/${sessionId}/reflection`
+                : `/session/${sessionId}/feedback`
           }
         />
         {definition ? (

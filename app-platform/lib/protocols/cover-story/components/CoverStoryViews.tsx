@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
 import { BRIEFING_PANELS, highlightSongTitle } from "@/lib/cover-story/briefing";
-import { formatRevealDate, lastPlantDate } from "@/lib/cover-story/format";
+import { formatRevealDate, isRevealDay, lastPlantDate } from "@/lib/cover-story/format";
 import type { CoverStoryPlayState } from "@/lib/cover-story/types";
 import type { CoverStoryAction } from "@/lib/cover-story/types";
 import { COVER_STORY_NOTE_MAX } from "@/lib/cover-story/types";
@@ -28,6 +28,162 @@ function Shell({
       </p>
       {children}
     </div>
+  );
+}
+
+function GhostButton({
+  children,
+  onClick,
+  disabled,
+  compact,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  compact?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={
+        compact
+          ? "rounded-md border border-cloud-grey px-4 py-2 font-display text-sm font-semibold text-unmute-navy transition hover:bg-cloud-grey disabled:cursor-not-allowed disabled:opacity-40"
+          : "w-full rounded-md border border-cloud-grey bg-transparent px-6 py-3 font-display font-semibold text-unmute-navy transition hover:bg-cloud-grey disabled:cursor-not-allowed disabled:opacity-40"
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+function fieldRosterStatus(
+  row: CoverStoryPlayState["leadField"][number],
+  phase: CoverStoryPlayState["phase"]
+): string {
+  if (row.locked) return "Ready";
+  if (!row.hasDeal) return "No card";
+  if (phase === "deal") return "Choosing";
+  return "No pick yet";
+}
+
+function FacilitatorSkipToReflection({
+  pending,
+  send,
+}: {
+  pending: boolean;
+  send: Send;
+}) {
+  const [confirming, setConfirming] = useState(false);
+
+  if (confirming) {
+    return (
+      <div className="mt-4 space-y-3 rounded-lg border border-cloud-grey bg-warm-white p-4">
+        <p className="font-body text-sm text-charcoal">
+          This will exit the moment and go directly to the discussion questions.
+        </p>
+        <div className="flex flex-col gap-2">
+          <AmberButton
+            disabled={pending}
+            onClick={() => void send({ type: "skipToReflection" })}
+          >
+            Yes, skip to discussion
+          </AmberButton>
+          <GhostButton disabled={pending} onClick={() => setConfirming(false)}>
+            Cancel
+          </GhostButton>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4">
+      <GhostButton disabled={pending} onClick={() => setConfirming(true)}>
+        Skip to discussion
+      </GhostButton>
+    </div>
+  );
+}
+
+function LeadFieldRosterRow({
+  row,
+  phase,
+  pending,
+  send,
+}: {
+  row: CoverStoryPlayState["leadField"][number];
+  phase: CoverStoryPlayState["phase"];
+  pending: boolean;
+  send: Send;
+}) {
+  const [locking, setLocking] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const status = fieldRosterStatus(row, phase);
+
+  const copyPickLink = async () => {
+    if (!row.pickUrl) return;
+    try {
+      await navigator.clipboard.writeText(row.pickUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <li className="rounded-md border border-cloud-grey/80 px-3 py-2">
+      <div className="flex items-start justify-between gap-3 font-body text-sm">
+        <div>
+          <span className="text-charcoal">{row.displayName}</span>
+          {row.locked && row.lockedAgencyName ? (
+            <p className="mt-0.5 font-body text-xs text-slate">{row.lockedAgencyName}</p>
+          ) : null}
+        </div>
+        <span className="shrink-0 font-mono text-[10px] uppercase tracking-widest text-steel-blue">
+          {status}
+        </span>
+      </div>
+      {!row.locked && row.hasDeal && row.pickCards ? (
+        <div className="mt-2 space-y-2">
+          {row.pickUrl ? (
+            <GhostButton compact disabled={pending} onClick={() => void copyPickLink()}>
+              {copied ? "Link copied" : "Copy private pick link"}
+            </GhostButton>
+          ) : null}
+          {locking ? (
+            <div className="space-y-2">
+              {row.pickCards.map((card) => (
+                <button
+                  key={card.agencyId}
+                  type="button"
+                  disabled={pending}
+                  onClick={() =>
+                    void send({
+                      type: "lockAgencyOnBehalf",
+                      participantId: row.id,
+                      agencyId: card.agencyId,
+                    })
+                  }
+                  className="w-full rounded-md border border-cloud-grey bg-warm-white px-3 py-2 text-left font-body text-sm text-charcoal hover:bg-cloud-grey disabled:opacity-40"
+                >
+                  Lock {card.name}
+                </button>
+              ))}
+              <GhostButton compact disabled={pending} onClick={() => setLocking(false)}>
+                Cancel
+              </GhostButton>
+            </div>
+          ) : (
+            <GhostButton compact disabled={pending} onClick={() => setLocking(true)}>
+              Lock for them
+            </GhostButton>
+          )}
+        </div>
+      ) : null}
+    </li>
   );
 }
 
@@ -78,27 +234,6 @@ function NavyButton({
       disabled={disabled}
       onClick={onClick}
       className="w-full rounded-md bg-unmute-navy px-6 py-3 font-display font-semibold text-white hover:bg-deep-navy disabled:cursor-not-allowed disabled:opacity-40"
-    >
-      {children}
-    </button>
-  );
-}
-
-function GhostButton({
-  children,
-  onClick,
-  disabled,
-}: {
-  children: ReactNode;
-  onClick: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="rounded-md border border-cloud-grey px-4 py-2 font-display text-sm font-semibold text-unmute-navy hover:bg-cloud-grey disabled:cursor-not-allowed disabled:opacity-40"
     >
       {children}
     </button>
@@ -491,12 +626,13 @@ function DealView({
           </p>
           <ul className="mb-4 space-y-2">
             {state.leadField.map((row) => (
-              <li key={row.id} className="flex justify-between font-body text-sm text-charcoal">
-                <span>{row.displayName}</span>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-                  {row.locked ? "Ready" : "Choosing"}
-                </span>
-              </li>
+              <LeadFieldRosterRow
+                key={row.id}
+                row={row}
+                phase={state.phase}
+                pending={pending}
+                send={send}
+              />
             ))}
           </ul>
           {state.phase === "deal" ? (
@@ -521,6 +657,7 @@ function FieldView({
 }) {
   const [lateName, setLateName] = useState("");
   const revealLabel = formatRevealDate(state.revealOn);
+  const revealReady = isRevealDay(state.revealOn);
 
   return (
     <Shell>
@@ -532,12 +669,13 @@ function FieldView({
           </p>
           <ul className="mb-4 space-y-2">
             {state.leadField.map((row) => (
-              <li key={row.id} className="flex justify-between font-body text-sm">
-                <span>{row.displayName}</span>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-                  {row.locked ? "In the field" : "No card"}
-                </span>
-              </li>
+              <LeadFieldRosterRow
+                key={row.id}
+                row={row}
+                phase={state.phase}
+                pending={pending}
+                send={send}
+              />
             ))}
           </ul>
           <p className="mb-2 font-body text-sm text-charcoal">Admit late</p>
@@ -563,11 +701,25 @@ function FieldView({
               your agency. You will file proof at the reveal.
             </p>
           </div>
-          <div className="mt-4">
-            <AmberButton disabled={pending} onClick={() => void send({ type: "startReveal" })}>
-              Start the reveal
+          <div className="mt-4 space-y-2">
+            <p className="font-body text-sm text-charcoal">
+              On reveal day ({revealLabel}), start Sitting B here. This does not reveal anyone&apos;s
+              cover early — it only opens the mission-report and guessing flow when the field
+              period is over.
+            </p>
+            <AmberButton
+              disabled={pending || !revealReady}
+              onClick={() => void send({ type: "startReveal" })}
+            >
+              Start Sitting B on reveal day
             </AmberButton>
+            {!revealReady ? (
+              <p className="font-body text-xs text-slate">
+                Available on {revealLabel}. Agents keep their covers private until then.
+              </p>
+            ) : null}
           </div>
+          <FacilitatorSkipToReflection pending={pending} send={send} />
         </LeadLabel>
       ) : (
         <MissionLockedSheet state={state} />
@@ -826,135 +978,164 @@ function RevealView({
   const reveal = state.reveal;
   if (!reveal) return null;
 
+  const skipControl =
+    state.isLead && state.phase === "reveal" ? (
+      <FacilitatorSkipToReflection pending={pending} send={send} />
+    ) : null;
+
   if (reveal.subphase === "final" || state.phase === "complete") {
     return <FinalBoard state={state} pending={pending} send={send} />;
   }
 
   if (reveal.subphase === "mission") {
-    return <MissionReportView state={state} pending={pending} send={send} />;
+    return (
+      <>
+        <MissionReportView state={state} pending={pending} send={send} />
+        {skipControl}
+      </>
+    );
   }
 
   if (reveal.subphase === "guess") {
-    return <GuessView state={state} pending={pending} send={send} reload={reload} />;
+    return (
+      <>
+        <GuessView state={state} pending={pending} send={send} reload={reload} />
+        {skipControl}
+      </>
+    );
   }
 
   if (reveal.subphase === "gallery") {
     return (
-      <Shell>
-        <h1 className="text-center font-display text-2xl font-bold text-unmute-navy">
-          {reveal.target?.displayName}
-        </h1>
-        <p className="text-center font-body text-slate">What the room guessed. No truth yet.</p>
-        <ul className="space-y-3">
-          {reveal.gallery.map((row, index) => (
-            <li
-              key={`${row.agencyText}-${index}`}
-              className="rounded-lg border border-cloud-grey bg-warm-white p-4"
-            >
-              <p className="font-display text-lg text-unmute-navy">{row.agencyText}</p>
-              <p className="font-body text-sm text-slate">{row.evidenceText}</p>
-            </li>
-          ))}
-        </ul>
-        {state.isLead ? (
-          <LeadLabel>
-            <AmberButton disabled={pending} onClick={() => void send({ type: "revealCover" })}>
-              Reveal their cover
-            </AmberButton>
-          </LeadLabel>
-        ) : (
-          <p className="text-center font-body text-slate">The lead will reveal when you are ready.</p>
-        )}
-      </Shell>
+      <>
+        <Shell>
+          <h1 className="text-center font-display text-2xl font-bold text-unmute-navy">
+            {reveal.target?.displayName}
+          </h1>
+          <p className="text-center font-body text-slate">What the room guessed. No truth yet.</p>
+          <ul className="space-y-3">
+            {reveal.gallery.map((row, index) => (
+              <li
+                key={`${row.agencyText}-${index}`}
+                className="rounded-lg border border-cloud-grey bg-warm-white p-4"
+              >
+                <p className="font-display text-lg text-unmute-navy">{row.agencyText}</p>
+                <p className="font-body text-sm text-slate">{row.evidenceText}</p>
+              </li>
+            ))}
+          </ul>
+          {state.isLead ? (
+            <LeadLabel>
+              <AmberButton disabled={pending} onClick={() => void send({ type: "revealCover" })}>
+                Reveal their cover
+              </AmberButton>
+            </LeadLabel>
+          ) : (
+            <p className="text-center font-body text-slate">The lead will reveal when you are ready.</p>
+          )}
+        </Shell>
+        {skipControl}
+      </>
     );
   }
 
   if (reveal.subphase === "mark") {
-    return <MarkView state={state} pending={pending} send={send} />;
+    return (
+      <>
+        <MarkView state={state} pending={pending} send={send} />
+        {skipControl}
+      </>
+    );
   }
 
   if (reveal.subphase === "board") {
     return (
-      <Shell>
-        <h1 className="text-center font-display text-3xl font-bold text-unmute-navy">
-          {reveal.target?.displayName}
-        </h1>
-        <p className="text-center font-display text-2xl text-signal-amber">
-          {reveal.board?.agencyName}
-        </p>
-        <ul className="space-y-2">
-          {(reveal.board?.words ?? []).map((word) => (
-            <li
-              key={word.phrase}
-              className="rounded-lg border border-cloud-grey bg-warm-white px-4 py-3 font-body text-charcoal"
-            >
-              <p>
-                {word.phrase}
-                <span className="ml-2 font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-                  {word.planted ? "Planted" : "Didn’t plant"}
-                </span>
-              </p>
-              {word.planted && word.plantedOn ? (
-                <p className="mt-1 font-body text-sm text-slate">{word.plantedOn}</p>
-              ) : null}
-              {word.planted && word.witnessNames.length > 0 ? (
-                <p className="mt-1 font-body text-sm text-slate">
-                  {word.witnessNames.join(", ")}
+      <>
+        <Shell>
+          <h1 className="text-center font-display text-3xl font-bold text-unmute-navy">
+            {reveal.target?.displayName}
+          </h1>
+          <p className="text-center font-display text-2xl text-signal-amber">
+            {reveal.board?.agencyName}
+          </p>
+          <ul className="space-y-2">
+            {(reveal.board?.words ?? []).map((word) => (
+              <li
+                key={word.phrase}
+                className="rounded-lg border border-cloud-grey bg-warm-white px-4 py-3 font-body text-charcoal"
+              >
+                <p>
+                  {word.phrase}
+                  <span className="ml-2 font-mono text-[10px] uppercase tracking-widest text-steel-blue">
+                    {word.planted ? "Planted" : "Didn’t plant"}
+                  </span>
                 </p>
-              ) : null}
-              {word.note ? (
-                <p className="mt-1 font-body text-sm text-slate">{word.note}</p>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-        <p className="text-center font-body text-slate">
-          Take a minute. How did the words get in?
-        </p>
-        {state.isLead ? (
-          <LeadLabel>
-            <AmberButton disabled={pending} onClick={() => void send({ type: "openScoring" })}>
-              Score guesses
-            </AmberButton>
-          </LeadLabel>
-        ) : null}
-      </Shell>
+                {word.planted && word.plantedOn ? (
+                  <p className="mt-1 font-body text-sm text-slate">{word.plantedOn}</p>
+                ) : null}
+                {word.planted && word.witnessNames.length > 0 ? (
+                  <p className="mt-1 font-body text-sm text-slate">
+                    {word.witnessNames.join(", ")}
+                  </p>
+                ) : null}
+                {word.note ? (
+                  <p className="mt-1 font-body text-sm text-slate">{word.note}</p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          <p className="text-center font-body text-slate">
+            Take a minute. How did the words get in?
+          </p>
+          {state.isLead ? (
+            <LeadLabel>
+              <AmberButton disabled={pending} onClick={() => void send({ type: "openScoring" })}>
+                Score guesses
+              </AmberButton>
+            </LeadLabel>
+          ) : null}
+        </Shell>
+        {skipControl}
+      </>
     );
   }
 
   if (reveal.subphase === "points" && reveal.points) {
     return (
-      <Shell>
-        <h1 className="text-center font-display text-2xl font-bold text-unmute-navy">
-          Points just awarded
-        </h1>
-        <p className="text-center font-body text-slate">{reveal.points.agentName}</p>
-        <p className="text-center font-display text-4xl text-unmute-navy">
-          {reveal.points.type1 + reveal.points.mission}
-        </p>
-        <p className="text-center font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-          Type 1 {reveal.points.type1} · Mission {reveal.points.mission}
-        </p>
-        <ul className="space-y-2">
-          {reveal.points.guessers.map((row) => (
-            <li key={row.name} className="flex justify-between font-body text-sm">
-              <span>{row.name}</span>
-              <span>+{row.delta}</span>
-            </li>
-          ))}
-        </ul>
-        {state.isLead ? (
-          <LeadLabel>
-            <AmberButton disabled={pending} onClick={() => void send({ type: "nextTarget" })}>
-              Next person
-            </AmberButton>
-          </LeadLabel>
-        ) : null}
-      </Shell>
+      <>
+        <Shell>
+          <h1 className="text-center font-display text-2xl font-bold text-unmute-navy">
+            Points just awarded
+          </h1>
+          <p className="text-center font-body text-slate">{reveal.points.agentName}</p>
+          <p className="text-center font-display text-4xl text-unmute-navy">
+            {reveal.points.type1 + reveal.points.mission}
+          </p>
+          <p className="text-center font-mono text-[10px] uppercase tracking-widest text-steel-blue">
+            Type 1 {reveal.points.type1} · Mission {reveal.points.mission}
+          </p>
+          <ul className="space-y-2">
+            {reveal.points.guessers.map((row) => (
+              <li key={row.name} className="flex justify-between font-body text-sm">
+                <span>{row.name}</span>
+                <span>+{row.delta}</span>
+              </li>
+            ))}
+          </ul>
+          {state.isLead ? (
+            <LeadLabel>
+              <AmberButton disabled={pending} onClick={() => void send({ type: "nextTarget" })}>
+                Next person
+              </AmberButton>
+            </LeadLabel>
+          ) : null}
+        </Shell>
+        {skipControl}
+      </>
     );
   }
 
-  return null;
+  return skipControl;
 }
 
 function GuessView({
@@ -1213,7 +1394,7 @@ function FinalBoard({
       {state.isLead && state.phase !== "complete" ? (
         <LeadLabel>
           <AmberButton disabled={pending} onClick={() => void send({ type: "completeSession" })}>
-            Continue to feedback
+            Continue to discussion
           </AmberButton>
         </LeadLabel>
       ) : null}

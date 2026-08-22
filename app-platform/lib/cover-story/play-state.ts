@@ -12,6 +12,8 @@ import type {
 import { COVER_STORY_GUESS_SECONDS, type CoverStoryPlayState } from "./types";
 import { missionCopyPaste, loadDeals, loadMembers } from "./session";
 import { missionScore, type1Score, type2Score } from "./score";
+import { ensureDealPickToken } from "./pick-token";
+import { buildPickUrl } from "./pick-page";
 
 export async function buildPlayState(input: {
   admin: SupabaseClient;
@@ -19,8 +21,9 @@ export async function buildPlayState(input: {
   participantId: string;
   isLead: boolean;
   cs: CoverStorySession;
+  appOrigin?: string;
 }): Promise<CoverStoryPlayState> {
-  const { admin, sessionId, participantId, isLead, cs } = input;
+  const { admin, sessionId, participantId, isLead, cs, appOrigin } = input;
   const members = await loadMembers(admin, sessionId);
   const deals = await loadDeals(admin, cs.id);
   const burned = new Set<number>();
@@ -58,10 +61,45 @@ export async function buildPlayState(input: {
           const deal = deals.find((d) => d.participant_id === player.participantId);
           const plantedCount = deal ? await countPlanted(admin, deal.id) : 0;
           const submitted = deal ? await isMissionSubmitted(admin, deal.id) : false;
+          let lockedAgencyName: string | null = null;
+          let pickUrl: string | null = null;
+          let pickCards: { agencyId: number; name: string; words: string[] }[] | null = null;
+
+          if (deal?.locked_agency_id) {
+            const { data: agency } = await admin
+              .from("cover_story_agencies")
+              .select("official_name")
+              .eq("id", deal.locked_agency_id)
+              .maybeSingle();
+            lockedAgencyName =
+              (agency as { official_name?: string } | null)?.official_name ?? "Agency";
+          } else if (deal) {
+            const token = await ensureDealPickToken(admin, deal);
+            pickUrl = buildPickUrl(appOrigin, token);
+            pickCards = [];
+            for (const agencyId of deal.shown_agency_ids) {
+              const { data: agency } = await admin
+                .from("cover_story_agencies")
+                .select("id, official_name")
+                .eq("id", agencyId)
+                .maybeSingle();
+              const words = await loadWordsForAgency(admin, agencyId);
+              pickCards.push({
+                agencyId,
+                name: (agency as CoverStoryAgency | null)?.official_name ?? "Agency",
+                words: words.map((w) => w.phrase),
+              });
+            }
+          }
+
           return {
             id: player.participantId,
             displayName: player.displayName,
             locked: Boolean(deal?.locked_agency_id),
+            lockedAgencyName,
+            hasDeal: Boolean(deal),
+            pickUrl,
+            pickCards,
             plantedCount,
             missionSubmitted: submitted,
           };

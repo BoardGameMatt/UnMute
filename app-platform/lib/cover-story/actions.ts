@@ -20,6 +20,8 @@ import {
 } from "./types";
 import { suggestCorrect } from "./match-guess";
 import { fisherYates, missionScore, pickDisjointHands, pickHand, type1Score } from "./score";
+import { isRevealDay } from "./format";
+import { newPickToken } from "./pick-token";
 import {
   burnedAgencyIds,
   ensureCoverStorySession,
@@ -188,6 +190,11 @@ async function handleAction(input: {
       await lockAgency(admin, sessionId, participantId, action.agencyId);
       return;
     }
+    case "lockAgencyOnBehalf": {
+      if (!isLead) throw Object.assign(new Error("Only the lead can do that."), { status: 403 });
+      await lockAgency(admin, sessionId, action.participantId, action.agencyId);
+      return;
+    }
     case "openField": {
       if (!isLead) throw Object.assign(new Error("Only the lead can do that."), { status: 403 });
       const cs = await requireCs(admin, sessionId);
@@ -282,15 +289,12 @@ async function handleAction(input: {
     }
     case "completeSession": {
       if (!isLead) throw Object.assign(new Error("Only the lead can do that."), { status: 403 });
-      const cs = await requireCs(admin, sessionId);
-      await patchCs(admin, cs.id, { phase: "complete", reveal_subphase: "final" });
-      const completedAt = new Date().toISOString();
-      const { error } = await admin
-        .from("sessions")
-        .update({ status: "completed", completed_at: completedAt })
-        .eq("id", sessionId);
-      if (error) throw new Error(error.message);
-      await syncPublicState(admin, sessionId, { phase: "complete" });
+      await completeCoverStorySession(admin, sessionId);
+      return;
+    }
+    case "skipToReflection": {
+      if (!isLead) throw Object.assign(new Error("Only the lead can do that."), { status: 403 });
+      await skipToReflection(admin, sessionId);
       return;
     }
     default: {
@@ -354,6 +358,7 @@ async function dealMissingHands(
       cover_story_session_id: cs.id,
       participant_id: member.participantId,
       shown_agency_ids: hands[index],
+      pick_token: newPickToken(),
     }))
   );
   if (insertErr) throw new Error(insertErr.message);
@@ -375,6 +380,39 @@ export async function expireGuessIfNeeded(
   await patchCs(admin, cs.id, { reveal_subphase: "gallery" });
   await syncPublicState(admin, sessionId, { phase: "reveal" });
   return { ...cs, reveal_subphase: "gallery" };
+}
+
+async function completeCoverStorySession(
+  admin: SupabaseClient,
+  sessionId: string
+): Promise<void> {
+  const cs = await requireCs(admin, sessionId);
+  await patchCs(admin, cs.id, { phase: "complete", reveal_subphase: "final" });
+  const completedAt = new Date().toISOString();
+  const { error } = await admin
+    .from("sessions")
+    .update({ status: "completed", completed_at: completedAt })
+    .eq("id", sessionId);
+  if (error) throw new Error(error.message);
+  await syncPublicState(admin, sessionId, { phase: "complete" });
+}
+
+async function skipToReflection(admin: SupabaseClient, sessionId: string): Promise<void> {
+  const cs = await requireCs(admin, sessionId);
+  if (cs.phase !== "field" && cs.phase !== "reveal") {
+    throw new Error("Skip to discussion is only available during the mission or reveal.");
+  }
+  await completeCoverStorySession(admin, sessionId);
+}
+
+/** Lock an agency for a participant (self-serve, pick link, or lead on behalf). */
+export async function lockAgencyForParticipant(
+  admin: SupabaseClient,
+  sessionId: string,
+  participantId: string,
+  agencyId: number
+): Promise<void> {
+  await lockAgency(admin, sessionId, participantId, agencyId);
 }
 
 async function lockAgency(
@@ -571,6 +609,7 @@ async function admitLate(
       cover_story_session_id: cs.id,
       participant_id: participant.id,
       shown_agency_ids: hand,
+      pick_token: newPickToken(),
     });
     if (dealErr) throw new Error(dealErr.message);
   }
@@ -580,6 +619,9 @@ async function startReveal(admin: SupabaseClient, sessionId: string): Promise<vo
   const cs = await requireCs(admin, sessionId);
   if (cs.phase !== "field") {
     throw new Error("Start the reveal from the field period.");
+  }
+  if (!isRevealDay(cs.reveal_on)) {
+    throw new Error("The reveal cannot start until the scheduled reveal date.");
   }
   const members = await loadMembers(admin, sessionId);
   const deals = await loadDeals(admin, cs.id);

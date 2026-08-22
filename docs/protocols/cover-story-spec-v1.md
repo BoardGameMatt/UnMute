@@ -63,8 +63,10 @@ Sitting B uses a separate reveal explainer (guess silently, ninety seconds).
    - It runs until **[reveal date]**.
    - Speak each word in a meeting with at least two other people from this session (spoken words only; virtual meetings count; do not name the agency).
    - Keep a private record of **the date, who was there, and a little context**. They will file that proof at Sitting B — there is no field logger in the product.
-6. Lock one card. After lock: copy-to-clipboard (agency + words), half-the-room characterization, **See you on [reveal date].** Facilitator roster shows **Ready** vs **Choosing**. Facilitator must keep their cover off any shared display.
+6. Lock one card. After lock: copy-to-clipboard (agency + words), half-the-room characterization, **See you on [reveal date].** Facilitator roster shows **Ready** vs **Choosing** (deal) or **No pick yet** (field). Lead-only roster also shows **locked agency names** for the facilitator’s record. Members must not see others’ covers.
 7. **Start the mission** parks the session in `field`. Session stays `active`.
+
+**Absent / lock-on-behalf:** Each deal gets an unguessable `pick_token`. Private URL `/cover-story/pick/[token]` shows that agent’s three agencies (five words each) and locks one — usable by the absent agent or by the facilitator on their behalf. Lead field dashboard: **Copy private pick link** and **Lock for them** (inline picker). Tokens are minted on deal and backfilled on first access if missing.
 
 `startReading` is lead-only, lobby-only. It does not auto-fire. It may clear leftover play data only when leaving lobby (replay). It must not wipe field or reveal data.
 
@@ -74,7 +76,11 @@ Sitting B uses a separate reveal explainer (guess silently, ninety seconds).
 
 No persistent in-app log. There is no interface during the weeks to enter dates, witnesses, or notes. Phones may still show the locked cover and copy sheet so agents can remember words.
 
-Facilitator dashboard: who locked a cover, admit late (deals leftover unused agencies), reminder copy-paste (T−7 / T−2), **Start the reveal**. No agency names. No planted counts (those do not exist until Sitting B).
+Facilitator dashboard: roster with locked agency names (lead only), admit late (deals leftover unused agencies), reminder copy-paste (T−7 / T−2), private pick links for agents without a lock, **Start Sitting B on reveal day** (disabled until `reveal_on`; server rejects early start), **Skip to discussion** (ends session → reflection, skips NPS). No planted counts during field (those do not exist until Sitting B).
+
+**Start Sitting B:** Button copy makes clear this opens the mission-report / guessing flow on the scheduled reveal date — it does not reveal anyone’s cover early. Disabled until local calendar date ≥ `reveal_on`; enforced server-side in `startReveal`.
+
+**Skip to discussion:** Lead-only during `field` and `reveal`. Confirmation if before natural end. Sets `sessions.status = completed`, `cover_story_sessions.phase = complete`; everyone redirects to `/session/[id]/reflection` (not feedback / NPS).
 
 ---
 
@@ -149,7 +155,7 @@ No session progress bar. NPS + reflection only after Sitting B completes (same S
 
 ## 13. Data
 
-Agencies, words, deals, logs, guesses, scores, and `cover_story_sessions` live in service-role tables — never in `state_json` (open RLS). `cover_story_sessions` holds phase, reveal date, reveal order, and `reveal_subphase` (`mission` → `guess` → `gallery` → `board` → `mark` → `points` → `final`). `cover_story_word_logs.note` is ≤50 characters. Migration `016_cover_story_mission_report.sql` adds the note column and the `mission` subphase. Migration `017_cover_story_sessions_rls.sql` locks session metadata to service_role.
+Agencies, words, deals, logs, guesses, scores, and `cover_story_sessions` live in service-role tables — never in `state_json` (open RLS). `cover_story_sessions` holds phase, reveal date, reveal order, and `reveal_subphase` (`mission` → `guess` → `gallery` → `board` → `mark` → `points` → `final`). `cover_story_deals.pick_token` powers private pick links. `cover_story_word_logs.note` is ≤50 characters. Migration `016_cover_story_mission_report.sql` adds the note column and the `mission` subphase. Migration `017_cover_story_sessions_rls.sql` locks session metadata to service_role. Migration `018_cover_story_pick_token.sql` adds `pick_token` on deals.
 
 ---
 

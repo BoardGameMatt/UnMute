@@ -3,10 +3,11 @@ import { expireGuessIfNeeded } from "@/lib/cover-story/actions";
 import { authorizeCoverStoryParticipant } from "@/lib/cover-story/authorize";
 import { buildPlayState } from "@/lib/cover-story/play-state";
 import { ensureCoverStorySession } from "@/lib/cover-story/session";
+import { resolveAppOrigin } from "@/lib/session/app-origin";
 
 type RouteContext = { params: { sessionId: string } };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   const sessionId = context.params.sessionId;
   const auth = await authorizeCoverStoryParticipant(sessionId);
   if (!auth.ok) {
@@ -22,6 +23,7 @@ export async function GET(_request: Request, context: RouteContext) {
       participantId: auth.participantId,
       isLead: auth.isLead,
       cs: current,
+      appOrigin: resolveAppOrigin(request.headers),
     });
     return NextResponse.json({ state });
   } catch (err) {

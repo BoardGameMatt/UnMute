@@ -647,6 +647,7 @@ export interface CoverStoryDeal {
   shown_agency_ids: number[];
   locked_agency_id: number | null;
   locked_at: string | null;
+  pick_token: string | null;
   created_at: string;
 }
 
@@ -655,6 +656,7 @@ export type CoverStoryDealInsert = Omit<CoverStoryDeal, "id" | "created_at"> & {
   created_at?: string;
   locked_agency_id?: number | null;
   locked_at?: string | null;
+  pick_token?: string | null;
 };
 
 export interface CoverStoryWordLog {

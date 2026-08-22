@@ -4,6 +4,7 @@ import type { CoverStoryAction } from "@/lib/cover-story/types";
 import { dispatchCoverStoryAction, expireGuessIfNeeded } from "@/lib/cover-story/actions";
 import { buildPlayState } from "@/lib/cover-story/play-state";
 import { ensureCoverStorySession } from "@/lib/cover-story/session";
+import { resolveAppOrigin } from "@/lib/session/app-origin";
 
 type RouteContext = { params: { sessionId: string } };
 
@@ -18,6 +19,7 @@ const ACTION_TYPES = new Set<CoverStoryAction["type"]>([
   "openDeal",
   "ensureDeal",
   "lockAgency",
+  "lockAgencyOnBehalf",
   "openField",
   "submitMissionReport",
   "admitLate",
@@ -35,6 +37,7 @@ const ACTION_TYPES = new Set<CoverStoryAction["type"]>([
   "scoreWithoutStory",
   "showFinal",
   "completeSession",
+  "skipToReflection",
 ]);
 
 export async function POST(request: Request, context: RouteContext) {
@@ -77,6 +80,7 @@ export async function POST(request: Request, context: RouteContext) {
     participantId: auth.participantId,
     isLead: auth.isLead,
     cs: current,
+    appOrigin: resolveAppOrigin(request.headers),
   });
   return NextResponse.json({ ok: true, state });
 }
