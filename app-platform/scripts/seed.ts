@@ -173,6 +173,16 @@ async function main(): Promise<void> {
       max_players: 15,
       config_schema: {},
     },
+    {
+      slug: "talk-track",
+      name: "Talk Track",
+      description:
+        "Teams build a spoken sentence one word at a time so a teammate can name the word on the card.",
+      type: "realtime",
+      min_players: 4,
+      max_players: 20,
+      config_schema: {},
+    },
   ];
 
   const { error: protocolsError } = await supabase

@@ -7,6 +7,7 @@ type LobbyGuestJoinFormProps = {
   sessionId: string;
   teamId: string;
   joinCode: string;
+  errorMessage?: string | null;
 };
 
 function SubmitButton({
@@ -57,59 +58,22 @@ export function LobbyGuestJoinForm({
   sessionId,
   teamId,
   joinCode,
+  errorMessage = null,
 }: LobbyGuestJoinFormProps) {
   const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const hasName = name.trim().length > 0;
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    const form = e.currentTarget;
-    const fd = new FormData(form);
-
-    setPending(true);
-    try {
-      // Default redirect: "follow". Do NOT use redirect: "manual" — for redirects the
-      // fetch spec can yield an opaque response (status 0) with no Location header,
-      // which breaks client-side handling and shows a false error.
-      const res = await fetch(`/api/join/${encodeURIComponent(joinCode)}`, {
-        method: "POST",
-        body: fd,
-        credentials: "same-origin",
-      });
-
-      if (res.ok) {
-        try {
-          const landed = new URL(res.url, window.location.origin);
-          // Lobby (pre-start) or session page (late join into active).
-          if (/\/session\/[^/]+(\/lobby)?\/?$/.test(landed.pathname)) {
-            window.location.href = res.url;
-            return;
-          }
-        } catch {
-          // ignore
-        }
-        setError("Could not join. Try again.");
-        return;
-      }
-
-      let message = "Could not join. Try again.";
-      try {
-        const body = (await res.json()) as { error?: string };
-        if (body.error) message = body.error;
-      } catch {
-        // ignore
-      }
-      setError(message);
-    } finally {
-      setPending(false);
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
+    <form
+      method="POST"
+      action={`/api/join/${encodeURIComponent(joinCode)}`}
+      className="w-full max-w-md space-y-6"
+      onSubmit={() => {
+        if (!hasName) return;
+        setPending(true);
+      }}
+    >
       <input type="hidden" name="sessionId" value={sessionId} />
       <input type="hidden" name="teamId" value={teamId} />
 
@@ -129,9 +93,9 @@ export function LobbyGuestJoinForm({
         />
       </label>
 
-      {error ? (
+      {errorMessage ? (
         <p className="text-center text-sm text-signal-red" role="alert">
-          {error}
+          {errorMessage}
         </p>
       ) : null}
 

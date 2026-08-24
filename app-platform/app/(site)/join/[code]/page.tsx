@@ -10,11 +10,12 @@ import { PARTICIPANT_COOKIE, JOIN_CODE_LENGTH, normalizeJoinCode } from "@/lib/c
 
 type JoinCodePageProps = {
   params: { code: string };
+  searchParams: { error?: string };
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function JoinCodePage({ params }: JoinCodePageProps) {
+export default async function JoinCodePage({ params, searchParams }: JoinCodePageProps) {
   noStore();
   const code = normalizeJoinCode(params.code ?? "");
 
@@ -192,6 +193,7 @@ export default async function JoinCodePage({ params }: JoinCodePageProps) {
               sessionId={session.id}
               teamId={session.team_id}
               joinCode={code}
+              errorMessage={searchParams.error ?? null}
             />
           </div>
         ) : null}

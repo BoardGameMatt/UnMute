@@ -4,22 +4,28 @@ import {
   normalizeDisplayName,
   normalizeJoinCode,
 } from "@/lib/constants";
+import { redirectSameOrigin } from "@/lib/http/redirect-same-origin";
 import { joinSessionAsGuestCore } from "@/lib/join/join-session-as-guest";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = { params: { code: string } };
 
+function joinErrorRedirect(code: string, message: string): NextResponse {
+  const params = new URLSearchParams({ error: message });
+  return redirectSameOrigin(`/join/${code}?${params.toString()}`);
+}
+
 export async function POST(request: Request, context: RouteContext) {
   const code = normalizeJoinCode(context.params.code ?? "");
   if (code.length !== JOIN_CODE_LENGTH) {
-    return NextResponse.json({ error: "Invalid join code." }, { status: 400 });
+    return redirectSameOrigin(`/join?error=${encodeURIComponent("Invalid join code.")}`);
   }
 
   let formData: FormData;
   try {
     formData = await request.formData();
   } catch {
-    return NextResponse.json({ error: "Invalid form data." }, { status: 400 });
+    return joinErrorRedirect(code, "Invalid form data.");
   }
 
   const sessionId = String(formData.get("sessionId") ?? "").trim();
@@ -34,14 +40,11 @@ export async function POST(request: Request, context: RouteContext) {
     .maybeSingle();
 
   if (sessionLookupErr || !sessionRow) {
-    return NextResponse.json({ error: "Session not found." }, { status: 404 });
+    return joinErrorRedirect(code, "Session not found.");
   }
 
   if (normalizeJoinCode(sessionRow.join_code) !== code) {
-    return NextResponse.json(
-      { error: "Join code does not match this session." },
-      { status: 400 }
-    );
+    return joinErrorRedirect(code, "Join code does not match this session.");
   }
 
   const result = await joinSessionAsGuestCore({
@@ -51,18 +54,14 @@ export async function POST(request: Request, context: RouteContext) {
   });
 
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 400 });
+    return joinErrorRedirect(code, result.error);
   }
 
-  const origin = new URL(request.url).origin;
-  const claimUrl = new URL(
-    `/api/session/${result.sessionId}/claim-participant`,
-    origin
+  // Relative Location keeps the browser on the host it already used (localhost,
+  // LAN IP, or production). claim-participant GET sets the participant cookie
+  // on a top-level navigation.
+  return redirectSameOrigin(
+    `/api/session/${result.sessionId}/claim-participant?pid=${encodeURIComponent(result.participantId)}`
   );
-  claimUrl.searchParams.set("pid", result.participantId);
-
-  // Redirect through claim-participant GET so the browser applies Set-Cookie on
-  // a top-level navigation (reliable for every profile). Do not rely on
-  // Set-Cookie from fetch() before client-side location changes.
-  return NextResponse.redirect(claimUrl, 303);
 }
+

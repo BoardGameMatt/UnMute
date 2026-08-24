@@ -11,8 +11,10 @@
     "validate:wao": "npx tsx scripts/validate-wao-questions.ts",
     "load:wao": "npx tsx scripts/load-wao-questions.ts",
     "load:cover-story": "npx tsx scripts/load-cover-story-agencies.ts",
+    "load:talk-track": "npx tsx scripts/load-talk-track-cards.ts",
+    "mint:talk-track": "npx tsx scripts/mint-talk-track-session.ts",
     "seed:trane-quiz": "npx tsx scripts/seed-trane-quiz.ts",
-    "test": "tsx --test lib/protocols/draw-it-by-ear/*.test.ts lib/wao/*.test.ts lib/trane-quiz/*.test.ts lib/cover-story/*.test.ts"
+    "test": "tsx --test lib/protocols/draw-it-by-ear/*.test.ts lib/wao/*.test.ts lib/trane-quiz/*.test.ts lib/cover-story/*.test.ts lib/protocols/talk-track/*.test.ts"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.6.0",

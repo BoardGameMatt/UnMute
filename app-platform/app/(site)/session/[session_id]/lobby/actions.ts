@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import { resetCoverStorySessionToLobby } from "@/lib/cover-story/session";
+import { resetTalkTrackToLobby, startTalkTrack } from "@/lib/protocols/talk-track/actions";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -125,10 +126,39 @@ export async function startSessionAction(
     }
   }
 
+  if (protocolSlug === "talk-track") {
+    const { count, error: countErr } = await supabase
+      .from("session_participants")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { error: "Could not count the room." };
+    }
+    if ((count ?? 0) < 4) {
+      return { error: "Talk Track needs at least 4 people." };
+    }
+  }
+
   // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
     return { error: resetErr.message };
+  }
+
+  // Talk Track must finish formation while the session is still lobby. Flipping
+  // status first left a stuck "already started" room when startTalkTrack failed.
+  if (protocolSlug === "talk-track") {
+    try {
+      const admin = createServiceClient();
+      const started = await startTalkTrack(admin, sessionId);
+      if (!started.ok) {
+        return { error: started.error };
+      }
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not start Talk Track.",
+      };
+    }
   }
 
   const { error: upErr } = await supabase
@@ -202,6 +232,17 @@ export async function returnToLobbyAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not reset Cover Story.",
+      };
+    }
+  }
+
+  if (protocolSlug === "talk-track") {
+    try {
+      const admin = createServiceClient();
+      await resetTalkTrackToLobby(admin, sessionId);
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not reset Talk Track.",
       };
     }
   }

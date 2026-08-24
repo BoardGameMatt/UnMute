@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
+import { redirectSameOrigin } from "@/lib/http/redirect-same-origin";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {
@@ -91,8 +92,7 @@ export async function GET(request: Request, context: RouteContext) {
       ? `/session/${sessionId}`
       : `/session/${sessionId}/lobby`;
 
-  const origin = url.origin;
-  const response = NextResponse.redirect(new URL(destPath, origin), 303);
+  const response = redirectSameOrigin(destPath);
 
   response.cookies.set(PARTICIPANT_COOKIE, participantId, {
     path: "/",

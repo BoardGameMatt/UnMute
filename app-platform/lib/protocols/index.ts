@@ -8,6 +8,7 @@ import "./the-truth-is";
 import "./draw-it-by-ear";
 import "./wrong-answers-only";
 import "./cover-story";
+import "./talk-track";
 
 export {
   getProtocol,

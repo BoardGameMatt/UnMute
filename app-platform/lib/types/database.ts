@@ -108,6 +108,7 @@ export interface Session {
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
+  content_pack_id?: string | null;
 }
 
 export type SessionParticipantRole = "lead" | "member";
@@ -236,6 +237,7 @@ export type SessionInsert = {
   started_at?: string | null;
   completed_at?: string | null;
   created_at?: string;
+  content_pack_id?: string | null;
 };
 
 export type SessionUpdate = Partial<Omit<Session, "id">>;
@@ -721,6 +723,123 @@ export type CoverStoryTargetResultInsert = Omit<
   finalized_at?: string;
 };
 
+export interface ContentPack {
+  id: string;
+  protocol_id: string;
+  slug: string;
+  label: string;
+  subtitle: string | null;
+  sort_order: number;
+  status: string;
+  created_at: string;
+}
+
+export type ContentPackInsert = Omit<ContentPack, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  subtitle?: string | null;
+};
+
+export interface TalkTrackCard {
+  id: string;
+  content_pack_id: string;
+  word_1: string;
+  word_2: string;
+  word_3: string;
+  word_4: string;
+  word_5: string;
+  active: boolean;
+  created_at: string;
+}
+
+export type TalkTrackCardInsert = Omit<TalkTrackCard, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  active?: boolean;
+};
+
+export interface TalkTrackSession {
+  session_id: string;
+  phase: string;
+  cycle_index: number;
+  team_order: string[];
+  next_team_index: number;
+  current_turn_id: string | null;
+  paused: boolean;
+  hold_started_at: string | null;
+  last_turn_points: number | null;
+  last_turn_end_reason: string | null;
+  created_at: string;
+}
+
+export type TalkTrackSessionInsert = Omit<TalkTrackSession, "created_at"> & {
+  created_at?: string;
+};
+
+export interface TalkTrackTeam {
+  id: string;
+  session_id: string;
+  name: string;
+  member_ids: string[];
+  score: number;
+  sort_index: number;
+  created_at: string;
+}
+
+export type TalkTrackTeamInsert = Omit<TalkTrackTeam, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  score?: number;
+};
+
+export interface TalkTrackTurn {
+  id: string;
+  session_id: string;
+  team_id: string;
+  cycle_index: number;
+  card_id: string | null;
+  guesser_id: string | null;
+  train_ids: string[];
+  current_slot: number;
+  subphase: string;
+  started_at: string | null;
+  ended_at: string | null;
+  end_reason: string | null;
+  created_at: string;
+}
+
+export type TalkTrackTurnInsert = Omit<TalkTrackTurn, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export interface TalkTrackWordResult {
+  id: string;
+  turn_id: string;
+  slot: number;
+  outcome: string;
+  decided_by: string | null;
+  decided_at: string | null;
+}
+
+export type TalkTrackWordResultInsert = Omit<TalkTrackWordResult, "id"> & {
+  id?: string;
+};
+
+export interface TalkTrackScoreNudge {
+  id: string;
+  session_id: string;
+  team_id: string;
+  delta: number;
+  created_by: string;
+  created_at: string;
+}
+
+export type TalkTrackScoreNudgeInsert = Omit<TalkTrackScoreNudge, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -908,6 +1027,48 @@ export type Database = {
         Row: CoverStoryTargetResult;
         Insert: CoverStoryTargetResultInsert;
         Update: Partial<CoverStoryTargetResultInsert>;
+        Relationships: [];
+      };
+      content_packs: {
+        Row: ContentPack;
+        Insert: ContentPackInsert;
+        Update: Partial<ContentPackInsert>;
+        Relationships: [];
+      };
+      talk_track_cards: {
+        Row: TalkTrackCard;
+        Insert: TalkTrackCardInsert;
+        Update: Partial<TalkTrackCardInsert>;
+        Relationships: [];
+      };
+      talk_track_sessions: {
+        Row: TalkTrackSession;
+        Insert: TalkTrackSessionInsert;
+        Update: Partial<TalkTrackSessionInsert>;
+        Relationships: [];
+      };
+      talk_track_teams: {
+        Row: TalkTrackTeam;
+        Insert: TalkTrackTeamInsert;
+        Update: Partial<TalkTrackTeamInsert>;
+        Relationships: [];
+      };
+      talk_track_turns: {
+        Row: TalkTrackTurn;
+        Insert: TalkTrackTurnInsert;
+        Update: Partial<TalkTrackTurnInsert>;
+        Relationships: [];
+      };
+      talk_track_word_results: {
+        Row: TalkTrackWordResult;
+        Insert: TalkTrackWordResultInsert;
+        Update: Partial<TalkTrackWordResultInsert>;
+        Relationships: [];
+      };
+      talk_track_score_nudges: {
+        Row: TalkTrackScoreNudge;
+        Insert: TalkTrackScoreNudgeInsert;
+        Update: Partial<TalkTrackScoreNudgeInsert>;
         Relationships: [];
       };
     };
