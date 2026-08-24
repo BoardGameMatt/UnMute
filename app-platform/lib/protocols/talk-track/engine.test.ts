@@ -88,6 +88,12 @@ describe("pickGuesser", () => {
     const afterAll = pickGuesser(members, ["a", "b", "c", "d"], () => 0);
     assert.ok(members.includes(afterAll));
   });
+
+  it("does not give a second turn until everyone has the same count", () => {
+    const members = ["a", "b", "c", "d"];
+    const next = pickGuesser(members, ["a", "b", "c", "d", "a"], () => 0);
+    assert.equal(next, "b");
+  });
 });
 
 describe("starterIndex", () => {
@@ -120,11 +126,11 @@ describe("scoring", () => {
 });
 
 describe("clocks", () => {
-  it("expires the turn at 60 seconds", () => {
+  it("expires the turn at 105 seconds", () => {
     const start = "2026-01-01T00:00:00.000Z";
     const startMs = Date.parse(start);
-    assert.equal(timerHasExpired(start, startMs + 59_000), false);
-    assert.equal(timerHasExpired(start, startMs + 60_000), true);
+    assert.equal(timerHasExpired(start, startMs + 104_000), false);
+    assert.equal(timerHasExpired(start, startMs + 105_000), true);
   });
 
   it("releases hold after 5 seconds", () => {

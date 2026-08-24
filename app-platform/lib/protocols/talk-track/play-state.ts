@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { slotPoints, wordsForViewer } from "./engine";
+import { TALK_TRACK_DEMO_WORDS, isDemoTurn, slotPoints, wordsForViewer } from "./engine";
 import {
   abandonIfGuesserGone,
   expireTurnIfNeeded,
@@ -68,12 +68,17 @@ export async function buildTalkTrackPlayState(input: {
   if (turn && turn.guesser_id === participantId) viewerRole = "guesser";
   else if (turn && turn.train_ids.includes(participantId)) viewerRole = "train";
 
+  const demo = turn ? isDemoTurn(turn.card_id, turn.guesser_id) : false;
+
   let wordViews: TalkTrackWordView[] | null = null;
-  if (turn?.card_id && tt?.phase === "turn") {
-    const card = await loadCard(admin, turn.card_id);
+  if (tt?.phase === "turn" && turn) {
     const results = await loadWordResults(admin, turn.id);
-    if (card) {
-      const texts = cardWords(card);
+    const texts = demo
+      ? [...TALK_TRACK_DEMO_WORDS]
+      : turn.card_id
+        ? await loadCard(admin, turn.card_id).then((card) => (card ? cardWords(card) : null))
+        : null;
+    if (texts) {
       const built: TalkTrackWordView[] = texts.map((text, i) => {
         const slot = i + 1;
         const row = results.find((r) => r.slot === slot);
@@ -101,8 +106,13 @@ export async function buildTalkTrackPlayState(input: {
       )
     : 0;
 
-  const instruction =
-    tt?.phase === "turn" && viewerRole === "guesser"
+  const instruction = demo
+    ? viewerRole === "guesser"
+      ? "Practice. You are the guesser — the word is pineapple. Prompt each person on the Clue Train, in order, to add one word to a sentence. When the sentence is done, the next person hits Stop and says “stop.” Then guess out loud."
+      : viewerRole === "train"
+        ? "Practice round. Add one word each, in order. Do not say the word. When the sentence is done, the next person hits Stop and says “stop.”"
+        : "Practice round. Watch. Don't help."
+    : tt?.phase === "turn" && viewerRole === "guesser"
       ? turn?.subphase === "guessing"
         ? "Guess. They cannot help."
         : "Listen."
@@ -135,7 +145,7 @@ export async function buildTalkTrackPlayState(input: {
       tt?.phase === "turn" && turn
         ? {
             id: turn.id,
-            teamName: liveTeam?.name ?? "Your team",
+            teamName: demo ? "Practice" : liveTeam?.name ?? "Your team",
             guesserName: turn.guesser_id ? names[turn.guesser_id] ?? "Guesser" : "Guesser",
             train: turn.train_ids
               .filter((id) => id !== turn.guesser_id)
@@ -150,6 +160,7 @@ export async function buildTalkTrackPlayState(input: {
             words: wordViews,
             canStop: viewerRole === "train" && turn.subphase === "cluing",
             canResolve: viewerRole === "train" && turn.subphase === "guessing",
+            isDemo: demo,
           }
         : null,
     canDealAnotherCycle: remainingCards >= 1,

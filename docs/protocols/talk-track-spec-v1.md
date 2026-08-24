@@ -2,7 +2,7 @@
 
 **Status:** Draft for review  
 **Slug:** `talk-track`  
-**Type:** Real-time (one active team; server-authoritative 60s clock)  
+**Type:** Real-time (one active team; server-authoritative 105s clock)  
 **Players:** 4–20 (optimal 8–12). Facilitator is a player.  
 **Envelope:** ~12–20 minutes depending on headcount and extra cycles  
 **Owner:** Matt Hendricks  
@@ -69,7 +69,7 @@ Registers as `lobbyExplainer` on `registerProtocol()`. Renders below the join QR
 Exactly one team is live. Everyone else watches.
 
 1. Server picks the **guesser** (see §6) and a **fresh card** (see §14). Remaining teammates are the **Talk Track**, in a random order that stays fixed for the turn.
-2. The 60-second clock starts for the whole room. It **does not pause** for guessing.
+2. The 105-second clock starts for the whole room. It **does not pause** for guessing. First 2.5s highlight the guesser, next 2.5s highlight the Clue Train, then a brief **Go!**, then the words appear. The clock is already running.
 3. Word 1 is current. The person listed first in the train **starts** this word. Each Talk Track member, in order, adds **exactly one spoken word**. The train **cycles** until someone hits Stop.
 4. Stop is available on every Talk Track phone from the moment the turn starts. The app cannot hear the room (honor system). Hitting Stop does not require it to be “your” spoken turn.
 5. On Stop: Talk Track **cannot add anything** — no extra words, no coaching. The guesser guesses **out loud** on the video call, as many tries as they want.
@@ -207,7 +207,7 @@ Random team order, persisted for the session. Every cycle uses the same order.
 
 Guesser is chosen at the **start of the turn**, before the card is in anyone’s payload.
 
-**Fairness:** do not repeat a guesser on that team until everyone on the team has been guesser once. Then the pool resets. Pure random inside the eligible pool.
+**Fairness:** pick among people on that team with the fewest guesser turns so far. Nobody gets a second turn until everyone on the team has the same count. Pure random inside that pool. The practice round does not count.
 
 Do **not** promote a Talk Track member to guesser mid-turn. They have already seen the card.
 
@@ -216,7 +216,7 @@ Do **not** promote a Talk Track member to guesser mid-turn. They have already se
 ## 7. Session flow
 
 ```
-LOBBY → TEAM_REVEAL → TURN → HOLD → TURN → … → (cycle 2, auto)
+LOBBY → DEMO → TEAM_REVEAL → TURN → HOLD → TURN → … → (cycle 2, auto)
       → HOLD after last turn of cycle 2+ → ANOTHER_ROUND?
       → [Yes: another full cycle] [No: FINAL_SCORES]
       → NPS → REFLECTION
@@ -227,15 +227,21 @@ A **round** in facilitator copy = one cycle.
 
 ### 7.1 LOBBY
 
-Standard session shell. Explainer as §3. Lead Start enabled at 4 players.
+Standard session shell. Explainer as §3. Lead Start enabled at 4 players. Join QR is Lead-only.
 
-`startProtocol` is Lead-only, lobby-only. It assigns teams, names, and turn order in one server action. No client-side assignment.
+Lead copy once the floor is met: explain the game, then start the demo. The Start control begins the practice round. Lead is the guesser.
+
+`startProtocol` is Lead-only, lobby-only. It assigns teams, names, and turn order in one server action, then starts the demo. No client-side assignment.
+
+### 7.1a DEMO
+
+Unscored practice. Lead is the guesser. Three other people, chosen at random, are the Clue Train. The spoken target is **pineapple**; four filler words sit on the ladder so the UI matches a real turn. Same 105s clock and intro as a live turn. After Stop + Got it/Pass (or time’s up), go to TEAM_REVEAL. No points.
 
 ### 7.2 TEAM_REVEAL
 
 Everyone sees named teams and display names (not initials). Lead copy: “Stay in this room. We are not splitting into breakouts.” Short hold, then the first turn starts. Lead can pause.
 
-### 7.3 TURN (60 seconds)
+### 7.3 TURN (105 seconds)
 
 See §4. Server clock (`turn_started_at`) is authoritative. Clients display; they do not decide expiry.
 
@@ -246,7 +252,7 @@ Turn-over reason is one of: `all_five` | `timer` | `abandoned`.
 Everyone sees:
 
 - That turn’s points (e.g. The Openers +6)
-- Running totals for every team (first time scores appear this cycle — **hidden during the 60 seconds**)
+- Running totals for every team (first time scores appear this cycle — **hidden during the 105 seconds**)
 - Time’s up treatment when `timer`; otherwise the last word resolved and the turn ended
 
 Then auto-start the next team. **Lead can Pause** (stops the auto-advance) and Resume.
@@ -286,7 +292,7 @@ Pass = 0. Expired unmarked = 0. Max per turn = 15. Team total = sum of its turns
 
 ### 8.2 Lead override
 
-Lead can **nudge a team’s running total by ±1**, repeatable, on HOLD and on FINAL_SCORES. Not during the live 60 seconds. Not a per-word flip.
+Lead can **nudge a team’s running total by ±1**, repeatable, on HOLD and on FINAL_SCORES. Not during the live 105 seconds. Not a per-word flip.
 
 Used when the clock beat a clear Got it, when a clue was illegal, or when first-tap Got it/Pass was wrong. Subtract or add the slot value by tapping ±1 that many times.
 
@@ -296,7 +302,7 @@ Show a small `FACILITATOR` label and the current totals. Members never see the n
 
 | Moment | Visible? |
 |---|---|
-| During the 60 seconds | No |
+| During the 105 seconds | No |
 | HOLD / ANOTHER_ROUND? / FINAL_SCORES | Yes |
 
 ---
@@ -339,7 +345,7 @@ Display names on play and hold screens. Initials alone are insufficient.
 
 ### 9.4 Timer presentation
 
-Follows the WAO pattern (`WaoPlayTimer.tsx`). Duration **60s**.
+Follows the WAO pattern (`WaoPlayTimer.tsx`). Duration **105s**.
 
 | Phase | Treatment |
 |---|---|
@@ -507,7 +513,7 @@ Team assignment lives on `talk_track_teams.member_ids`. Do not invent a second r
 | Word visibility | Everyone except the live guesser |
 | Facilitator | Plays on a team |
 | Confirm | Any Talk Track member; first tap wins |
-| Clock | 60s, keeps running during guesses |
+| Clock | 105s, keeps running during guesses |
 | Next-word starter | Rotates each word |
 | All five early | Turn ends immediately |
 | Time’s up mid-guess | No credit; Lead may nudge |
@@ -528,7 +534,7 @@ Write this into facilitator notes before the first live run. Do not improvise it
 
 1. Pre-print 30 cards (or as many as you have) as five-line lists.
 2. Split the room into teams of 4+ on a whiteboard. Use the name list above.
-3. Phone timer, 60 seconds, visible to the room. Facilitator watches the clock.
+3. Phone timer, 105 seconds, visible to the room. Facilitator watches the clock.
 4. Guesser turns away from any shared screen that shows the card. Talk Track stands or sits in view of the rest of the room.
 5. Facilitator holds the card, points at the current line, and listens for Stop. Guesser speaks. Facilitator marks Got it / Pass on paper (1–5).
 6. Spectator rule spoken every turn: if you can see the card, you are not helping.
@@ -558,7 +564,7 @@ One step at a time. Each independently testable.
 2. Team formation + name assignment + turn order (unit tests for the §5.1 table).
 3. Lobby explainer + Start gate at 4.
 4. Role-filtered play payload (guesser strip). This is the load-bearing security step — do not defer it.
-5. 60s server clock, timer presentation, Time’s up hold.
+5. 105s server clock, timer presentation, Time’s up hold.
 6. Stop → Got it/Pass, first tap wins, word ladder states, starter rotation.
 7. Scoring + HOLD score strip + Lead ±1 nudge.
 8. Two-cycle auto, then Another Round Yes/No, card exhaustion path.

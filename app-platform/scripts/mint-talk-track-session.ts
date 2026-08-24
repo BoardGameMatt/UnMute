@@ -109,13 +109,11 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.log("Talk Track test session ready (Pack A).");
+  console.log("Talk Track lobby (Pack A).");
   console.log("  join_code:", sessionRow.join_code);
   console.log("  session_id:", sessionRow.id);
   console.log("  host:", `${APP_ORIGIN_DISPLAY}/host/${sessionRow.host_token}`);
   console.log("  join:", `${APP_ORIGIN_DISPLAY}/join/${sessionRow.join_code}`);
-  console.log("  local_host:", `http://localhost:3000/host/${sessionRow.host_token}`);
-  console.log("  local_join:", `http://localhost:3000/join/${sessionRow.join_code}`);
 }
 
 main().catch((err: unknown) => {

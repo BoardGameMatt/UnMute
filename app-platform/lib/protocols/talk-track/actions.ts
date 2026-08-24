@@ -7,6 +7,7 @@ import {
   formTeams,
   holdIsReady,
   liveMemberIds,
+  isDemoTurn,
   pickGuesser,
   shuffleCopy,
   slotPoints,
@@ -23,6 +24,7 @@ import {
   remainingPlayableCards,
   resolvePackId,
   syncPublicState,
+  type RosterMember,
   type TalkTrackSessionRow,
   type TalkTrackTeamRow,
   type TalkTrackTurnRow,
@@ -132,8 +134,10 @@ export async function startTalkTrack(
   const teamOrder = shuffleCopy((inserted ?? []).map((row) => row.id as string));
   await patchSession(admin, sessionId, { team_order: teamOrder });
 
-  await poke(admin, sessionId, "team_reveal");
-  return { ok: true };
+  const tt = await loadTalkTrackSession(admin, sessionId);
+  const teams = await loadTeams(admin, sessionId);
+  if (!tt) return fail(500, "Talk Track session did not save.");
+  return beginDemo(admin, sessionId, tt, teams, roster);
 }
 
 export async function resetTalkTrackToLobby(
@@ -144,6 +148,66 @@ export async function resetTalkTrackToLobby(
   await admin.from("talk_track_turns").delete().eq("session_id", sessionId);
   await admin.from("talk_track_teams").delete().eq("session_id", sessionId);
   await admin.from("talk_track_sessions").delete().eq("session_id", sessionId);
+}
+
+async function beginDemo(
+  admin: SupabaseClient,
+  sessionId: string,
+  tt: TalkTrackSessionRow,
+  teams: TalkTrackTeamRow[],
+  roster: RosterMember[]
+): Promise<TalkTrackActionResult> {
+  const lead = roster.find((row) => row.isLead);
+  if (!lead) return fail(500, "The facilitator is not on the roster.");
+  const trainIds = shuffleCopy(
+    roster
+      .filter((row) => row.participantId !== lead.participantId)
+      .map((row) => row.participantId)
+  ).slice(0, 3);
+  if (trainIds.length < 3) {
+    return fail(400, "Talk Track needs at least 4 people for the practice round.");
+  }
+  const teamId = tt.team_order[0] ?? teams[0]?.id;
+  if (!teamId) return fail(500, "No team to attach the practice round to.");
+
+  const { data: turn, error: turnErr } = await admin
+    .from("talk_track_turns")
+    .insert({
+      session_id: sessionId,
+      team_id: teamId,
+      cycle_index: tt.cycle_index,
+      card_id: null,
+      guesser_id: lead.participantId,
+      train_ids: trainIds,
+      current_slot: 1,
+      subphase: "cluing",
+      started_at: new Date().toISOString(),
+      ended_at: null,
+      end_reason: null,
+    })
+    .select("id")
+    .single();
+  if (turnErr || !turn) {
+    return fail(500, turnErr?.message ?? "Could not start the practice round.");
+  }
+
+  const slots = [1, 2, 3, 4, 5].map((slot) => ({
+    turn_id: turn.id as string,
+    slot,
+    outcome: "unset",
+  }));
+  const { error: wordErr } = await admin.from("talk_track_word_results").insert(slots);
+  if (wordErr) return fail(500, wordErr.message);
+
+  await patchSession(admin, sessionId, {
+    phase: "turn",
+    current_turn_id: turn.id as string,
+    hold_started_at: null,
+    next_team_index: 0,
+    paused: false,
+  });
+  await poke(admin, sessionId, "turn");
+  return { ok: true };
 }
 
 async function beginTurn(
@@ -232,7 +296,8 @@ async function beginTurn(
     .select("guesser_id")
     .eq("session_id", sessionId)
     .eq("team_id", team.id)
-    .not("guesser_id", "is", null);
+    .not("guesser_id", "is", null)
+    .not("card_id", "is", null);
   if (priorErr) return fail(500, priorErr.message);
   const priorGuessers = (priorTurns ?? [])
     .map((t) => t.guesser_id as string | null)
@@ -319,6 +384,20 @@ async function finishTurn(
     .eq("id", turn.id)
     .is("ended_at", null);
   if (endErr) return fail(500, endErr.message);
+
+  if (isDemoTurn(turn.card_id, turn.guesser_id)) {
+    await patchSession(admin, sessionId, {
+      phase: "team_reveal",
+      current_turn_id: null,
+      next_team_index: 0,
+      hold_started_at: new Date().toISOString(),
+      last_turn_points: 0,
+      last_turn_end_reason: "skipped",
+      paused: false,
+    });
+    await poke(admin, sessionId, "team_reveal");
+    return { ok: true };
+  }
 
   await patchSession(admin, sessionId, {
     phase: "hold",
@@ -533,7 +612,8 @@ export async function dispatchTalkTrackAction(input: {
       if (error) return fail(500, error.message);
       if (!updated) return fail(409, "That word is already marked.");
 
-      if (outcome === "scored") {
+      const demo = isDemoTurn(turn.card_id, turn.guesser_id);
+      if (outcome === "scored" && !demo) {
         const team = teams.find((t) => t.id === turn.team_id);
         if (team) {
           await admin
@@ -543,10 +623,10 @@ export async function dispatchTalkTrackAction(input: {
         }
       }
 
-      if (turn.current_slot >= 5) {
+      if (demo || turn.current_slot >= 5) {
         const team = teams.find((t) => t.id === turn.team_id);
         if (!team) return fail(500, "Team is missing.");
-        return finishTurn(admin, sessionId, tt, turn, "all_five", team);
+        return finishTurn(admin, sessionId, tt, turn, demo ? "skipped" : "all_five", team);
       }
 
       const { error: slotErr } = await admin

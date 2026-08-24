@@ -1,12 +1,78 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { SessionProgressBar } from "@/components/ui/SessionProgressBar";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
-import { TALK_TRACK_HOLD_SECONDS, TALK_TRACK_TURN_SECONDS } from "../engine";
+import {
+  TALK_TRACK_DEMO_WORDS,
+  TALK_TRACK_HOLD_SECONDS,
+  TALK_TRACK_INTRO_GO_MS,
+  TALK_TRACK_INTRO_HIGHLIGHT_MS,
+  TALK_TRACK_TURN_SECONDS,
+} from "../engine";
 import type { TalkTrackAction, TalkTrackPlayState } from "../types";
 import { TrainOrder } from "./TrainOrder";
 import { WordLadder } from "./WordLadder";
+
+type IntroBeat = "guesser" | "train" | "go" | "play";
+
+function useIntroBeat(turnId: string | null): IntroBeat {
+  const [beat, setBeat] = useState<IntroBeat>("guesser");
+  const [originMs, setOriginMs] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!turnId) {
+      setOriginMs(null);
+      setBeat("guesser");
+      return;
+    }
+    setOriginMs(Date.now());
+    setBeat("guesser");
+  }, [turnId]);
+
+  useEffect(() => {
+    if (originMs == null) return;
+    const tick = () => {
+      const elapsed = Date.now() - originMs;
+      if (elapsed < TALK_TRACK_INTRO_HIGHLIGHT_MS) setBeat("guesser");
+      else if (elapsed < TALK_TRACK_INTRO_HIGHLIGHT_MS * 2) setBeat("train");
+      else if (elapsed < TALK_TRACK_INTRO_HIGHLIGHT_MS * 2 + TALK_TRACK_INTRO_GO_MS) {
+        setBeat("go");
+      } else setBeat("play");
+    };
+    tick();
+    const id = window.setInterval(tick, 50);
+    return () => window.clearInterval(id);
+  }, [originMs]);
+
+  return beat;
+}
+
+function PulseFrame({
+  active,
+  children,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  const reduceMotion = useReducedMotion();
+  if (!active) return <div className="w-full">{children}</div>;
+  if (reduceMotion) {
+    return (
+      <div className="w-full rounded-md border-2 border-unmute-navy">{children}</div>
+    );
+  }
+  return (
+    <motion.div
+      className="w-full rounded-md border-2 border-unmute-navy"
+      animate={{ opacity: [1, 0.7, 1], scale: [1, 1.04, 1] }}
+      transition={{ duration: 0.7, repeat: Infinity, ease: [0.4, 0, 0.2, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 type Props = {
   state: TalkTrackPlayState;
@@ -266,12 +332,23 @@ function TurnView({
   pending: boolean;
   send: (action: TalkTrackAction) => Promise<boolean>;
 }) {
+  const beat = useIntroBeat(state.turn?.id ?? null);
   const turn = state.turn;
   if (!turn) return null;
+  const ready = beat === "play";
+  const demoWord = turn.isDemo ? TALK_TRACK_DEMO_WORDS[0] : null;
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="relative flex flex-col items-center gap-6">
       <p className="font-display text-xl font-semibold text-unmute-navy">{turn.teamName}</p>
+      {demoWord && state.viewerRole === "guesser" ? (
+        <p className="text-center font-body text-sm text-slate">
+          The word is{" "}
+          <span className="font-display text-2xl font-bold text-unmute-navy">
+            {demoWord}
+          </span>
+        </p>
+      ) : null}
       <WaoPlayTimer
         durationSeconds={TALK_TRACK_TURN_SECONDS}
         startedAt={turn.startedAt}
@@ -279,32 +356,49 @@ function TurnView({
           void send({ type: "timerExpired" });
         }}
       />
-      <p className="font-body text-sm text-slate">
-        Guesser: <span className="font-semibold text-unmute-navy">{turn.guesserName}</span>
-      </p>
-      {turn.words ? (
+      <PulseFrame active={beat === "guesser"}>
+        <p className="px-4 py-2 text-center font-body text-sm text-slate">
+          Guesser: <span className="font-semibold text-unmute-navy">{turn.guesserName}</span>
+        </p>
+      </PulseFrame>
+      {ready && turn.words ? (
         <div className="w-full">
           <WordLadder words={turn.words} currentSlot={turn.slot} />
         </div>
-      ) : (
+      ) : ready ? (
         <p className="font-display text-lg text-unmute-navy">
           {turn.subphase === "guessing" ? "Guess. They cannot help." : "Listen."}
         </p>
+      ) : (
+        <div className="flex h-24 items-center justify-center">
+          {beat === "go" ? (
+            <motion.p
+              className="font-display text-4xl font-bold text-unmute-navy"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: [0, 1, 1, 0], scale: [0.97, 1.04, 1, 1] }}
+              transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+            >
+              Go!
+            </motion.p>
+          ) : null}
+        </div>
       )}
-      <TrainOrder
-        members={turn.train.map((member) => ({
-          id: member.id,
-          displayName: member.displayName,
-          isStarter: member.isStarter,
-        }))}
-        caption="Clue Train"
-      />
+      <PulseFrame active={beat === "train"}>
+        <TrainOrder
+          members={turn.train.map((member) => ({
+            id: member.id,
+            displayName: member.displayName,
+            isStarter: member.isStarter,
+          }))}
+          caption="Clue Train"
+        />
+      </PulseFrame>
       {state.spectatorInstruction && state.viewerRole === "spectator" ? (
         <p className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
           {state.spectatorInstruction}
         </p>
       ) : null}
-      {turn.canStop ? (
+      {ready && turn.canStop ? (
         <button
           type="button"
           disabled={pending}
@@ -314,7 +408,7 @@ function TurnView({
           Stop
         </button>
       ) : null}
-      {turn.canResolve ? (
+      {ready && turn.canResolve ? (
         <div className="flex w-full gap-3">
           <button
             type="button"
