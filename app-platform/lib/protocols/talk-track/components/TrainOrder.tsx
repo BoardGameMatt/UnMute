@@ -11,6 +11,7 @@ type TrainOrderProps = {
   /** Explainer-only: who is adding the next spoken word in the teaching loop. */
   activeId?: string | null;
   caption?: string;
+  pulse?: boolean;
 };
 
 /**
@@ -21,6 +22,7 @@ export function TrainOrder({
   members,
   activeId = null,
   caption = "Clue Train",
+  pulse = false,
 }: TrainOrderProps) {
   if (members.length === 0) return null;
   const first = members[0];
@@ -47,10 +49,10 @@ export function TrainOrder({
               <li
                 key={member.id}
                 className={`flex items-center justify-between rounded-md border px-3 py-2 ${
-                  isActive
+                  isActive || pulse
                     ? "border-unmute-navy bg-warm-white"
                     : "border-cloud-grey bg-warm-white"
-                }`}
+                } ${pulse ? "animate-pulse" : ""}`}
               >
                 <span
                   className={`truncate font-display text-sm sm:text-base ${

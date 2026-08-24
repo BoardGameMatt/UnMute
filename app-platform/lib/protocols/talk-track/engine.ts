@@ -16,9 +16,19 @@ export const TALK_TRACK_TEAM_NAMES = [
 
 export const TALK_TRACK_MIN_PLAYERS = 4;
 export const TALK_TRACK_MAX_PLAYERS = 20;
-export const TALK_TRACK_TURN_SECONDS = 60;
+export const TALK_TRACK_TURN_SECONDS = 105;
 export const TALK_TRACK_HOLD_SECONDS = 5;
 export const TALK_TRACK_MANDATORY_CYCLES = 2;
+export const TALK_TRACK_INTRO_HIGHLIGHT_MS = 2500;
+export const TALK_TRACK_INTRO_GO_MS = 1000;
+/** Practice card. Slot 1 is the spoken target; the rest are ladder filler. */
+export const TALK_TRACK_DEMO_WORDS = [
+  "PINEAPPLE",
+  "HAT",
+  "RIVER",
+  "CASTLE",
+  "THUNDER",
+] as const;
 
 export type TalkTrackEndReason = "all_five" | "timer" | "abandoned" | "skipped";
 export type TalkTrackWordOutcome = "scored" | "passed" | "expired" | "unset";
@@ -85,7 +95,10 @@ export function formTeams(
   return teams;
 }
 
-/** No repeat guesser until everyone on the team has guessed once. */
+/**
+ * Pick among people with the fewest guesser turns so far. Nobody gets an
+ * extra turn until everyone on the team has the same count.
+ */
 export function pickGuesser(
   memberIds: string[],
   priorGuesserIds: string[],
@@ -94,11 +107,25 @@ export function pickGuesser(
   if (memberIds.length === 0) {
     throw new Error("Cannot pick a guesser from an empty team.");
   }
-  const guessed = new Set(priorGuesserIds.filter((id) => memberIds.includes(id)));
-  const eligible = memberIds.filter((id) => !guessed.has(id));
-  const pool = eligible.length > 0 ? eligible : memberIds;
+  const counts = new Map<string, number>();
+  for (const id of memberIds) counts.set(id, 0);
+  for (const id of priorGuesserIds) {
+    if (!counts.has(id)) continue;
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  let min = Number.POSITIVE_INFINITY;
+  for (const id of memberIds) {
+    const n = counts.get(id) ?? 0;
+    if (n < min) min = n;
+  }
+  const pool = memberIds.filter((id) => (counts.get(id) ?? 0) === min);
   const index = Math.floor(random() * pool.length);
   return pool[index] ?? pool[0]!;
+}
+
+/** Live practice turn: no pack card, but a guesser is seated. */
+export function isDemoTurn(cardId: string | null, guesserId: string | null): boolean {
+  return !cardId && Boolean(guesserId);
 }
 
 /** 1-based slot. Starter rotates each word even if Stop landed mid-cycle. */

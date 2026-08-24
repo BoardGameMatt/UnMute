@@ -77,6 +77,7 @@ export type TalkTrackPlayState = {
     words: TalkTrackWordView[] | null;
     canStop: boolean;
     canResolve: boolean;
+    isDemo: boolean;
   } | null;
   canDealAnotherCycle: boolean;
 };

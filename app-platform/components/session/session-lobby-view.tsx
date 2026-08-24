@@ -149,30 +149,36 @@ export function SessionLobbyView({
         </h1>
       </header>
 
-      <section
-        className="rounded-lg border border-cloud-grey bg-warm-white p-6 shadow-sm sm:p-7"
-        aria-label="Join code for projector"
-      >
-        <p className="mb-4 text-center font-mono text-[10px] font-medium uppercase tracking-widest text-steel-blue">
-          Join code: show on projector
+      {currentRole === "lead" ? (
+        <section
+          className="rounded-lg border border-cloud-grey bg-warm-white p-6 shadow-sm sm:p-7"
+          aria-label="Join code for projector"
+        >
+          <p className="mb-4 text-center font-mono text-[10px] font-medium uppercase tracking-widest text-steel-blue">
+            Join code: show on projector
+          </p>
+          <SessionJoinQr joinUrl={joinUrl} />
+          <div className="mb-4 flex flex-wrap justify-center gap-2 sm:gap-3">
+            {chars.map((char, i) => (
+              <div
+                key={`${char}-${i}`}
+                className="flex h-14 min-w-[44px] items-center justify-center rounded-lg border-2 border-cloud-grey bg-warm-white px-2 font-mono text-2xl font-medium uppercase tracking-widest text-deep-navy sm:h-16 sm:min-w-[52px] sm:text-[28px] sm:leading-none"
+              >
+                {char}
+              </div>
+            ))}
+          </div>
+          <p className="text-center font-body text-sm text-slate">
+            <span className="font-body">Can&apos;t scan? Go to </span>
+            <span className="font-mono text-unmute-navy">{JOIN_URL_DISPLAY}</span>
+            <span className="font-body"> and enter this code</span>
+          </p>
+        </section>
+      ) : (
+        <p className="text-center font-body text-base text-slate">
+          You&apos;re in the room. Wait for the facilitator to start.
         </p>
-        <SessionJoinQr joinUrl={joinUrl} />
-        <div className="mb-4 flex flex-wrap justify-center gap-2 sm:gap-3">
-          {chars.map((char, i) => (
-            <div
-              key={`${char}-${i}`}
-              className="flex h-14 min-w-[44px] items-center justify-center rounded-lg border-2 border-cloud-grey bg-warm-white px-2 font-mono text-2xl font-medium uppercase tracking-widest text-deep-navy sm:h-16 sm:min-w-[52px] sm:text-[28px] sm:leading-none"
-            >
-              {char}
-            </div>
-          ))}
-        </div>
-        <p className="text-center font-body text-sm text-slate">
-          <span className="font-body">Can&apos;t scan? Go to </span>
-          <span className="font-mono text-unmute-navy">{JOIN_URL_DISPLAY}</span>
-          <span className="font-body"> and enter this code</span>
-        </p>
-      </section>
+      )}
 
       {LobbyExplainer ? <LobbyExplainer /> : null}
 
@@ -234,10 +240,16 @@ export function SessionLobbyView({
             onClick={handleStart}
             className="w-full max-w-md rounded-md bg-signal-amber px-6 py-4 font-display text-lg font-semibold text-deep-navy shadow-sm transition hover:bg-sunrise-gold disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {isStarting ? "Starting…" : "Start session"}
+            {isStarting
+              ? "Starting…"
+              : protocolSlug === "talk-track"
+                ? "Start demo"
+                : "Start session"}
           </button>
           <p className="max-w-md text-center font-body text-sm text-slate">
-            {hasEnoughToStart
+            {protocolSlug === "talk-track" && hasEnoughToStart
+              ? "Once everyone has joined, explain how Talk Track works. Then start the demo — you will be the guesser."
+              : hasEnoughToStart
               ? "Do not press Start until everyone has joined."
               : `Start unlocks when at least ${minPlayers} ${
                   protocolSlug === "cover-story" ? "players" : "people"
