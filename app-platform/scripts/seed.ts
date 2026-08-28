@@ -183,6 +183,16 @@ async function main(): Promise<void> {
       max_players: 20,
       config_schema: {},
     },
+    {
+      slug: "zoning-rights",
+      name: "Zoning Rights",
+      description:
+        "Predict how a colleague would place buildings on a growing city map.",
+      type: "turnbased",
+      min_players: 3,
+      max_players: 20,
+      config_schema: {},
+    },
   ];
 
   const { error: protocolsError } = await supabase

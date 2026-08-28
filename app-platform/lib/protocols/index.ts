@@ -9,6 +9,7 @@ import "./draw-it-by-ear";
 import "./wrong-answers-only";
 import "./cover-story";
 import "./talk-track";
+import "./zoning-rights";
 
 export {
   getProtocol,
