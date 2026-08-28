@@ -3,8 +3,10 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
+import { writeSessionEvent } from "@/lib/console/session-events";
 import { resetCoverStorySessionToLobby } from "@/lib/cover-story/session";
 import { resetTalkTrackToLobby, startTalkTrack } from "@/lib/protocols/talk-track/actions";
+import { resetZoningRightsToLobby, startZoningRights } from "@/lib/protocols/zoning-rights/actions";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -81,6 +83,9 @@ export async function startSessionAction(
   }
 
   if (sessionRow.status !== "lobby") {
+    if (sessionRow.status === "cancelled") {
+      return { error: "This session was cancelled." };
+    }
     return { error: "This session has already started." };
   }
 
@@ -139,6 +144,19 @@ export async function startSessionAction(
     }
   }
 
+  if (protocolSlug === "zoning-rights") {
+    const { count, error: countErr } = await supabase
+      .from("session_participants")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { error: "Could not count the room." };
+    }
+    if ((count ?? 0) < 3) {
+      return { error: "Need 3 to start." };
+    }
+  }
+
   // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
@@ -161,18 +179,48 @@ export async function startSessionAction(
     }
   }
 
-  const { error: upErr } = await supabase
+  if (protocolSlug === "zoning-rights") {
+    try {
+      const admin = createServiceClient();
+      const started = await startZoningRights(admin, sessionId);
+      if (!started.ok) {
+        return { error: started.error };
+      }
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not start Zoning Rights.",
+      };
+    }
+  }
+
+  const { data: activated, error: upErr } = await supabase
     .from("sessions")
     .update({
       status: "active",
       started_at: new Date().toISOString(),
     })
     .eq("id", sessionId)
-    .eq("status", "lobby");
+    .eq("status", "lobby")
+    .select("id")
+    .maybeSingle();
 
   if (upErr) {
     return { error: upErr.message };
   }
+
+  if (!activated) {
+    return {
+      error:
+        "Could not start this session — it may have been cancelled or already started.",
+    };
+  }
+
+  await writeSessionEvent(createServiceClient(), {
+    sessionId,
+    type: "session_started",
+    actorKind: "participant",
+    actorId: auth.participantId,
+  });
 
   redirect(`/session/${sessionId}`);
 }
@@ -243,6 +291,17 @@ export async function returnToLobbyAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not reset Talk Track.",
+      };
+    }
+  }
+
+  if (protocolSlug === "zoning-rights") {
+    try {
+      const admin = createServiceClient();
+      await resetZoningRightsToLobby(admin, sessionId);
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not reset Zoning Rights.",
       };
     }
   }

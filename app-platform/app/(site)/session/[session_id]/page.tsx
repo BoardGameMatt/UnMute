@@ -121,9 +121,27 @@ export default async function SessionPage({ params }: SessionPageProps) {
   }
 
   const sessionStatus = sessionRow.status as SessionStatus;
+  if (sessionStatus === "cancelled") {
+    return (
+      <main className="min-h-screen bg-warm-white px-5 py-12">
+        <div className="mx-auto max-w-md text-center">
+          <h1 className="font-display text-2xl font-bold text-unmute-navy">
+            This session has ended
+          </h1>
+          <p className="mt-3 font-body text-slate">
+            Staff cancelled this session. You can close this page.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   if (sessionStatus === "completed") {
     if (protocolSlug === "wrong-answers-only") {
       redirect(`/session/${sessionId}/wao-scoreboard`);
+    }
+    if (protocolSlug === "zoning-rights") {
+      redirect(`/session/${sessionId}/zoning-rights-scoreboard`);
     }
     redirect(`/session/${sessionId}/feedback`);
   }
@@ -151,7 +169,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
   return (
     <main className="min-h-screen bg-warm-white py-12">
       <SessionProvider
-        session={sessionRow as Session}
+        session={sessionRow as unknown as Session}
         currentParticipant={participant}
         roleInSession={role}
         protocolName={protocolName}
@@ -161,6 +179,8 @@ export default async function SessionPage({ params }: SessionPageProps) {
           href={
             protocolSlug === "wrong-answers-only"
               ? `/session/${sessionId}/wao-scoreboard`
+              : protocolSlug === "zoning-rights"
+                ? `/session/${sessionId}/zoning-rights-scoreboard`
               : protocolSlug === "cover-story"
                 ? `/session/${sessionId}/reflection`
                 : `/session/${sessionId}/feedback`

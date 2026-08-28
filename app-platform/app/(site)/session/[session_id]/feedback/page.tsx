@@ -54,7 +54,8 @@ export default async function SessionFeedbackPage({ params }: FeedbackPageProps)
   const goesToReflection =
     protocolSlug === "wrong-answers-only" ||
     protocolSlug === "cover-story" ||
-    protocolSlug === "talk-track";
+    protocolSlug === "talk-track" ||
+    protocolSlug === "zoning-rights";
 
   const { data: link, error: linkErr } = await supabase
     .from("session_participants")

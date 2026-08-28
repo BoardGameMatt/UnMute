@@ -12,7 +12,8 @@ type SessionCompletedRedirectProps = {
 
 /**
  * Subscribes to `sessions` row; when status becomes `completed`, navigates
- * everyone (including participants on a reveal) to `href`.
+ * everyone (including participants on a reveal) to `href`. Cancelled sessions
+ * refresh so the play page can show the ended state instead of feedback.
  * Also polls as a fallback when Realtime is delayed or unavailable.
  */
 export function SessionCompletedRedirect({
@@ -26,10 +27,21 @@ export function SessionCompletedRedirect({
     const supabase = createClient();
     let navigated = false;
 
-    const go = () => {
+    const goCompleted = () => {
       if (navigated) return;
       navigated = true;
       router.replace(destination);
+    };
+
+    const goCancelled = () => {
+      if (navigated) return;
+      navigated = true;
+      router.refresh();
+    };
+
+    const applyStatus = (status: string | undefined) => {
+      if (status === "completed") goCompleted();
+      else if (status === "cancelled") goCancelled();
     };
 
     const checkStatus = async () => {
@@ -38,7 +50,7 @@ export function SessionCompletedRedirect({
         .select("status")
         .eq("id", sessionId)
         .maybeSingle();
-      if (data?.status === "completed") go();
+      applyStatus(data?.status as string | undefined);
     };
 
     void checkStatus();
@@ -58,7 +70,7 @@ export function SessionCompletedRedirect({
         },
         (payload) => {
           const next = payload.new as { status?: string } | null;
-          if (next?.status === "completed") go();
+          applyStatus(next?.status);
         }
       )
       .subscribe();

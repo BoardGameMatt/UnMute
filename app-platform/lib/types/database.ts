@@ -44,6 +44,7 @@ export interface Team {
   require_auth: boolean;
   created_by: string | null;
   created_at: string;
+  client_id: string | null;
 }
 
 export type TeamRosterRole = "lead" | "member";
@@ -108,7 +109,12 @@ export interface Session {
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
-  content_pack_id?: string | null;
+  content_pack_id: string | null;
+  created_by: string | null;
+  label: string | null;
+  scheduled_for: string | null;
+  internal_note: string | null;
+  facilitator_contact_email: string | null;
 }
 
 export type SessionParticipantRole = "lead" | "member";
@@ -176,6 +182,7 @@ export type TeamInsert = {
   require_auth?: boolean;
   created_by?: string | null;
   created_at?: string;
+  client_id?: string | null;
 };
 
 export type TeamUpdate = Partial<Omit<Team, "id">>;
@@ -238,6 +245,11 @@ export type SessionInsert = {
   completed_at?: string | null;
   created_at?: string;
   content_pack_id?: string | null;
+  created_by?: string | null;
+  label?: string | null;
+  scheduled_for?: string | null;
+  internal_note?: string | null;
+  facilitator_contact_email?: string | null;
 };
 
 export type SessionUpdate = Partial<Omit<Session, "id">>;
@@ -272,6 +284,7 @@ export interface ProtocolImage {
   image_path: string;
   criteria: Json;
   created_at: string;
+  content_pack_id: string | null;
 }
 
 export type ProtocolImageInsert = Omit<ProtocolImage, "id" | "created_at"> & {
@@ -316,6 +329,7 @@ export interface WaoQuestion {
   pinned: boolean;
   active: boolean;
   created_at: string;
+  content_pack_id: string;
 }
 
 export type WaoQuestionInsert = Omit<WaoQuestion, "id" | "created_at"> & {
@@ -323,6 +337,7 @@ export type WaoQuestionInsert = Omit<WaoQuestion, "id" | "created_at"> & {
   created_at?: string;
   pinned?: boolean;
   active?: boolean;
+  content_pack_id?: string;
 };
 
 export interface WaoQuestionItem {
@@ -586,6 +601,7 @@ export interface CoverStoryAgency {
   hr_safe: boolean;
   notes: string | null;
   created_at: string;
+  content_pack_id: string;
 }
 
 export type CoverStoryAgencyInsert = Omit<CoverStoryAgency, "created_at"> & {
@@ -723,6 +739,70 @@ export type CoverStoryTargetResultInsert = Omit<
   finalized_at?: string;
 };
 
+export type StaffRole = "worker" | "admin";
+
+export interface Client {
+  id: string;
+  name: string;
+  created_at: string;
+  created_by: string | null;
+}
+
+export type ClientInsert = {
+  id?: string;
+  name: string;
+  created_at?: string;
+  created_by?: string | null;
+};
+
+export type ClientUpdate = Partial<Omit<Client, "id">>;
+
+export interface StaffProfile {
+  person_id: string;
+  staff_role: StaffRole;
+  active: boolean;
+  created_at: string;
+  created_by: string | null;
+  revoked_at: string | null;
+  revoked_by: string | null;
+}
+
+export type StaffProfileInsert = {
+  person_id: string;
+  staff_role: StaffRole;
+  active?: boolean;
+  created_at?: string;
+  created_by?: string | null;
+  revoked_at?: string | null;
+  revoked_by?: string | null;
+};
+
+export type StaffProfileUpdate = Partial<Omit<StaffProfile, "person_id">>;
+
+export type SessionEventActorKind = "staff" | "participant" | "system";
+
+export interface SessionEvent {
+  id: string;
+  session_id: string;
+  at: string;
+  type: string;
+  actor_kind: SessionEventActorKind;
+  actor_id: string | null;
+  payload: Json;
+}
+
+export type SessionEventInsert = {
+  id?: string;
+  session_id: string;
+  at?: string;
+  type: string;
+  actor_kind: SessionEventActorKind;
+  actor_id?: string | null;
+  payload?: Json;
+};
+
+export type ContentPackStatus = "active" | "draft" | "retired";
+
 export interface ContentPack {
   id: string;
   protocol_id: string;
@@ -730,7 +810,7 @@ export interface ContentPack {
   label: string;
   subtitle: string | null;
   sort_order: number;
-  status: string;
+  status: ContentPackStatus;
   created_at: string;
 }
 
@@ -840,6 +920,91 @@ export type TalkTrackScoreNudgeInsert = Omit<TalkTrackScoreNudge, "id" | "create
   created_at?: string;
 };
 
+export interface ZoningRightsBuilding {
+  id: string;
+  content_pack_id: string;
+  name: string;
+  active: boolean;
+  created_at: string;
+}
+
+export type ZoningRightsBuildingInsert = Omit<ZoningRightsBuilding, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  active?: boolean;
+};
+
+export interface ZoningRightsSession {
+  session_id: string;
+  phase: string;
+  mode: string;
+  individual_round_index: number;
+  team_round_index: number;
+  current_round_id: string | null;
+  board_json: Json;
+  created_at: string;
+}
+
+export type ZoningRightsSessionInsert = Omit<ZoningRightsSession, "created_at"> & {
+  created_at?: string;
+  current_round_id?: string | null;
+  board_json?: Json;
+  phase?: string;
+  mode?: string;
+  individual_round_index?: number;
+  team_round_index?: number;
+};
+
+export interface ZoningRightsRound {
+  id: string;
+  session_id: string;
+  mode: string;
+  round_index: number;
+  planner_id: string | null;
+  zm_id: string | null;
+  lead_developer_id: string | null;
+  k: number;
+  lots_json: Json;
+  building_ids: string[];
+  zm_assignment_json: Json | null;
+  team_guess_json: Json | null;
+  guess_started_at: string | null;
+  discuss_started_at: string | null;
+  intro_started_at: string | null;
+  ended_at: string | null;
+  end_reason: string | null;
+  created_at: string;
+}
+
+export type ZoningRightsRoundInsert = Omit<ZoningRightsRound, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  zm_id?: string | null;
+  lead_developer_id?: string | null;
+  lots_json?: Json;
+  building_ids?: string[];
+  zm_assignment_json?: Json | null;
+  team_guess_json?: Json | null;
+};
+
+export interface ZoningRightsGuess {
+  id: string;
+  round_id: string;
+  participant_id: string;
+  assignment_json: Json;
+  locked_at: string | null;
+  is_exact: boolean | null;
+  created_at: string;
+}
+
+export type ZoningRightsGuessInsert = Omit<ZoningRightsGuess, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  assignment_json?: Json;
+  locked_at?: string | null;
+  is_exact?: boolean | null;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -859,6 +1024,24 @@ export type Database = {
         Row: Team;
         Insert: TeamInsert;
         Update: TeamUpdate;
+        Relationships: [];
+      };
+      clients: {
+        Row: Client;
+        Insert: ClientInsert;
+        Update: ClientUpdate;
+        Relationships: [];
+      };
+      staff_profiles: {
+        Row: StaffProfile;
+        Insert: StaffProfileInsert;
+        Update: StaffProfileUpdate;
+        Relationships: [];
+      };
+      session_events: {
+        Row: SessionEvent;
+        Insert: SessionEventInsert;
+        Update: Partial<SessionEventInsert>;
         Relationships: [];
       };
       team_roster: {
@@ -1069,6 +1252,30 @@ export type Database = {
         Row: TalkTrackScoreNudge;
         Insert: TalkTrackScoreNudgeInsert;
         Update: Partial<TalkTrackScoreNudgeInsert>;
+        Relationships: [];
+      };
+      zoning_rights_buildings: {
+        Row: ZoningRightsBuilding;
+        Insert: ZoningRightsBuildingInsert;
+        Update: Partial<ZoningRightsBuildingInsert>;
+        Relationships: [];
+      };
+      zoning_rights_sessions: {
+        Row: ZoningRightsSession;
+        Insert: ZoningRightsSessionInsert;
+        Update: Partial<ZoningRightsSessionInsert>;
+        Relationships: [];
+      };
+      zoning_rights_rounds: {
+        Row: ZoningRightsRound;
+        Insert: ZoningRightsRoundInsert;
+        Update: Partial<ZoningRightsRoundInsert>;
+        Relationships: [];
+      };
+      zoning_rights_guesses: {
+        Row: ZoningRightsGuess;
+        Insert: ZoningRightsGuessInsert;
+        Update: Partial<ZoningRightsGuessInsert>;
         Relationships: [];
       };
     };
