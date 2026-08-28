@@ -108,7 +108,7 @@ function instructionFor(
     if (role === "lead_developer") {
       return "Tap a building, then tap the lot. Tap the name on a lot to take it back. Lock it in when the team agrees, or wait for the timer.";
     }
-    return `Discuss as a team. Zoning Manager is off camera — no hints. ${ld} is placing the team's choice on the map during this discussion.`;
+    return `Discuss as a team. Zoning Manager is off camera — no hints. You can see the same map as ${ld}. Only they can place.`;
   }
   return "";
 }

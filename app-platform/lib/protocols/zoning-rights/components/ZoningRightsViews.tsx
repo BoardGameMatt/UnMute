@@ -110,6 +110,7 @@ function MapPlacement({
   assignment,
   onChange,
   disabled,
+  showTray,
   lotMarks,
   lotGuessNames,
 }: {
@@ -117,11 +118,13 @@ function MapPlacement({
   assignment: Assignment;
   onChange: (next: Assignment) => void;
   disabled?: boolean;
+  showTray?: boolean;
   lotMarks?: Record<string, LotMark>;
   lotGuessNames?: Record<string, string>;
 }) {
   const [held, setHeld] = useState<string | null>(null);
   const lotNames = namesFromAssignment(assignment, state.buildings);
+  const trayVisible = showTray ?? !disabled;
 
   const place = (letter: string, buildingId?: string) => {
     if (disabled) return;
@@ -159,12 +162,13 @@ function MapPlacement({
         onPlaceLetter={place}
         onReturnLetter={returnLetter}
       />
-      {!disabled ? (
+      {trayVisible ? (
         <BuildingTray
           buildings={state.buildings}
           assignment={assignment}
-          heldId={held}
-          onHold={setHeld}
+          disabled={disabled}
+          heldId={disabled ? null : held}
+          onHold={disabled ? () => undefined : setHeld}
         />
       ) : null}
     </>
@@ -248,7 +252,7 @@ const GuessAssign = ({
   );
 };
 
-const TeamLock = ({
+const TeamDiscussBoard = ({
   state,
   pending,
   send,
@@ -257,20 +261,31 @@ const TeamLock = ({
   pending: boolean;
   send: (action: ZoningRightsAction) => Promise<boolean>;
 }) => {
+  const isLeadDeveloper = state.canTeamLock;
   const [assignment, setAssignment] = useState<Assignment>(state.teamGuess ?? {});
   const ready = assignmentComplete(assignment, state.k);
+
+  useEffect(() => {
+    if (!isLeadDeveloper) {
+      setAssignment(state.teamGuess ?? {});
+    }
+  }, [isLeadDeveloper, state.teamGuess]);
+
   return (
     <>
-      <Label>Lead Developer</Label>
+      <Label>{isLeadDeveloper ? "Lead Developer" : "View only"}</Label>
       <MapPlacement
         state={state}
         assignment={assignment}
+        disabled={!isLeadDeveloper}
+        showTray
         onChange={(next) => {
+          if (!isLeadDeveloper) return;
           setAssignment(next);
           void send({ type: "placeTeamGuess", assignment: next });
         }}
       />
-      {ready ? (
+      {isLeadDeveloper && ready ? (
         <PrimaryButton
           disabled={pending}
           onClick={() => {
@@ -324,10 +339,14 @@ export function ZoningRightsViews({ sessionId, state, pending, error, send }: Vi
 
   const picking = state.phase === "IND_PLANNER_PICK" || state.phase === "TEAM_PLANNER_PICK";
   const selectedLots = state.canPickLots && picking ? draftLots : state.selectedLots;
+  const watchingTeamPlace =
+    (state.phase === "TEAM_DISCUSS" || state.phase === "TEAM_LOCK") &&
+    state.viewerRole !== "zoning_manager";
   const placing =
     state.canAssignZm ||
     state.canGuess ||
     state.canTeamLock ||
+    watchingTeamPlace ||
     (state.myGuessLocked && state.phase === "IND_GUESS" && state.viewerRole !== "zoning_manager");
 
   const toggleLot = (cell: Cell) => {
@@ -441,14 +460,8 @@ export function ZoningRightsViews({ sessionId, state, pending, error, send }: Vi
         </p>
       ) : null}
 
-      {state.canTeamLock ? <TeamLock state={state} pending={pending} send={send} /> : null}
-
-      {(state.phase === "TEAM_DISCUSS" || state.phase === "TEAM_LOCK") &&
-      !state.canTeamLock &&
-      state.viewerRole !== "zoning_manager" ? (
-        <p className="text-center font-body text-sm text-slate">
-          Watch {state.leadDeveloperName ?? "the Lead Developer"} place the team&apos;s choice.
-        </p>
+      {watchingTeamPlace ? (
+        <TeamDiscussBoard state={state} pending={pending} send={send} />
       ) : null}
 
       {state.phase === "IND_REVEAL" ? (

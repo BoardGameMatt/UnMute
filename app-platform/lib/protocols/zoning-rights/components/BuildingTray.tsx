@@ -24,36 +24,44 @@ export function BuildingTray({
 
   if (tray.length === 0 && !heldId) return null;
 
+  const chipClass = (buildingId: string) =>
+    `rounded-md border bg-warm-white px-3 py-2 font-display text-sm text-unmute-navy ${
+      heldId === buildingId || pressing === buildingId
+        ? "border-2 border-signal-amber"
+        : "border-unmute-navy/20"
+    }`;
+
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap justify-center gap-2">
-        {tray.map((building) => (
-          <button
-            key={building.id}
-            type="button"
-            disabled={disabled}
-            draggable={!disabled}
-            onDragStart={(event) => {
-              event.dataTransfer.setData("text/plain", building.id);
-              event.dataTransfer.effectAllowed = "move";
-              onHold(building.id);
-            }}
-            onDragEnd={() => onHold(null)}
-            onPointerDown={() => setPressing(building.id)}
-            onPointerUp={() => setPressing(null)}
-            onPointerCancel={() => setPressing(null)}
-            onClick={() => onHold(heldId === building.id ? null : building.id)}
-            className={`rounded-md border bg-warm-white px-3 py-2 font-display text-sm text-unmute-navy ${
-              heldId === building.id || pressing === building.id
-                ? "border-2 border-signal-amber"
-                : "border-unmute-navy/20"
-            }`}
-          >
-            {building.name}
-          </button>
-        ))}
+        {tray.map((building) =>
+          disabled ? (
+            <div key={building.id} className={chipClass(building.id)}>
+              {building.name}
+            </div>
+          ) : (
+            <button
+              key={building.id}
+              type="button"
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.setData("text/plain", building.id);
+                event.dataTransfer.effectAllowed = "move";
+                onHold(building.id);
+              }}
+              onDragEnd={() => onHold(null)}
+              onPointerDown={() => setPressing(building.id)}
+              onPointerUp={() => setPressing(null)}
+              onPointerCancel={() => setPressing(null)}
+              onClick={() => onHold(heldId === building.id ? null : building.id)}
+              className={chipClass(building.id)}
+            >
+              {building.name}
+            </button>
+          )
+        )}
       </div>
-      {heldId ? (
+      {disabled ? null : heldId ? (
         <p className="text-center font-body text-xs text-slate">
           Now tap the lot you want to put it in.
         </p>
