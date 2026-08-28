@@ -9,6 +9,37 @@ Vercel deploys the Next.js app automatically when `main` updates. **Supabase sch
 
 ---
 
+## Which Vercel project is production
+
+This GitHub repo is connected to more than one Vercel project. Only one of them is the product facilitators use.
+
+| Vercel project | Domain | Role |
+|----------------|--------|------|
+| **`unmute-app`** | [app.unmutelabs.com](https://app.unmutelabs.com) | **Production product.** Root Directory must be `app-platform`. Confirm this project's Production deployment is Ready before minting join codes. |
+| `un-mute` | Preview hosts such as `un-mute-*.vercel.app` | Separate project. A green deploy here does **not** mean `app.unmutelabs.com` updated. Do not turn on Production auto-deploy for this project. |
+
+If a Vercel email says “Failed production deployment on unmute-app”, that is the product. Fix that build; do not assume the other project shipped the Moment.
+
+---
+
+## Compile check (committed files only)
+
+Vercel builds **git**, not your laptop. A local `npm run build` can pass because untracked files exist on disk, then `unmute-app` fails with `Module not found`.
+
+That is what broke production in August 2026: `lobby/actions.ts` imported `@/lib/console/session-events`, but that file was not in the merge.
+
+Before merging to `main`:
+
+```bash
+cd app-platform
+git status          # every new @/ import must be a tracked file in the same ship
+npm run build       # must succeed on the files git will send
+```
+
+GitHub Actions workflow `.github/workflows/app-platform-build.yml` runs the same compile. Do not merge if that check is red.
+
+---
+
 ## Release checklist (every production push)
 
 Copy this list when merging to `main` or announcing a demo:
@@ -18,7 +49,9 @@ Production release:
 - [ ] Identify new/changed files under app-platform/supabase/migrations/
 - [ ] Apply pending migrations to production Supabase (CLI or SQL editor)
 - [ ] Run schema verification (see below) — all checks pass
-- [ ] Merge / confirm Vercel deploy finished
+- [ ] cd app-platform && npm run build  (or App build CI green)
+- [ ] Merge to main
+- [ ] Confirm Vercel project unmute-app Production deploy is Ready (not un-mute)
 - [ ] Smoke-test the first action that touches new schema for each affected Moment
 - [ ] Run content seed scripts if the release adds pack/card/question data
 - [ ] Only then mint join codes or share host links with facilitators

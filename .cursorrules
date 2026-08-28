@@ -158,3 +158,15 @@ When working on a protocol, read its spec first and treat it as
 authoritative. Do not invent mechanics that are not in the spec.
 If the spec is ambiguous, choose the more conservative option and
 record the choice, rather than inventing a mechanic.
+
+## Production deploy
+Product production is Vercel project **unmute-app** (`app.unmutelabs.com`),
+Root Directory `app-platform`. Do not treat deploys of the `un-mute` project
+as shipping the product.
+
+Vercel auto-deploys **committed** app code on `main`; untracked files are not
+included. Before merging, run `cd app-platform && npm run build` and confirm
+every new `@/` import is in the same commit. Supabase migrations are manual.
+Apply pending SQL in app-platform/supabase/migrations/ and run
+`npm run verify:schema`. Follow docs/production-deploy.md. Do not mint
+production join codes until schema verification passes and unmute-app is Ready.
