@@ -24,6 +24,83 @@ function key(col: number, row: number) {
   return `${col},${row}`;
 }
 
+function MapCellBody({
+  cell,
+  letter,
+  lotName,
+  guessName,
+  mark,
+  isLegal,
+  isSelected,
+  canPick,
+}: {
+  cell: OccupiedCellView | undefined;
+  letter: string | undefined;
+  lotName: string | undefined;
+  guessName: string | undefined;
+  mark: LotMark | undefined;
+  isLegal: boolean;
+  isSelected: boolean;
+  canPick: boolean;
+}) {
+  return (
+    <>
+      {cell?.kind === "hall" ? (
+        <span className="font-mono text-[7px] font-medium uppercase leading-tight tracking-wider sm:text-[8px]">
+          City
+          <br />
+          Hall
+        </span>
+      ) : cell?.kind === "building" ? (
+        <span className="font-display text-[9px] font-semibold leading-tight">{cell.name}</span>
+      ) : letter ? (
+        <span className="flex flex-col items-center">
+          <span className="font-display text-base font-semibold text-unmute-navy sm:text-lg">
+            {letter}
+          </span>
+          {lotName ? (
+            <span className="font-display text-[8px] font-medium leading-tight text-charcoal">
+              {lotName}
+            </span>
+          ) : (
+            <span className="mt-0.5 h-3.5 w-3.5 rounded-[2px] border border-dashed border-unmute-navy/50" />
+          )}
+          {mark === "miss" && guessName && guessName !== lotName ? (
+            <span className="font-body text-[7px] leading-tight text-signal-red">
+              Team: {guessName}
+            </span>
+          ) : null}
+        </span>
+      ) : isLegal && canPick ? (
+        <span
+          className={`flex h-4 w-4 items-center justify-center rounded-[3px] border-2 border-unmute-navy font-mono text-[10px] text-unmute-navy ${
+            isSelected ? "bg-unmute-navy text-warm-white" : "bg-warm-white"
+          }`}
+        >
+          {isSelected ? "✓" : ""}
+        </span>
+      ) : null}
+
+      {mark === "hit" ? (
+        <span
+          className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-sunrise-gold font-display text-lg font-bold leading-none text-deep-navy"
+          aria-label="Correct"
+        >
+          ✓
+        </span>
+      ) : null}
+      {mark === "miss" ? (
+        <span
+          className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-signal-red font-display text-lg font-bold leading-none text-warm-white"
+          aria-label="Incorrect"
+        >
+          ×
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 export function CityMap({
   occupied,
   legalLots,
@@ -77,82 +154,50 @@ export function CityMap({
 
         const interactivePick = canPick && isLegal;
         const interactivePlace = Boolean(canPlace && letter);
+        const body = (
+          <MapCellBody
+            cell={cell}
+            letter={letter}
+            lotName={letter ? lotNames?.[letter] : undefined}
+            guessName={letter ? lotGuessNames?.[letter] : undefined}
+            mark={mark}
+            isLegal={isLegal}
+            isSelected={isSelected}
+            canPick={canPick}
+          />
+        );
+
+        if (interactivePick || interactivePlace) {
+          return (
+            <button
+              key={k}
+              type="button"
+              onClick={() => {
+                if (interactivePick) onToggle?.({ col, row });
+                else if (letter && heldBuildingId) onPlaceLetter?.(letter);
+                else if (letter && lotNames?.[letter]) onReturnLetter?.(letter);
+              }}
+              onDragOver={(event) => {
+                if (!interactivePlace) return;
+                event.preventDefault();
+              }}
+              onDrop={(event) => {
+                if (!letter) return;
+                event.preventDefault();
+                const dropped = event.dataTransfer.getData("text/plain");
+                onPlaceLetter?.(letter, dropped || undefined);
+              }}
+              className={className}
+            >
+              {body}
+            </button>
+          );
+        }
 
         return (
-          <button
-            key={k}
-            type="button"
-            disabled={!interactivePick && !interactivePlace}
-            onClick={() => {
-              if (interactivePick) onToggle?.({ col, row });
-              else if (letter && heldBuildingId) onPlaceLetter?.(letter);
-              else if (letter && lotNames?.[letter]) onReturnLetter?.(letter);
-            }}
-            onDragOver={(event) => {
-              if (!interactivePlace) return;
-              event.preventDefault();
-            }}
-            onDrop={(event) => {
-              if (!letter) return;
-              event.preventDefault();
-              const dropped = event.dataTransfer.getData("text/plain");
-              onPlaceLetter?.(letter, dropped || undefined);
-            }}
-            className={className}
-          >
-            {cell?.kind === "hall" ? (
-              <span className="font-mono text-[7px] font-medium uppercase leading-tight tracking-wider sm:text-[8px]">
-                City
-                <br />
-                Hall
-              </span>
-            ) : cell?.kind === "building" ? (
-              <span className="font-display text-[9px] font-semibold leading-tight">{cell.name}</span>
-            ) : letter ? (
-              <span className="flex flex-col items-center">
-                <span className="font-display text-base font-semibold text-unmute-navy sm:text-lg">
-                  {letter}
-                </span>
-                {lotNames?.[letter] ? (
-                  <span className="font-display text-[8px] font-medium leading-tight text-charcoal">
-                    {lotNames[letter]}
-                  </span>
-                ) : (
-                  <span className="mt-0.5 h-3.5 w-3.5 rounded-[2px] border border-dashed border-unmute-navy/50" />
-                )}
-                {mark === "miss" && lotGuessNames?.[letter] && lotGuessNames[letter] !== lotNames?.[letter] ? (
-                  <span className="font-body text-[7px] leading-tight text-signal-red">
-                    Team: {lotGuessNames[letter]}
-                  </span>
-                ) : null}
-              </span>
-            ) : isLegal && canPick ? (
-              <span
-                className={`flex h-4 w-4 items-center justify-center rounded-[3px] border-2 border-unmute-navy font-mono text-[10px] text-unmute-navy ${
-                  isSelected ? "bg-unmute-navy text-warm-white" : "bg-warm-white"
-                }`}
-              >
-                {isSelected ? "✓" : ""}
-              </span>
-            ) : null}
-
-            {mark === "hit" ? (
-              <span
-                className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-sunrise-gold font-display text-lg font-bold leading-none text-deep-navy"
-                aria-label="Correct"
-              >
-                ✓
-              </span>
-            ) : null}
-            {mark === "miss" ? (
-              <span
-                className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-signal-red font-display text-lg font-bold leading-none text-warm-white"
-                aria-label="Incorrect"
-              >
-                ×
-              </span>
-            ) : null}
-          </button>
+          <div key={k} className={className}>
+            {body}
+          </div>
         );
       })}
     </div>

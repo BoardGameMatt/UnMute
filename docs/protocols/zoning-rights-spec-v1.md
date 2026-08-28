@@ -247,9 +247,9 @@ No map interaction. Later team rounds skip this intro and go straight to lot pic
 1. **City Planner** picks exactly 4 legal lots and locks. Four letters **A, B, C, D**. Checkbox map on the planner’s phone and the shared laptop (not round-1-only).
 2. **Zoning Manager** dealt 4 unused buildings, assigns in secret, locks. Same private tray. On lock, their phone shows the off-camera prompt (§5.7). They stay off camera and muted through discussion until reveal. They do **not** join the discussion.
 3. Server picks this round’s **Lead Developer** (§6.4) when the Zoning Manager locks, so the room knows who is placing before discussion starts. Display the name on every screen except it is not a secret.
-4. **DISCUSS (120 seconds).** Everyone except the Zoning Manager is in the discussion. Building **list** is visible. Lettered lots are visible. Zoning Manager’s permutation is not. The **Lead Developer** places A–D live on the map during these two minutes. The shared laptop mirrors that placement. Other members: view-only map. Zoning Manager remains off camera, muted, no hints (honor system + on-screen rule). There is **no separate lock phase**. Copy (members):
+4. **DISCUSS (120 seconds).** Everyone except the Zoning Manager is in the discussion. Building **list** is visible. Lettered lots are visible. Zoning Manager’s permutation is not. The **Lead Developer** places A–D live on the map during these two minutes. Everyone else (including the facilitator, unless they are the Lead Developer) sees **the same map and remaining building list**, view-only — no placing, no taking buildings back, no **Lock it in**. The shared laptop mirrors that placement. Zoning Manager remains off camera, muted, no hints (honor system + on-screen rule). There is **no separate lock phase**. Copy (members):
 
-> Discuss as a team. Zoning Manager is off camera — no hints. [Lead Developer name] is placing the team's choice on the map during this discussion.
+> Discuss as a team. Zoning Manager is off camera — no hints. You can see the same map as [Lead Developer name]. Only they can place.
 
 Copy (Lead Developer):
 
@@ -323,7 +323,7 @@ Drag-and-drop may still work; do not mention it.
 
 **Team discuss (members, not LD):**
 
-> Discuss as a team. Zoning Manager is off camera — no hints. [Lead Developer name] is placing the team's choice on the map during this discussion.
+> Discuss as a team. Zoning Manager is off camera — no hints. You can see the same map as [Lead Developer name]. Only they can place.
 
 **Team discuss (Lead Developer):**
 
@@ -338,9 +338,10 @@ Do **not** show “No searching. No chat.” on play screens. These are not dete
 | Shared laptop (facilitator screen) | Full 5×7 map; occupied buildings; round 1 checkbox picker; later rounds’ live lot picks; lettered lots; building **names** once the Zoning Manager has locked; timer when guessing or discussing; **live Lead Developer placement** during `TEAM_DISCUSS`; reveal layout; names who got it / team result; join QR in lobby |
 | City Planner phone | Round 1: no picker (facilitator screen only). Later rounds: map + checkboxes. After lock, same as a guesser (individual) or discuss/watch (team) |
 | Zoning Manager phone | Map + building tray during assign (drag onto lettered lots); after lock, off-camera / mute prompt until reveal. Never their permutation on the shared map until reveal. Never other people’s **individual** guesses |
-| Guesser phone | Map + building tray during individual guess; drag onto lettered lots |
-| Lead Developer phone | Map + building tray during `TEAM_DISCUSS` |
-| Session Lead chrome | Locked-in counts, Continue / Another round / Move to team play / Wrap things up. **Not** the team tray unless the Lead is also this round’s Lead Developer. **No** skip-planner button. |
+| Guesser phone | Map + building tray during individual guess; tap onto lettered lots |
+| Lead Developer phone | Interactive map + building tray during `TEAM_DISCUSS` |
+| Other players (not ZM, not LD) | Same map + remaining building list as the Lead Developer, **view-only** |
+| Session Lead chrome | Locked-in counts, Continue / Another round / Move to team play / Wrap things up. Team tray is view-only unless the Lead is also this round’s Lead Developer. **No** skip-planner button. |
 
 The Zoning Manager **must not** share their phone screen. After they lock, they go **off camera and mute** until the room has locked in (individual guesses) or the two-minute team timer ends. Honor system — the app cannot control the video call. If they are sharing the laptop map as session Lead, that share stays; the webcam tile and mic go off.
 
@@ -559,7 +560,8 @@ Play cards: `warm-white`, `cloud-grey` border, `rounded-lg`, `p-6` minimum. Sess
 | City Planner | Phone (not round 1) | Checkbox map during later lot picks | ZM permutation until reveal |
 | Zoning Manager | Phone | Dealt buildings; letter zones; after lock, off-camera / mute prompt until reveal | Anyone’s individual guess; do not mirror their permutation onto the shared map until reveal |
 | Guesser | Phone | Building names + letter tray during individual guess; true layout at reveal; names who matched | ZM permutation before reveal; other individual guesses |
-| Lead Developer | Phone | Interactive A–D tray during discuss; own placement mirrored on the shared map | ZM permutation before reveal |
+| Lead Developer | Phone | Interactive A–D tray during discuss; own placement mirrored on the shared map and on every other non-ZM phone | ZM permutation before reveal |
+| Other players (not ZM) | Phone | Same map + remaining building list as the Lead Developer, view-only | Cannot place, return, or lock; ZM permutation before reveal |
 | Shared laptop | — | Public map, letters, name list, timer, live team placement, reveal | Any secret ZM permutation before reveal; personal individual trays |
 
 ---
@@ -800,7 +802,7 @@ What is lost: private phones, lock-in counts, pack uniqueness enforcement. The p
 5. Opening board has eight checkboxes on the **facilitator screen** in round 1; member phones have no checkboxes. After round 1 lock+reveal, checkbox count equals the new legal-lot set (not still eight).
 6. Start consumes four distinct Pack A buildings onto N/E/S/W; those four never appear in a later deal.
 7. Team discuss: only the current Lead Developer can persist the public team guess; session Lead cannot place unless they are LD. T=0 commits whatever is on the map.
-8. `TEAM_DISCUSS` placement is visible on the shared map before T=0; ZM assignment is still absent from other clients.
+8. `TEAM_DISCUSS` placement is visible on the shared map **and** on inactive player phones (same map + remaining list, not interactive) before T=0; ZM assignment is still absent from other clients.
 9. Throttled-network: double Lock in does not fork two permutations; T=0 snapshot matches last persisted tray.
 10. Disconnect: ZM drop before lock re-rolls; LD drop re-rolls; guesser drop does not stall reveal.
 11. Degraded fallback in the facilitator notes.
