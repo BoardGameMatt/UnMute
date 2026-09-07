@@ -49,7 +49,7 @@ function instructionFor(
   }
   if (phase === "SCOREBOARD") {
     return isLead
-      ? "Continue when the room is ready for feedback."
+      ? "Continue when the room is ready for the debrief."
       : "Waiting for the facilitator to continue.";
   }
   return PERSISTENT;
@@ -210,6 +210,8 @@ export async function buildIkwymPlayState(input: {
     canBroadcast: isLead && PROMPT_PHASES.has(ikwym.phase),
     canNext: isLead && ikwym.phase === "REVEAL_SHOW",
     canWrap: isLead && ikwym.phase === "REVEAL_SHOW",
+    canResumeReveal:
+      isLead && ikwym.phase === "SCOREBOARD" && items.some((row) => !row.resolved_at),
     canAdvanceRecap: isLead && ikwym.phase === "SCOREBOARD",
     scores,
   };

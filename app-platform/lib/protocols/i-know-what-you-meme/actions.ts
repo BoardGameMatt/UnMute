@@ -6,8 +6,7 @@ import {
   connectedPool,
   GUESS_SECONDS,
   isAllowedGifUrl,
-  pickOne,
-  shuffleCopy,
+  pickTwoUnique,
   timerHasExpired,
 } from "./engine";
 import {
@@ -21,7 +20,6 @@ import {
   loadRoster,
   resolvePackId,
   syncPublicState,
-  type IkwymPromptRow,
   type IkwymSessionRow,
   type RosterMember,
 } from "./store";
@@ -53,6 +51,23 @@ async function patchSession(
   if (error) throw new Error(error.message);
 }
 
+async function patchSessionIfPhase(
+  admin: SupabaseClient,
+  sessionId: string,
+  expectedPhase: IkwymPhase,
+  patch: Record<string, unknown>
+): Promise<boolean> {
+  const { data, error } = await admin
+    .from("ikwym_sessions")
+    .update(patch)
+    .eq("session_id", sessionId)
+    .eq("phase", expectedPhase)
+    .select("session_id")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
 export async function resetIkwymToLobby(admin: SupabaseClient, sessionId: string): Promise<void> {
   await admin
     .from("ikwym_sessions")
@@ -61,15 +76,6 @@ export async function resetIkwymToLobby(admin: SupabaseClient, sessionId: string
   await admin.from("ikwym_reveal_items").delete().eq("session_id", sessionId);
   await admin.from("ikwym_responses").delete().eq("session_id", sessionId);
   await admin.from("ikwym_sessions").delete().eq("session_id", sessionId);
-}
-
-function drawPair(
-  prompts: IkwymPromptRow[],
-  kind: "checkin" | "stimulus",
-  excludeIds: string[]
-): IkwymPromptRow | null {
-  const pool = prompts.filter((p) => p.kind === kind && !excludeIds.includes(p.id));
-  return pickOne(shuffleCopy(pool));
 }
 
 export async function startIkwym(
@@ -85,22 +91,16 @@ export async function startIkwym(
   const prompts = await loadPrompts(admin, packId);
   const checkins = prompts.filter((p) => p.kind === "checkin");
   const stimuli = prompts.filter((p) => p.kind === "stimulus");
-  if (checkins.length < 2 || stimuli.length < 2) {
+  const checkinPair = pickTwoUnique(checkins);
+  const stimulusPair = pickTwoUnique(stimuli);
+  if (!checkinPair || !stimulusPair) {
     return fail(500, "Pack A is not installed.");
   }
 
   await resetIkwymToLobby(admin, sessionId);
 
-  const r1Checkin = drawPair(prompts, "checkin", []);
-  const r1Stimulus = drawPair(prompts, "stimulus", []);
-  if (!r1Checkin || !r1Stimulus) {
-    return fail(500, "Pack A is not installed.");
-  }
-  const r2Checkin = drawPair(prompts, "checkin", [r1Checkin.id]);
-  const r2Stimulus = drawPair(prompts, "stimulus", [r1Stimulus.id]);
-  if (!r2Checkin || !r2Stimulus) {
-    return fail(500, "Pack A is not installed.");
-  }
+  const [r1Checkin, r2Checkin] = checkinPair;
+  const [r1Stimulus, r2Stimulus] = stimulusPair;
 
   const { error: sessErr } = await admin.from("ikwym_sessions").insert({
     session_id: sessionId,
@@ -165,8 +165,25 @@ async function maybeAdvanceCollection(
   if (!live.every((id) => submitted.has(id))) return;
 
   if (round === 1) {
-    await patchSession(admin, ikwym.session_id, { phase: "R2_PROMPTS", round_index: 2 });
-    await poke(admin, ikwym.session_id, "R2_PROMPTS");
+    const moved = await patchSessionIfPhase(admin, ikwym.session_id, "R1_SELECTING", {
+      phase: "R2_PROMPTS",
+      round_index: 2,
+    });
+    if (moved) await poke(admin, ikwym.session_id, "R2_PROMPTS");
+    return;
+  }
+
+  const latest = await loadIkwymSession(admin, ikwym.session_id);
+  if (!latest || latest.phase !== "R2_SELECTING") return;
+
+  const existing = await loadRevealItems(admin, ikwym.session_id);
+  if (existing[0]) {
+    const moved = await patchSessionIfPhase(admin, ikwym.session_id, "R2_SELECTING", {
+      phase: "REVEAL_GUESS",
+      current_reveal_item_id: existing[0].id,
+      guess_started_at: new Date().toISOString(),
+    });
+    if (moved) await poke(admin, ikwym.session_id, "REVEAL_GUESS");
     return;
   }
 
@@ -179,11 +196,15 @@ async function maybeAdvanceCollection(
     }))
   );
   if (queued.length === 0) {
-    await goScoreboard(admin, ikwym.session_id);
+    const moved = await patchSessionIfPhase(admin, ikwym.session_id, "R2_SELECTING", {
+      phase: "SCOREBOARD",
+      guess_started_at: null,
+      current_reveal_item_id: null,
+    });
+    if (moved) await poke(admin, ikwym.session_id, "SCOREBOARD");
     return;
   }
 
-  await admin.from("ikwym_reveal_items").delete().eq("session_id", ikwym.session_id);
   const rows = queued.map((item, index) => ({
     session_id: ikwym.session_id,
     sort_index: index,
@@ -196,15 +217,27 @@ async function maybeAdvanceCollection(
     .insert(rows)
     .select("id, sort_index")
     .order("sort_index", { ascending: true });
-  if (error || !inserted?.[0]) throw new Error(error?.message ?? "Could not build the reveal queue.");
+  if (error) {
+    if (error.code !== "23505") throw new Error(error.message);
+    const raced = await loadRevealItems(admin, ikwym.session_id);
+    if (!raced[0]) return;
+    const moved = await patchSessionIfPhase(admin, ikwym.session_id, "R2_SELECTING", {
+      phase: "REVEAL_GUESS",
+      current_reveal_item_id: raced[0].id,
+      guess_started_at: new Date().toISOString(),
+    });
+    if (moved) await poke(admin, ikwym.session_id, "REVEAL_GUESS");
+    return;
+  }
+  if (!inserted?.[0]) throw new Error("Could not build the reveal queue.");
 
   const firstId = inserted[0].id as string;
-  await patchSession(admin, ikwym.session_id, {
+  const moved = await patchSessionIfPhase(admin, ikwym.session_id, "R2_SELECTING", {
     phase: "REVEAL_GUESS",
     current_reveal_item_id: firstId,
     guess_started_at: new Date().toISOString(),
   });
-  await poke(admin, ikwym.session_id, "REVEAL_GUESS");
+  if (moved) await poke(admin, ikwym.session_id, "REVEAL_GUESS");
 }
 
 async function maybeResolveGuesses(
@@ -302,10 +335,7 @@ export async function dispatchIkwymAction(input: {
       stimulus_response: stimulusResponse,
       search_query: searchQuery,
     });
-    if (error) {
-      if (error.code === "23505") {
-        return { ok: true };
-      }
+    if (error && error.code !== "23505") {
       throw new Error(error.message);
     }
 
@@ -338,10 +368,7 @@ export async function dispatchIkwymAction(input: {
       guessed_participant_id: action.guessedParticipantId,
       locked_at: new Date().toISOString(),
     });
-    if (error) {
-      if (error.code === "23505") {
-        return { ok: true };
-      }
+    if (error && error.code !== "23505") {
       throw new Error(error.message);
     }
 
@@ -376,6 +403,29 @@ export async function dispatchIkwymAction(input: {
       return fail(400, "Wrap is only available after a GIF is revealed.");
     }
     await goScoreboard(admin, sessionId);
+    return { ok: true };
+  }
+
+  if (action.type === "resumeReveal") {
+    if (!isLead) return fail(403, "Only the facilitator can continue.");
+    if (ikwym.phase !== "SCOREBOARD") return fail(400, "Scores are not showing.");
+    const { data: sessionRow } = await admin
+      .from("sessions")
+      .select("status")
+      .eq("id", sessionId)
+      .maybeSingle();
+    if (sessionRow?.status === "completed") {
+      return fail(400, "This sitting is over.");
+    }
+    const items = await loadRevealItems(admin, sessionId);
+    const next = items.find((row) => !row.resolved_at);
+    if (!next) return fail(400, "The queue is finished.");
+    await patchSession(admin, sessionId, {
+      phase: "REVEAL_GUESS",
+      current_reveal_item_id: next.id,
+      guess_started_at: new Date().toISOString(),
+    });
+    await poke(admin, sessionId, "REVEAL_GUESS");
     return { ok: true };
   }
 

@@ -18,6 +18,18 @@ export function pickOne<T>(items: T[], random: () => number = Math.random): T | 
   return items[Math.floor(random() * items.length)] ?? null;
 }
 
+/** Shuffle once and take the first two. Both rounds get unused, random rows. */
+export function pickTwoUnique<T extends { id: string }>(
+  items: T[],
+  random: () => number = Math.random
+): [T, T] | null {
+  const shuffled = shuffleCopy(items, random);
+  const first = shuffled[0];
+  const second = shuffled[1];
+  if (!first || !second || first.id === second.id) return null;
+  return [first, second];
+}
+
 export function connectedPool(ids: string[], connected: string[]): string[] {
   if (connected.length === 0) return ids;
   return ids.filter((id) => connected.includes(id));

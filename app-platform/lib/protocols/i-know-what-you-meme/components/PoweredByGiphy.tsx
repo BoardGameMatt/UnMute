@@ -18,11 +18,11 @@ export const PoweredByGiphy = ({ className = "" }: PoweredByGiphyProps) => {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/powered-by-giphy.svg"
+        src="/powered-by-giphy.svg?v=4"
         alt="Powered By GIPHY"
-        width={160}
-        height={29}
-        className="h-7 w-auto"
+        width={200}
+        height={42}
+        className="h-8 w-auto max-w-[200px] object-contain object-center"
       />
     </a>
   );

@@ -73,27 +73,35 @@ function SamplePromptsAndGrid() {
     <div className="mx-auto w-full max-w-[16rem]">
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-lg border border-cloud-grey bg-warm-white p-3">
-          <p className="font-mono text-[8px] uppercase tracking-widest text-steel-blue">Check-in</p>
-          <p className="mt-1 font-display text-[11px] font-semibold leading-snug text-unmute-navy">
+          <p className="font-display text-[11px] font-semibold leading-snug text-unmute-navy">
             If this meeting were a sandwich, what would it be?
           </p>
         </div>
         <div className="rounded-lg border border-cloud-grey bg-warm-white p-3">
-          <p className="font-mono text-[8px] uppercase tracking-widest text-steel-blue">Stimulus</p>
-          <p className="mt-1 font-display text-[11px] font-semibold leading-snug text-unmute-navy">
+          <p className="font-display text-[11px] font-semibold leading-snug text-unmute-navy">
             Name a kitchen appliance.
           </p>
         </div>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-1.5">
-        {Array.from({ length: 9 }, (_, i) => (
+        {Array.from({ length: 12 }, (_, i) => (
           <div
             key={i}
-            className={`flex aspect-square items-center justify-center rounded-md border-2 ${
-              i === 4 ? "border-signal-amber bg-warm-white" : "border-cloud-grey bg-warm-white"
+            className={`relative flex aspect-square items-center justify-center rounded-md border-2 ${
+              i === 4
+                ? "border-signal-amber bg-warm-white shadow-md"
+                : "border-cloud-grey bg-warm-white opacity-40"
             }`}
           >
             {i === 4 ? <ToasterStill /> : <span className="h-4 w-4 rounded-sm bg-cloud-grey" />}
+            {i === 4 ? (
+              <span
+                className="absolute right-0.5 top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sunrise-gold font-display text-[8px] font-bold text-deep-navy"
+                aria-hidden="true"
+              >
+                ✓
+              </span>
+            ) : null}
           </div>
         ))}
       </div>
@@ -173,33 +181,32 @@ function SitOutBeat() {
           </li>
         ))}
       </ul>
-      <p className="rounded-md border border-cloud-grey bg-warm-white px-3 py-2 text-center font-body text-[11px] leading-relaxed text-charcoal">
-        Pick something you’d show this team.
-      </p>
     </div>
   );
 }
 
 const PANES = [
   {
-    caption: "Play on your phone. Keep everyone's video up on your laptop.",
+    caption:
+      "To join, scan the QR code with your phone or play by entering the link. Pick on your phone so nobody sees which Giphy is yours.",
     body: <DeviceIllustration />,
   },
   {
-    caption: "Same two prompts for everyone. Search. Pick one GIF.",
+    caption:
+      "Everyone will see the same pair of prompts and then select a Giphy which best captures how you feel. Then we'll do it again for a 2nd pair of prompts.",
     body: <SamplePromptsAndGrid />,
   },
   {
-    caption: "Don’t say which one is yours.",
+    caption: "Don't give any hints on which Giphys you picked!",
     body: <ClosedMouthChips />,
   },
   {
-    caption: "Then we guess who picked it. Reading them is the score.",
+    caption:
+      "Then, we'll share one of the selected Giphys and you will try and figure out who picked it to score points.",
     body: <GuessBeat />,
   },
   {
-    caption:
-      "The person who picked it sits this one out. Guessing yourself doesn’t count. Pick something you’d show this team.",
+    caption: "If your selection is shown, don't tip off the other players!!",
     body: <SitOutBeat />,
   },
 ] as const;
@@ -216,12 +223,16 @@ function PaneBody({ index }: { index: number }) {
 
 function PaneDots({ current }: { current: number }) {
   return (
-    <div className="mt-4 flex justify-center gap-2" aria-hidden="true">
+    <div
+      className="mt-5 flex justify-center gap-2.5"
+      role="img"
+      aria-label={`How it works, step ${current + 1} of ${PANES.length}`}
+    >
       {PANES.map((pane, i) => (
         <span
           key={pane.caption}
-          className={`h-1.5 w-1.5 rounded-full ${
-            i === current ? "bg-unmute-navy" : "bg-cloud-grey"
+          className={`h-2.5 w-2.5 rounded-full ${
+            i === current ? "bg-unmute-navy" : "border-2 border-slate bg-transparent"
           }`}
         />
       ))}
@@ -259,7 +270,7 @@ export function IkwymLobbyExplainer() {
     <Shell>
       <div className="relative">
         <div className="invisible" aria-hidden="true">
-          <PaneBody index={4} />
+          <PaneBody index={1} />
         </div>
         <motion.div
           key={beat}

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { SessionProgressBar } from "@/components/ui/SessionProgressBar";
-import { fetchGifs, type GiphyGif } from "@/lib/giphy";
+import { fetchGifs, GIPHY_PAGE_SIZE, type GiphyGif } from "@/lib/giphy";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
 import { RESPONSE_MAX, type IkwymAction, type IkwymPlayState } from "../types";
 import { PoweredByGiphy } from "./PoweredByGiphy";
@@ -66,14 +66,41 @@ function NavyButton({
   );
 }
 
-function PromptCard({ title, children }: { title: string; children: React.ReactNode }) {
+function LeadPhoneReminder() {
+  return (
+    <p className="text-center font-body text-sm leading-relaxed text-slate">
+      Pick on your phone. Leave this laptop on the shared screen.
+    </p>
+  );
+}
+
+function PromptCard({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-cloud-grey bg-warm-white p-6">
-      <p className="font-mono text-[10px] font-medium uppercase tracking-widest text-steel-blue">
-        {title}
-      </p>
-      <div className="mt-3 font-display text-lg font-semibold text-unmute-navy">{children}</div>
+      <div className="font-display text-lg font-semibold text-unmute-navy">{children}</div>
     </div>
+  );
+}
+
+function PromptAnswer({
+  prompt,
+  value,
+  onChange,
+}: {
+  prompt: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block rounded-lg border border-cloud-grey bg-warm-white p-6">
+      <span className="font-display text-lg font-semibold text-unmute-navy">{prompt}</span>
+      <input
+        value={value}
+        maxLength={RESPONSE_MAX}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-4 w-full rounded-md border border-cloud-grey bg-warm-white px-4 py-3 font-body text-charcoal"
+      />
+    </label>
   );
 }
 
@@ -108,18 +135,37 @@ const CollectionForm = ({
   const [checkin, setCheckin] = useState("");
   const [stimulus, setStimulus] = useState("");
   const [gifs, setGifs] = useState<GiphyGif[] | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextOffset, setNextOffset] = useState(0);
   const [searching, setSearching] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selected, setSelected] = useState<GiphyGif | null>(null);
   const canSearch = checkin.trim().length > 0 && stimulus.trim().length > 0;
+  const searchQuery = `${checkin.trim()} ${stimulus.trim()}`;
 
   const search = async () => {
     if (!canSearch) return;
     setSearching(true);
     setSelected(null);
-    const query = `${checkin.trim()} ${stimulus.trim()}`;
-    const results = await fetchGifs(query, 9);
-    setGifs(results);
+    setHasMore(false);
+    setNextOffset(0);
+    const page = await fetchGifs(searchQuery, GIPHY_PAGE_SIZE, 0);
+    setGifs(page.gifs);
+    setHasMore(page.hasMore);
+    setNextOffset(GIPHY_PAGE_SIZE);
     setSearching(false);
+  };
+
+  const showMore = async () => {
+    if (!gifs || !hasMore || loadingMore || searching) return;
+    setLoadingMore(true);
+    const page = await fetchGifs(searchQuery, GIPHY_PAGE_SIZE, nextOffset);
+    const seen = new Set(gifs.map((gif) => gif.id));
+    const extra = page.gifs.filter((gif) => !seen.has(gif.id));
+    setGifs([...gifs, ...extra]);
+    setHasMore(page.hasMore && extra.length > 0);
+    setNextOffset((offset) => offset + GIPHY_PAGE_SIZE);
+    setLoadingMore(false);
   };
 
   if (state.hasConfirmed) {
@@ -140,38 +186,26 @@ const CollectionForm = ({
 
   return (
     <>
-      <PromptCard title="Check-in">{state.checkinPrompt}</PromptCard>
-      <PromptCard title={state.stimulusLabel || "Stimulus"}>{state.stimulusPrompt}</PromptCard>
-      <label className="block">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-          Check-in answer
-        </span>
-        <input
-          value={checkin}
-          maxLength={RESPONSE_MAX}
-          onChange={(e) => {
-            setCheckin(e.target.value);
-            setGifs(null);
-            setSelected(null);
-          }}
-          className="mt-2 w-full rounded-md border border-cloud-grey bg-warm-white px-4 py-3 font-body text-charcoal"
-        />
-      </label>
-      <label className="block">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-          Stimulus answer
-        </span>
-        <input
-          value={stimulus}
-          maxLength={RESPONSE_MAX}
-          onChange={(e) => {
-            setStimulus(e.target.value);
-            setGifs(null);
-            setSelected(null);
-          }}
-          className="mt-2 w-full rounded-md border border-cloud-grey bg-warm-white px-4 py-3 font-body text-charcoal"
-        />
-      </label>
+      <PromptAnswer
+        prompt={state.checkinPrompt}
+        value={checkin}
+        onChange={(value) => {
+          setCheckin(value);
+          setGifs(null);
+          setHasMore(false);
+          setSelected(null);
+        }}
+      />
+      <PromptAnswer
+        prompt={state.stimulusPrompt}
+        value={stimulus}
+        onChange={(value) => {
+          setStimulus(value);
+          setGifs(null);
+          setHasMore(false);
+          setSelected(null);
+        }}
+      />
       <NavyButton disabled={!canSearch || searching || pending} onClick={() => void search()}>
         {searching ? "Searching…" : "Search GIFs"}
       </NavyButton>
@@ -186,28 +220,53 @@ const CollectionForm = ({
               Search unavailable
             </p>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
-              {gifs.map((gif) => {
-                const isOn = selected?.id === gif.id;
-                return (
-                  <button
-                    key={gif.id}
-                    type="button"
-                    onClick={() => setSelected(gif)}
-                    className={`aspect-square overflow-hidden rounded-md border-2 ${
-                      isOn ? "border-signal-amber" : "border-cloud-grey"
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={gif.previewUrl}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  </button>
-                );
-              })}
-            </div>
+            <>
+              <div className="grid grid-cols-3 gap-2">
+                {gifs.map((gif) => {
+                  const isOn = selected?.id === gif.id;
+                  return (
+                    <button
+                      key={gif.id}
+                      type="button"
+                      aria-pressed={isOn}
+                      onClick={() => setSelected(gif)}
+                      className={`relative aspect-square overflow-hidden rounded-md border-2 transition duration-300 ease-out ${
+                        isOn
+                          ? "z-[1] border-signal-amber shadow-md"
+                          : selected
+                            ? "border-cloud-grey opacity-40"
+                            : "border-cloud-grey"
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={gif.previewUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                      {isOn ? (
+                        <span
+                          className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-sunrise-gold font-display text-sm font-bold text-deep-navy shadow-sm"
+                          aria-hidden="true"
+                        >
+                          ✓
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+              {hasMore ? (
+                <button
+                  type="button"
+                  disabled={loadingMore || searching}
+                  onClick={() => void showMore()}
+                  className="mx-auto block font-body text-sm text-unmute-navy underline decoration-unmute-navy/40 underline-offset-4 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {loadingMore ? "Loading…" : "Show more"}
+                </button>
+              ) : null}
+            </>
           )}
           <PoweredByGiphy className="w-full" />
           <PrimaryButton
@@ -259,7 +318,6 @@ const RevealGif = ({
 export function IkwymViews({ sessionId, state, pending, error, send }: ViewsProps) {
   const router = useRouter();
   const [picked, setPicked] = useState<string | null>(state.myGuessId);
-  const [wrapArmed, setWrapArmed] = useState(false);
   const showPersistent =
     state.phase !== "SCOREBOARD" && state.phase !== "REVEAL_SHOW";
   const showProgress = state.phase === "REVEAL_GUESS" || state.phase === "REVEAL_SHOW";
@@ -267,7 +325,6 @@ export function IkwymViews({ sessionId, state, pending, error, send }: ViewsProp
 
   useEffect(() => {
     setPicked(state.myGuessId);
-    setWrapArmed(false);
   }, [state.myGuessId, state.phase, state.revealIndex]);
 
   const onTimerComplete = useCallback(() => {
@@ -294,16 +351,15 @@ export function IkwymViews({ sessionId, state, pending, error, send }: ViewsProp
           <Label>Round {state.round}</Label>
           {state.isLead ? (
             <>
-              <PromptCard title="Check-in">{state.checkinPrompt}</PromptCard>
-              <PromptCard title={state.stimulusLabel || "Stimulus"}>
-                {state.stimulusPrompt}
-              </PromptCard>
+              <PromptCard>{state.checkinPrompt}</PromptCard>
+              <PromptCard>{state.stimulusPrompt}</PromptCard>
               <PrimaryButton
                 disabled={pending || !state.canBroadcast}
                 onClick={() => void send({ type: "broadcastRound" })}
               >
                 Send to team
               </PrimaryButton>
+              <LeadPhoneReminder />
             </>
           ) : null}
         </>
@@ -313,9 +369,12 @@ export function IkwymViews({ sessionId, state, pending, error, send }: ViewsProp
         <>
           <Label>Round {state.round}</Label>
           {state.isLead && !state.hasConfirmed ? (
-            <p className="text-center font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-              {state.confirmedCount} / {state.connectedCount} confirmed
-            </p>
+            <>
+              <p className="text-center font-mono text-[10px] uppercase tracking-widest text-steel-blue">
+                {state.confirmedCount} / {state.connectedCount} confirmed
+              </p>
+              <LeadPhoneReminder />
+            </>
           ) : null}
           <CollectionForm state={state} pending={pending} send={send} />
         </>
@@ -447,18 +506,9 @@ export function IkwymViews({ sessionId, state, pending, error, send }: ViewsProp
                   >
                     {lastGif ? "See scores" : "Next GIF"}
                   </PrimaryButton>
-                  {wrapArmed ? (
-                    <NavyButton
-                      disabled={pending || !state.canWrap}
-                      onClick={() => void send({ type: "wrap" })}
-                    >
-                      Confirm wrap
-                    </NavyButton>
-                  ) : (
-                    <NavyButton disabled={pending || !state.canWrap} onClick={() => setWrapArmed(true)}>
-                      Wrap things up
-                    </NavyButton>
-                  )}
+                  <NavyButton disabled={pending || !state.canWrap} onClick={() => void send({ type: "wrap" })}>
+                    Wrap things up
+                  </NavyButton>
                 </>
               ) : (
                 <p className="text-center font-body text-slate">Waiting for the facilitator.</p>
@@ -487,16 +537,26 @@ export function IkwymViews({ sessionId, state, pending, error, send }: ViewsProp
             ))}
           </ol>
           {state.isLead ? (
-            <PrimaryButton
-              disabled={pending || !state.canAdvanceRecap}
-              onClick={() => {
-                void send({ type: "advanceRecap" }).then((ok) => {
-                  if (ok) router.replace(`/session/${sessionId}/feedback`);
-                });
-              }}
-            >
-              Continue
-            </PrimaryButton>
+            <>
+              <PrimaryButton
+                disabled={pending || !state.canAdvanceRecap}
+                onClick={() => {
+                  void send({ type: "advanceRecap" }).then((ok) => {
+                    if (ok) router.replace(`/session/${sessionId}/feedback`);
+                  });
+                }}
+              >
+                Continue to debrief
+              </PrimaryButton>
+              {state.canResumeReveal ? (
+                <NavyButton
+                  disabled={pending}
+                  onClick={() => void send({ type: "resumeReveal" })}
+                >
+                  On second thought, let’s do another round
+                </NavyButton>
+              ) : null}
+            </>
           ) : (
             <p className="text-center font-body text-slate">
               Waiting for the facilitator to continue.

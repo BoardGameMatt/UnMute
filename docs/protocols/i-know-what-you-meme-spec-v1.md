@@ -25,8 +25,8 @@ The GIFs are the surface. **The payload is whether you can read how a specific c
 
 Two prompts per round:
 
-1. A check-in (“How are you showing up today?”).
-2. A stimulus (“Name a food”).
+1. A check-in (“What descriptive adjective would you use for how you're showing up today?”).
+2. A stimulus (“Name a specific dish, not a category like pasta.”).
 
 Both answers become one search query. The GIF is the compressed artifact. Guessing is the read.
 
@@ -59,21 +59,21 @@ Registers as `lobbyExplainer` on `registerProtocol()`. Renders below the join QR
 
 The looping panel is **one fixed size for every beat** (CSS grid overlap). Do not grow/shrink the shell as captions change.
 
-v1 explainer teaches collection + one guess. It does not teach “two rounds” as a separate mode.
+v1 explainer teaches join, pick-on-phone (so the shared screen does not leak the Lead’s GIF), two collection rounds, silence, then guess. Beat 2 names the second prompt pair.
 
 ### Beats
 
 | # | Caption | What they see |
 |---|---|---|
-| 1 | Play on your phone. Keep everyone's video up on your laptop. | Phone + laptop with a video grid. |
-| 2 | Same two prompts for everyone. Search. Pick one GIF. | Two prompt cards (fake copy) + a 3×3 grid with one cell selected (amber border). |
-| 3 | Don’t say which one is yours. | Named chips (Maya, Jordan, Steve); mouths closed. |
-| 4 | Then we guess who picked it. Reading them is the score. | Full-width GIF; display-name list; one name selected. |
-| 5 | The person who picked it sits this one out. Guessing yourself doesn’t count. Pick something you’d show this team. | Owner chip dimmed; workplace-notice strip. |
+| 1 | To join, scan the QR code with your phone or play by entering the link. Pick on your phone so nobody sees which Giphy is yours. | Phone + laptop with a video grid. QR lives in the lobby chrome beside this loop. |
+| 2 | Everyone will see the same pair of prompts and then select a Giphy which best captures how you feel. Then we'll do it again for a 2nd pair of prompts. | Two prompt cards (fake copy) + a 3×4 grid with one cell selected (amber border). |
+| 3 | Don't give any hints on which Giphys you picked! | Named chips (Maya, Jordan, Steve); mouths closed. |
+| 4 | Then, we'll share one of the selected Giphys and you will try and figure out who picked it to score points. | Full-width GIF; display-name list; one name selected. |
+| 5 | If your selection is shown, don't tip off the other players!! | Owner chip dimmed. |
 
 **Sample data (obviously fake, not in Pack A):** check-in *“If this meeting were a sandwich, what would it be?”* stimulus *“Name a kitchen appliance.”* Answers *“too much mustard”* + *“toaster”*. Fake GIF is a still illustration, not a live Giphy fetch.
 
-**Reuse:** prompt cards, 3×3 grid cell (selected vs not), display-name chips, lock-in button — same visual states as §7.
+**Reuse:** prompt cards, 3×4 grid cell (selected vs not), display-name chips, lock-in button — same visual states as §7.
 
 ---
 
@@ -84,10 +84,10 @@ Two **collection rounds**, then a **reveal queue**. Collection is simultaneous. 
 ### 4.1 A collection round
 
 1. Server draws one unused **check-in** and one unused **stimulus** from this session’s pack (§12). The whole room gets that pair. (Not a unique pair per person.)
-2. Lead sees both prompts and taps **Send to team**. Members see “Stand by — your lead is sending the prompts.” Nothing is searchable until that tap. `broadcast` is Lead-only, lobby-complete only in the sense that the session is already `active`.
-3. Every phone shows the two prompts with text fields (120 characters each). Persistent copy (§4.5).
+2. Lead sees both prompts and taps **Send to team**. Under that control (and again while they are still picking): **Pick on your phone. Leave this laptop on the shared screen.** Members see “Stand by — your lead is sending the prompts.” Nothing is searchable until that tap. `broadcast` is Lead-only, lobby-complete only in the sense that the session is already `active`.
+3. Every phone shows the two prompts, each followed by its answer field (120 characters). No “check-in” / “stimulus” labels. Persistent copy (§4.5).
 4. Both fields filled → **Search GIFs** (navy). The client concatenates `check-in answer + " " + stimulus answer` and calls Giphy with `rating=g` (not configurable).
-5. Before the grid: content notice (§4.6). Then a **3×3** of nine GIFs. Tap selects (2px amber border). **Confirm GIF** (amber) is disabled until a cell is selected.
+5. Before the grid: content notice (§4.6). Then a **3×4** of twelve GIFs. **Show more** (text link under the grid) appends another twelve below, using Giphy `offset`. Tap selects: amber border, sunrise-gold check, unselected cells dim. **Confirm GIF** (amber) is disabled until a cell is selected.
 6. Confirm persists that participant’s GIF for this round. They cannot change it. Waiting screen + roster chips (submitted = navy fill).
 7. When every **connected** participant has confirmed, the engine advances: round 1 → generate round 2 prompts (Lead broadcasts again); round 2 → build the reveal queue and start the first guess.
 
@@ -114,7 +114,7 @@ For each queue item:
 4. **Owner** (the person whose GIF this is): no name list. Copy: “Your GIF is up — stay quiet. See if they can figure it out.” They have no guess control and cannot score on this item.
 5. Two paths to resolve: every eligible guesser has locked, **or** the server timer expires. No 3-second tap-settle (a lock is already persisted, or it is not). Unlocked guessers score 0 for this GIF.
 6. Reveal: owner’s **display name**, then the names of people who got it. Running totals stay off the guess screen (see §5.3).
-7. Lead: **Next GIF** (amber). After the last GIF, that control is **See scores**. Lead may **Wrap things up** from any post-resolve screen (confirm) and skip the rest of the queue.
+7. Lead: **Next GIF** (amber). After the last GIF, that control is **See scores**. Lead may **Wrap things up** from any post-resolve screen (one click, no confirm) and skip the rest of the queue.
 
 Self-guess is blocked **server-side**, not only hidden in the dropdown. Owner submitting a guess is rejected.
 
@@ -156,7 +156,7 @@ Giphy’s API terms require a conspicuous **Powered By GIPHY** mark wherever Gip
 
 | Screen | Mark |
 |---|---|
-| Collection, once Search has returned (grid **or** “Search unavailable”) | Under the 3×3 / empty state, above Confirm |
+| Collection, once Search has returned (grid **or** “Search unavailable”) | Under the 3×4 / empty state, above Confirm |
 | Reveal guess and reveal show (phones + shared laptop) | Directly under the GIF |
 | Lobby explainer | **No.** Sample art is fake, not a Giphy fetch. |
 | Waiting / GIF locked / scoreboard | **No.** No Giphy content on screen. |
@@ -211,7 +211,7 @@ LOBBY
   → SCOREBOARD → NPS → REFLECTION
 ```
 
-Lead **Wrap** from `REVEAL_SHOW` jumps to `SCOREBOARD`.
+Lead **Wrap** from `REVEAL_SHOW` jumps to `SCOREBOARD` in one click. If unrevealed GIFs remain, the Lead may resume that queue from the scoreboard (**On second thought, let’s do another round**). That is not a third collection round.
 
 | Phase | Who acts | Timer | Advance |
 |---|---|---|---|
@@ -220,7 +220,7 @@ Lead **Wrap** from `REVEAL_SHOW` jumps to `SCOREBOARD`.
 | `R1_SELECTING` / `R2_SELECTING` | Everyone connected confirms a GIF | none | All connected confirmed |
 | `REVEAL_GUESS` | Non-owners lock a name | **30s** | All eligible locked, or server timer |
 | `REVEAL_SHOW` | Session Lead | none | Next GIF / See scores / Wrap |
-| `SCOREBOARD` | Session Lead Continue | none | Existing NPS route |
+| `SCOREBOARD` | Session Lead Continue to debrief | none | Existing NPS route. Resume remaining GIFs if the queue was wrapped early. |
 | NPS / reflection | Platform | — | Standard Season path |
 
 Progress bar: only during reveal. Expected total = length of the queue **at the moment reveal starts**. Wrap does not resize the bar; it may sit unfilled.
@@ -240,8 +240,8 @@ States cannot be color-only. Amber is the primary action (Confirm / Lock in / Ne
 | State | Treatment |
 |---|---|
 | Prompt card | `warm-white`, `cloud-grey` border, `rounded-lg`, `p-6` |
-| GIF cell, unselected | 1:1, `rounded-md`, 2px `cloud-grey` |
-| GIF cell, selected | 2px `signal-amber` |
+| GIF cell, unselected | 1:1, `rounded-md`, 2px `cloud-grey`. Dims (`opacity-40`) once another cell is selected. |
+| GIF cell, selected | 2px `signal-amber`, `shadow-md`, sunrise-gold check. Not color-only. |
 | Roster chip, not in | `warm-white`, `cloud-grey` border, display name |
 | Roster chip, confirmed | navy fill, warm-white name |
 | Guess name, idle | `warm-white`, 1px navy @ 20% |
@@ -272,8 +272,9 @@ Opt-out of WAO’s 3s tap-settle: a name lock is already persisted.
 
 - Search GIFs: navy.
 - Confirm GIF / Lock in / Send to team / Next GIF / See scores: grey (unavailable) → **amber** when the precondition is met.
-- Wrap things up: navy (secondary to Next).
-- Scoreboard Continue: amber, Lead-only, advances **everyone** to NPS.
+- Wrap things up: navy (secondary to Next). One click; no confirm.
+- Scoreboard **Continue to debrief**: amber, Lead-only, advances **everyone** to NPS.
+- Scoreboard **On second thought, let’s do another round**: navy, Lead-only, only if unrevealed GIFs remain. Resumes the existing queue. Hidden once the queue is finished.
 
 Withdrawn from `ikwym-v1`: **Replay** (reload) and **Debrief** as the end CTAs.
 
@@ -285,7 +286,7 @@ Withdrawn from `ikwym-v1`: **Replay** (reload) and **Debrief** as the end CTAs.
 | Collection | Roster + “searching on your phones” | Prompts, search, grid |
 | Guess | GIF large, timer, prompt labels, Powered By GIPHY under the GIF, **no names selected** | GIF + mark + name list (or owner sit-out) |
 | Resolve | Owner name + who got it | Same |
-| Scoreboard | Ranked list | Same; Lead Continue |
+| Scoreboard | Ranked list | Same; Lead Continue to debrief (and resume remaining GIFs if any) |
 
 ---
 
@@ -367,7 +368,7 @@ Lead-only metrics: collection `confirmed / connected`, reveal `i / M`, locks thi
 | Field | Value |
 |---|---|
 | Pack mode | `required` |
-| Pack A | 5 check-ins + 6 stimulus categories (lists below). This is the `ikwym-v1` `prompts.ts` bank, now a named pack. |
+| Pack A | 5 check-ins + 6 stimulus categories (lists below). Precise-language bank; not a comparative/scale prompt. |
 | Intra-session uniqueness | No check-in or stimulus label repeats across the two rounds. That is not a pack. |
 | Engine | Load only through `sessions.content_pack_id` |
 | Not a pack | The GIFs. Player-authored via Giphy. |
@@ -376,32 +377,35 @@ When this Moment ships on `main`, add a row to the console pack table in `docs/u
 
 ### 12.1 Pack A check-ins (5)
 
-Exact strings:
+Exact strings. Each asks for a precise or uncommon word, not a comparative or scale:
 
-1. How are you showing up today?
-2. Describe last week in one word
-3. How are you expecting this week to go?
-4. What's your energy level right now?
-5. If today were a weather pattern, what would it be?
+1. What descriptive adjective would you use for how you're showing up today?
+2. What uncommon word would describe last week?
+3. What precise adjective would you use for how you expect this week to go?
+4. What descriptive adjective would describe how your energy is today?
+5. What specific weather word would you give today, skipping "sunny" and "rainy"?
 
 ### 12.2 Pack A stimulus categories (6)
 
+Each asks for a specific instance, not a generic category word.
+
 | Label | Prompt |
 |---|---|
-| Pop culture | Name a pop culture figure |
-| Historical | Name a historical figure |
-| Animal | Name an animal |
-| Movie character | Name a movie character |
-| Food | Name a food |
-| TV character | Name a TV show character |
+| Pop culture | Name a specific pop culture figure, a person, not a category. |
+| Historical | Name a specific historical person, not a period or event. |
+| Animal | Name a specific animal, a breed, species, or named creature, not "dog." |
+| Movie character | Name a specific movie character, not just the film. |
+| Food | Name a specific dish, not a category like "pasta." |
+| TV character | Name a specific TV character, not just the show. |
 
-Draw uniformly from unused rows. Two rounds consume 2 check-ins + 2 stimuli. Five and six is surplus on purpose so a replay on Pack A still has unused lines **inside** one sitting; a **second sitting** with the same team should get Pack B (not authored in v1). If Pack B does not exist, staff reuse Pack A explicitly in console.
+Draw uniformly from unused rows at Start. Shuffle check-ins once and take two; shuffle stimuli once and take two. Round 1 and round 2 both get random unused lines — neither round is pinned to `sort_order`. Two rounds consume 2 check-ins + 2 stimuli. Five and six is surplus on purpose so a replay on Pack A still has unused lines **inside** one sitting; a **second sitting** with the same team should get Pack B (not authored in v1). If Pack B does not exist, staff reuse Pack A explicitly in console.
 
 ### 12.3 Authoring rules (Pack B later)
 
 - Workplace-readable. No prompt that forces a medical, legal, or HR disclosure.
 - Check-ins are about today / this week, not biography.
-- Stimulus is a concrete noun people can type in a few words.
+- Check-in copy must ask for a precise or uncommon adjective/word. Do not ask for a level, comparison, or “how is it going.”
+- Stimulus is a concrete noun people can type in a few words, and the prompt must ask for a **specific instance** (not “name a food / animal”).
 - Lobby sample copy must not duplicate these strings.
 
 ---
@@ -444,9 +448,10 @@ Giphy search is not persisted except as `search_query` on the owner’s own row.
 ## 14. Session end flow
 
 ```
-Last resolve (or Wrap) → scoreboard. Facilitator Continue advances everyone to NPS
+Last resolve (or Wrap) → scoreboard. Facilitator **Continue to debrief** advances everyone to NPS
 (`/session/[id]/feedback`). Completing NPS sends that person to reflection
-(`/session/[id]/reflection`).
+(`/session/[id]/reflection`). If Wrap left GIFs unrevealed, **On second thought, let’s do another round**
+returns to the next unresolved GIF. Hidden once the queue is finished.
 ```
 
 Reflection is the final screen. Do not park on NPS thank-you. Do not reload the protocol as “Replay.”
@@ -464,8 +469,10 @@ NPS is the platform feedback step (1–10 + optional comment).
 | Sequential one-at-a-time collection | **Withdrawn** (original chat spec) |
 | Rounds | Two collection rounds, then reveal |
 | Facilitator | Plays; also broadcasts / Next / Wrap |
+| Wrap | One click from `REVEAL_SHOW` to scoreboard. Resume remaining GIFs from scoreboard if any. |
+| End copy | Scoreboard **Continue to debrief** (NPS). |
 | Search query | `check-in answer + space + stimulus answer` |
-| Giphy | `rating=g` always; 9 results; 3×3; browser-side `NEXT_PUBLIC_GIPHY_API_KEY` |
+| Giphy | `rating=g` always; 12 results then Show more +12; 3×4; browser-side `NEXT_PUBLIC_GIPHY_API_KEY` |
 | Giphy key (prod) | Production key on unmute-app, not beta |
 | Giphy attribution | Official Powered By GIPHY mark under search results and under the reveal GIF; not typeset text |
 | Workplace fit | Honor system + notice; no extra filter in v1 |
@@ -529,7 +536,7 @@ If Giphy is down **in the product** but the rest of the app works: same paper/ph
 8. Timer expiry with no locks: owner still revealed; scores unchanged.
 9. Disconnect before Confirm does not stall the room; that person has no GIF in that round.
 10. Throttled-network: double Confirm does not write two rows; double Lock does not change the first name.
-11. Scoreboard Continue goes to existing NPS, then reflection — no Replay reload.
+11. Scoreboard Continue to debrief goes to existing NPS, then reflection — no Replay reload.
 12. Degraded fallback in the facilitator notes.
 13. After Search, the official Powered By GIPHY mark is visible under the grid (and under the GIF on reveal). Typeset “Powered by Giphy” alone fails this item.
 
@@ -549,7 +556,9 @@ Conversation + Season learnings resolved the original prompt’s gaps. These are
 | Pack B | Not authored. Reuse Pack A is a console override. |
 | Proxy Giphy server-side | No in v1. |
 | Persist GIFs into Supabase Storage | No. Store the Giphy URL. |
-| Extra cycle of new prompts after reveal | No. Wrap or scores. |
+| Extra cycle of new prompts after reveal | No. Wrap or scores. Resume remaining GIFs from the scoreboard is not a new collection round. |
+| Wrap confirm | No. One click to scoreboard. |
+| Prompt draw | Shuffle each bank at Start. Both rounds are random and unique. |
 
 No opt-outs from moment-conventions other than: no WAO tap-settle; collection has no timer.
 
@@ -566,7 +575,7 @@ One step at a time. Each independently testable. Do not greenfield a third engin
 5. Lobby explainer (fake sandwich / toaster only) + Start gate at 3.
 6. Persistent instruction copy + owner sit-out copy. Display names everywhere (no initials-only).
 7. Shared-laptop reveal treatment vs phone guess list.
-8. Wrap + scoreboard Continue → existing NPS → existing reflection. Delete Replay / Debrief.
+8. Wrap (one click) + scoreboard Continue to debrief → existing NPS → existing reflection. Delete Replay. Scoreboard “debrief” is the NPS label, not a separate screen.
 9. Pack A rows + `sessions.content_pack_id`. Stop reading prompts from a hardcoded module as the source of truth (a fixture module for tests is fine).
 10. Disconnect / connected-only collection advance (§9).
 11. Tight RLS on `ikwym_*` tables (replace `USING (true)`).

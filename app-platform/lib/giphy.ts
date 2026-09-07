@@ -4,6 +4,13 @@ export type GiphyGif = {
   previewUrl: string;
 };
 
+export type GiphyPage = {
+  gifs: GiphyGif[];
+  hasMore: boolean;
+};
+
+export const GIPHY_PAGE_SIZE = 12;
+
 type GiphySearchResponse = {
   data?: Array<{
     id: string;
@@ -12,16 +19,25 @@ type GiphySearchResponse = {
       fixed_height_small?: { url?: string };
     };
   }>;
+  pagination?: {
+    total_count?: number;
+    count?: number;
+    offset?: number;
+  };
 };
 
 /**
  * Search Giphy for GIFs. rating=g is always enforced.
- * Returns empty array on failure or missing API key.
+ * Returns an empty page on failure or missing API key.
  */
-export async function fetchGifs(query: string, limit: number = 9): Promise<GiphyGif[]> {
+export async function fetchGifs(
+  query: string,
+  limit: number = GIPHY_PAGE_SIZE,
+  offset: number = 0
+): Promise<GiphyPage> {
   const apiKey = process.env.NEXT_PUBLIC_GIPHY_API_KEY;
   if (!apiKey || !query.trim()) {
-    return [];
+    return { gifs: [], hasMore: false };
   }
 
   try {
@@ -29,18 +45,18 @@ export async function fetchGifs(query: string, limit: number = 9): Promise<Giphy
       api_key: apiKey,
       q: query.trim(),
       limit: String(limit),
+      offset: String(offset),
       rating: "g",
     });
 
     const res = await fetch(`https://api.giphy.com/v1/gifs/search?${params.toString()}`);
     if (!res.ok) {
-      return [];
+      return { gifs: [], hasMore: false };
     }
 
     const json = (await res.json()) as GiphySearchResponse;
     const data = json.data ?? [];
-
-    return data
+    const gifs = data
       .map((item) => {
         const url = item.images?.fixed_height?.url;
         const previewUrl = item.images?.fixed_height_small?.url;
@@ -48,7 +64,13 @@ export async function fetchGifs(query: string, limit: number = 9): Promise<Giphy
         return { id: item.id, url, previewUrl };
       })
       .filter((g): g is GiphyGif => g !== null);
+
+    const total = json.pagination?.total_count ?? 0;
+    const nextOffset = offset + data.length;
+    const hasMore = data.length > 0 && nextOffset < total;
+
+    return { gifs, hasMore };
   } catch {
-    return [];
+    return { gifs: [], hasMore: false };
   }
 }

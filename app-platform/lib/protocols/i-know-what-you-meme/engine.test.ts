@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { buildRevealOrder, isAllowedGifUrl, timerHasExpired } from "./engine";
+import { buildRevealOrder, isAllowedGifUrl, pickTwoUnique, timerHasExpired } from "./engine";
 
 describe("ikwym engine", () => {
   it("orders reveal as shuffled round 1 then shuffled round 2", () => {
@@ -34,5 +34,25 @@ describe("ikwym engine", () => {
     const startMs = Date.parse(start);
     assert.equal(timerHasExpired(start, startMs + 29_000, 30), false);
     assert.equal(timerHasExpired(start, startMs + 30_000, 30), true);
+  });
+
+  it("draws two unused prompts at random without repeating", () => {
+    const items = ["a", "b", "c", "d", "e"].map((id) => ({ id }));
+    const identityLike = () => 0.999;
+    const reversedLike = () => 0;
+    const firstTwo = pickTwoUnique(items, identityLike);
+    const otherTwo = pickTwoUnique(items, reversedLike);
+    assert.ok(firstTwo);
+    assert.ok(otherTwo);
+    assert.notEqual(firstTwo[0].id, firstTwo[1].id);
+    assert.notEqual(otherTwo[0].id, otherTwo[1].id);
+    assert.deepEqual(
+      firstTwo.map((row) => row.id),
+      ["a", "b"]
+    );
+    assert.notDeepEqual(
+      otherTwo.map((row) => row.id),
+      ["a", "b"]
+    );
   });
 });

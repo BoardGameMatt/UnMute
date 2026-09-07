@@ -13,6 +13,7 @@ const ACTION_TYPES = new Set<IkwymAction["type"]>([
   "timerExpired",
   "nextReveal",
   "wrap",
+  "resumeReveal",
   "advanceRecap",
 ]);
 

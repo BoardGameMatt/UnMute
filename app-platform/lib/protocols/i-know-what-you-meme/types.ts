@@ -25,6 +25,7 @@ export type IkwymAction =
   | { type: "timerExpired" }
   | { type: "nextReveal" }
   | { type: "wrap" }
+  | { type: "resumeReveal" }
   | { type: "advanceRecap" };
 
 export type RosterChip = {
@@ -77,6 +78,7 @@ export type IkwymPlayState = {
   canBroadcast: boolean;
   canNext: boolean;
   canWrap: boolean;
+  canResumeReveal: boolean;
   canAdvanceRecap: boolean;
   scores: ScoreRow[];
 };
