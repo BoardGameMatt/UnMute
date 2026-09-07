@@ -2,114 +2,121 @@
 
 Use this when no spec exists yet. Save completed specs to `docs/protocols/[slug]-spec-v1.md`.
 
-**Before drafting:** read [`docs/protocols/moment-conventions.md`](../../../docs/protocols/moment-conventions.md). Platform conventions (lobby explainer, session end flow, reflection, acceptance bar, etc.) are required for every Moment unless explicitly opted out with rationale.
+**Before drafting:** read [`docs/protocols/moment-conventions.md`](../../../docs/protocols/moment-conventions.md). Platform conventions are required unless the spec explicitly opts out with rationale.
+
+**Copy section order from** `docs/protocols/talk-track-spec-v1.md` or `docs/protocols/zoning-rights-spec-v1.md`. Do not copy the older WAO / Truth Is / Draw It By Ear documents for structure.
 
 ## Required sections
-
-Every build-ready spec must include:
 
 ### Header metadata
 
 ```markdown
-# [Protocol Name] — Protocol Spec v1
+# [Display Name] — Protocol Spec v1
 
 **Status:** Draft | Build spec, locked for v1
 **Slug:** `kebab-case-slug`
-**Type:** realtime | turnbased
-**Envelope:** [total minutes]
-**Players:** [min]–[max]
-**Owner:** [name]
+**Type:** realtime | turnbased | async
+**Players:** [min]–[max] (optimal …). Facilitator is a player.
+**Envelope:** ~[minutes] at optimal headcount
+**Owner:** Matt Hendricks
+**Pack mode:** `required` | `none`. Pack A is …
+
+This spec follows `docs/protocols/moment-conventions.md` except where it explicitly opts out, with rationale.
 ```
 
-### 1. What this protocol is
+### 1. What this Moment is
 
-One paragraph: surface mechanic + underlying payload (what interpersonal failure or insight it reveals).
+Surface mechanic + payload (what interpersonal failure or insight it reveals). Target dimensions if known.
 
-### 2. Core mechanic
+### 2. Players, join, device
+
+Start floor, cap, facilitator-as-player, phone + laptop, names close at Start (see moment-conventions §2).
+
+### 3. Lobby explainer
+
+Beat sequence for the animated teaching loop (see moment-conventions §1):
+- Beat captions (device setup, core action, key constraint, upside, penalty)
+- Sample data (must be fake/easy — **not** Pack A)
+- Fixed panel size
+- Which play UI components the explainer reuses
+
+### 4. Core mechanic
 
 Step-by-step player actions. Be explicit about:
 - What a tap/click/submit means
 - Visual states (if realtime sync)
 - Lock/submit paths (manual + timer expiry)
 - Post-timer settle behavior (if any)
+- Exact persistent play instruction copy
 
-### 3. Scoring
+### 5. Scoring
 
-- Point rules
-- Zero/partial credit rules
-- Tie-breaking
-- What gets shown at reveal
+Point rules, zero/partial credit, tie-breaking, what gets shown at reveal. Worked example.
 
-### 4. State machine
+### 6. State machine
 
-```
-LOBBY → PHASE_A → PHASE_B → ... → WRAP_UP → RESULTS
-```
+Named phases, who acts, timer or “no timer”, what advances.
 
-Each phase needs:
-- Who acts (all players, pairs, Lead only, rotating role)
-- Timer duration (if any)
-- What triggers transition to next phase
-- What each role sees
+### 7. UI notes (mobile-first)
 
-### 5. Roles & visibility
+Protocol label, UI state table (not color-only), timer thresholds, button states (grey → navy → amber).
+
+### 8. Roles & visibility
 
 | Role | Device | What they see | What they must NOT see |
 |------|--------|---------------|------------------------|
-| Lead | Phone | ... | ... |
+| Lead | Phone + laptop | ... | ... |
 | Member | Phone | ... | ... |
 
-### 6. UI notes (mobile-first)
+### 9. Edge cases
 
-Per phase: layout, protocol label, timer style, button states (grey → navy → amber flow for submits).
+Disconnect/reconnect, timer expiry with no input, min players, Lead end-early, late join closed.
 
-### 7. Edge cases
+### 10. Authorization boundary
 
-- Disconnect/reconnect
-- Timer expiry with no input
-- Minimum players not met
-- Lead end-early
+If service-role client is used: verification steps before every scoped read/write. Name the secret (words / image / permutation / GIF owner) and the network-tab test.
 
-### 8. Lobby explainer
+### 11. Facilitator script beats
 
-Beat sequence for the animated teaching loop (see moment-conventions §1):
-- Beat captions (device setup, core action, key constraint, upside, penalty)
-- Sample data (must be fake/easy — not real session content)
-- Which play UI components the explainer reuses
+Numbered list the Lead reads aloud. Include pre-empt for predictable objections. List Lead-only metrics.
 
-### 9. Persistent play instruction
+### 12. Content pack
 
-Exact on-screen copy visible throughout play, plus norms ("No searching. No chat." if applicable).
+`required` or `none`. What Pack A is. Intra-session uniqueness is not a pack. Engine loads through `sessions.content_pack_id`.
 
-### 10. Facilitator script beats
+### 13. Data model (protocol-specific)
 
-Numbered list the Lead reads aloud. Include pre-empt for predictable objections.
+Tables. What is public vs secret. Secrets do not live in open-RLS `state_json`.
 
-### 11. Session end flow
+### 14. Session end flow
 
-Scoreboard → NPS → Reflection. Protocol-specific scoreboard content.
+Scoreboard → NPS → Reflection. Protocol-specific scoreboard content. Reflection is the final screen.
 
-### 12. Reflection close
+### 15. Reflection close
 
-Standard Season prompts (see moment-conventions §8) plus optional facilitator prompt if room is quiet.
+Standard Season prompts (see moment-conventions §8) plus optional facilitator prompt if the room is quiet.
 
-### 13. Degraded fallback
+### 16. Locked decisions
+
+Table of what this conversation decided. Build must not reopen them.
+
+### 17. Degraded fallback
 
 How to run with zero platform. Written before build.
 
-### 14. Acceptance bar
+### 18. Acceptance bar
 
 Non-negotiable rehearsal criteria before live Season run (see moment-conventions §14).
 
-### 15. Authorization boundary
+### 19. Conservative leftovers
 
-If service-role client is used: verification steps before every scoped read/write.
+Calls the conversation did not make. Record the conservative option. Do not invent at build time.
 
-### 16. Build sequence
+### 20. Build sequence
 
 One change at a time, each step independently testable.
 
-### 17. Open questions
+### 21. Open questions
 
 List anything unresolved. Agent must not invent answers — flag and ask.
 
@@ -120,12 +127,14 @@ List anything unresolved. Agent must not invent answers — flag and ask.
 Before invoking implementation, verify:
 
 - [ ] Slug is final and kebab-case
+- [ ] Header includes pack mode and the follows-conventions line
 - [ ] State machine has no unnamed phases
 - [ ] Every phase has timer duration or "no timer"
-- [ ] Scoring has worked examples (at least 2 rounds)
-- [ ] Role visibility table is complete
-- [ ] Envelope time is realistic for player count range
-- [ ] Lobby explainer beats documented (moment-conventions §1)
+- [ ] Scoring has a worked example
+- [ ] Role visibility table is complete (including the secret)
+- [ ] Envelope time is realistic for the player-count range
+- [ ] Lobby explainer beats documented, sample data is not Pack A
 - [ ] Persistent play instruction copy is exact
 - [ ] Degraded fallback and acceptance bar present
 - [ ] Session end flow includes reflection as final screen
+- [ ] Locked decisions + conservative leftovers present

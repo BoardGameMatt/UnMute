@@ -10,6 +10,7 @@ import "./wrong-answers-only";
 import "./cover-story";
 import "./talk-track";
 import "./zoning-rights";
+import "./i-know-what-you-meme";
 
 export {
   getProtocol,

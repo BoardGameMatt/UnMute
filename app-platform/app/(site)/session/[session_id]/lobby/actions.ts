@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import { writeSessionEvent } from "@/lib/console/session-events";
 import { resetCoverStorySessionToLobby } from "@/lib/cover-story/session";
+import { resetIkwymToLobby, startIkwym } from "@/lib/protocols/i-know-what-you-meme/actions";
 import { resetTalkTrackToLobby, startTalkTrack } from "@/lib/protocols/talk-track/actions";
 import { resetZoningRightsToLobby, startZoningRights } from "@/lib/protocols/zoning-rights/actions";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -157,6 +158,19 @@ export async function startSessionAction(
     }
   }
 
+  if (protocolSlug === "i-know-what-you-meme") {
+    const { count, error: countErr } = await supabase
+      .from("session_participants")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { error: "Could not count the room." };
+    }
+    if ((count ?? 0) < 3) {
+      return { error: "Need 3 to start." };
+    }
+  }
+
   // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
@@ -189,6 +203,20 @@ export async function startSessionAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not start Zoning Rights.",
+      };
+    }
+  }
+
+  if (protocolSlug === "i-know-what-you-meme") {
+    try {
+      const admin = createServiceClient();
+      const started = await startIkwym(admin, sessionId);
+      if (!started.ok) {
+        return { error: started.error };
+      }
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not start I Know What You Meme.",
       };
     }
   }
@@ -302,6 +330,17 @@ export async function returnToLobbyAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not reset Zoning Rights.",
+      };
+    }
+  }
+
+  if (protocolSlug === "i-know-what-you-meme") {
+    try {
+      const admin = createServiceClient();
+      await resetIkwymToLobby(admin, sessionId);
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not reset I Know What You Meme.",
       };
     }
   }

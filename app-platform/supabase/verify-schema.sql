@@ -43,6 +43,13 @@ WITH expected AS (
   UNION ALL SELECT '021_zoning_rights.sql', 'table', 'zoning_rights_sessions', NULL
   UNION ALL SELECT '021_zoning_rights.sql', 'table', 'zoning_rights_rounds', NULL
   UNION ALL SELECT '021_zoning_rights.sql', 'table', 'zoning_rights_guesses', NULL
+  -- 022 drops team_round_index <= 3; no new object to detect.
+  -- I Know What You Meme (023)
+  UNION ALL SELECT '023_ikwym.sql', 'table', 'ikwym_prompts', NULL
+  UNION ALL SELECT '023_ikwym.sql', 'table', 'ikwym_sessions', NULL
+  UNION ALL SELECT '023_ikwym.sql', 'table', 'ikwym_responses', NULL
+  UNION ALL SELECT '023_ikwym.sql', 'table', 'ikwym_reveal_items', NULL
+  UNION ALL SELECT '023_ikwym.sql', 'table', 'ikwym_guesses', NULL
 ),
 present AS (
   SELECT

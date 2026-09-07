@@ -63,6 +63,12 @@ const CHECKS: SchemaCheck[] = [
   { migration: "021", moment: "Zoning Rights", table: "zoning_rights_sessions" },
   { migration: "021", moment: "Zoning Rights", table: "zoning_rights_rounds" },
   { migration: "021", moment: "Zoning Rights", table: "zoning_rights_guesses" },
+  // 022 drops team_round_index <= 3; no new table/column to detect.
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_prompts" },
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_sessions" },
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_responses" },
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_reveal_items" },
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_guesses" },
 ];
 
 async function checkObject(

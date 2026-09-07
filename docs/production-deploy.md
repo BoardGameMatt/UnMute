@@ -95,6 +95,7 @@ Open `app-platform/supabase/verify-schema.sql`, run the full script. Any row in 
 | Talk Track | `talk-track` | Start session → `talk_track_*` tables (needs `019`) |
 | Unmute Console | `/console` | Staff sign-in → `clients`, `staff_profiles` (needs `020`) |
 | Zoning Rights | `zoning-rights` | Start session → `zoning_rights_*` tables (needs `021`) |
+| I Know What You Meme | `i-know-what-you-meme` | Start session → `ikwym_*` tables (needs `023`). Giphy: `NEXT_PUBLIC_GIPHY_API_KEY` on unmute-app + redeploy. |
 
 ### Content seeds (after schema, when needed)
 
@@ -137,6 +138,7 @@ All files live in `app-platform/supabase/migrations/`. Production must have **ev
 | 019 | `019_talk_track.sql` | Talk Track + content packs |
 | 020 | `020_unmute_console.sql` | Unmute Console |
 | 021 | `021_zoning_rights.sql` | Zoning Rights |
+| 023 | `023_ikwym.sql` | I Know What You Meme |
 
 When adding migration `021+`, update this table, `verify-schema.sql`, and `scripts/verify-prod-schema.ts`.
 

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 42" role="img" aria-label="Powered By GIPHY">
+  <!--
+    Dark-on-light Powered By GIPHY lockup for API attribution.
+    Official zip was 403 at build time. The wordmark is drawn with
+    system fonts so the G cannot collapse into a filled blob.
+    Drop Giphy’s file here with the same name if you obtain it.
+  -->
+  <g fill="#121212">
+    <text
+      x="0"
+      y="11"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="8"
+      font-weight="700"
+      letter-spacing="1.6"
+    >POWERED BY</text>
+    <text
+      x="0"
+      y="38"
+      font-family="Arial Black, Arial, Helvetica, sans-serif"
+      font-size="26"
+      font-weight="900"
+      letter-spacing="1"
+    >GIPHY</text>
+  </g>
+</svg>

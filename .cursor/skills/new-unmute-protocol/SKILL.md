@@ -17,10 +17,12 @@ disable-model-invocation: true
 2. If no spec exists, stop and help the user draft one using [reference.md](reference.md).
 3. If the spec is ambiguous, choose the conservative option and note the choice in the spec or a short comment — do not invent mechanics.
 
-Existing spec examples:
-- `docs/protocols/wrong-answers-only-spec-v1.md`
-- `docs/Protocol_Spec_The_Truth_Is.md`
-- `docs/Protocol_Spec_Draw_It_By_Ear.md`
+Existing spec examples (spec shape, not just mechanics):
+- `docs/protocols/zoning-rights-spec-v1.md`
+- `docs/protocols/talk-track-spec-v1.md`
+- `docs/protocols/i-know-what-you-meme-spec-v1.md`
+- `docs/protocols/wrong-answers-only-spec-v1.md` — implementation patterns (timer, explainer, session end), not section order
+- `docs/protocols/cover-story-spec-v1.md` — async / opt-out example
 
 **Platform conventions (required for every Moment):** `docs/protocols/moment-conventions.md` — lobby explainer, timer, session end flow, reflection, acceptance bar, etc. Specs must comply unless they explicitly opt out with rationale.
 
@@ -39,8 +41,10 @@ Protocol build:
 - [ ] index.ts — registerProtocol()
 - [ ] Import added to app-platform/lib/protocols/index.ts
 - [ ] Action route wired in app/api/session/[id]/action/route.ts (if engine-backed)
+- [ ] SQL migration(s) added under app-platform/supabase/migrations/
 - [ ] Mobile-first participant views verified
 - [ ] /review-bugbot run before PR
+- [ ] Production: migrations applied + npm run verify:schema (see docs/production-deploy.md)
 ```
 
 ### Step 1: Confirm spec metadata
@@ -148,7 +152,11 @@ If the protocol has an engine, add a case in `app-platform/app/api/session/[id]/
 
 Follow the existing `the-truth-is` and `draw-it-by-ear` branches in that file.
 
-### Step 7: Pre-PR verification
+### Step 7: Migrations + production verification
+
+Every protocol that adds tables or columns needs a numbered file in
+`app-platform/supabase/migrations/`. Update `verify-prod-schema.ts` and
+`supabase/verify-schema.sql` if you add new required objects.
 
 Before opening a PR:
 
@@ -157,6 +165,13 @@ Before opening a PR:
 3. Role visibility constraints enforced server-side, not just hidden in UI
 4. Join codes remain 6-char uppercase alphanumeric (session shell, not protocol)
 5. Run `/review-bugbot` on branch changes
+
+Before merging to `main` or demoing on production:
+
+1. Apply pending migrations — `docs/production-deploy.md`
+2. Run `npm run verify:schema` from `app-platform/`
+3. Smoke-test the first action that writes to new schema
+4. Only then share join codes with facilitators
 
 ## Plan Mode integration
 
@@ -168,6 +183,7 @@ For a new protocol, prefer this sequence:
 4. **Build** — invoke this skill or say "implement per spec"
 5. **Local playtest** — run dev server, join as Lead + Members
 6. **PR + Bugbot**
+7. **Production** — migrations + `verify:schema` per `docs/production-deploy.md`
 
 ## Additional resources
 
