@@ -55,7 +55,8 @@ export default async function SessionFeedbackPage({ params }: FeedbackPageProps)
     protocolSlug === "wrong-answers-only" ||
     protocolSlug === "cover-story" ||
     protocolSlug === "talk-track" ||
-    protocolSlug === "zoning-rights";
+    protocolSlug === "zoning-rights" ||
+    protocolSlug === "i-know-what-you-meme";
 
   const { data: link, error: linkErr } = await supabase
     .from("session_participants")

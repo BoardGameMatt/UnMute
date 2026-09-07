@@ -1,10 +1,50 @@
 # Unmute Moment — Platform Conventions
 
 **Status:** Living document  
-**Reference implementation:** Wrong Answers Only (WAO) v1  
+**Implementation patterns:** Wrong Answers Only (WAO) — timer, explainer chrome, session end  
+**Spec shape:** Talk Track and Zoning Rights — copy these, not the older WAO / Truth Is / Draw It By Ear documents  
 **Applies to:** Every new protocol / Moment spec in `docs/protocols/`
 
 Individual protocol specs define *game mechanics*. This document defines *platform patterns* every Moment must follow unless the spec explicitly opts out with rationale.
+
+---
+
+## 0. Vocabulary and spec shape (required)
+
+**Protocol** is the code term: table names, slugs, `registerProtocol()`, directory paths, route segments. Do not rename those.
+
+**Moment** is the product term. Specs, facilitator copy, and anything a non-engineer reads say Moment. A spec title may still read “Protocol Spec v1” so it matches the existing files.
+
+### Header every spec starts with
+
+```markdown
+# [Display Name] — Protocol Spec v1
+
+**Status:** Draft | Build spec, locked for v1
+**Slug:** `kebab-case`
+**Type:** realtime | turnbased | async
+**Players:** [min]–[max] (optimal …). Facilitator is a player.
+**Envelope:** ~[minutes] at optimal headcount
+**Owner:** Matt Hendricks
+**Pack mode:** `required` | `none`. Pack A is …
+
+This spec follows `docs/protocols/moment-conventions.md` except where it explicitly opts out, with rationale.
+```
+
+### Opening sections (in this order)
+
+1. **What this Moment is** — surface mechanic, then the payload (what it reveals about people). Target dimensions if known (Season default: D3 / D8 primary, D2 secondary).
+2. **Players, join, device** — start floor, cap, facilitator-as-player, join rules from §2.
+3. **Lobby explainer** — beat table + fake sample data.
+4. Then mechanic, scoring, state machine, UI, visibility, edges.
+
+### Closing sections every locked spec needs
+
+- **Locked decisions** — table of what the conversation actually decided.
+- **Conservative leftovers** — calls the conversation did not make. Build must not invent further mechanics.
+- Spec checklist (copy from §16).
+
+WAO remains the *implementation* reference. It is not the spec-shape reference. Do not copy its section order or “amendments from live testing” structure for new Moments.
 
 ---
 
@@ -35,7 +75,11 @@ Every lobby explainer must include at minimum:
 4. **Scoring upside** — What good play looks like
 5. **Penalty / zero rule** — What kills a round or score (if applicable)
 
-Use **easy sample data** — never real session content. Reuse shared visual components from play UI where possible (WAO: `WaoItemFace` in the explainer matches play).
+Use **easy sample data** — never real session content, never Pack A items. Reuse shared visual components from play UI where possible (WAO: `WaoItemFace` in the explainer matches play).
+
+If the Moment has a second mode (team play, Sitting B, extra cycles), the **v1 lobby loop teaches the first mode only**. The facilitator can still run the rest in the sitting.
+
+The looping panel is **one fixed size for every beat** (CSS grid overlap so the stage is as tall as the tallest beat). Do not grow/shrink the shell as captions change. (Zoning Rights playtest: resizing the explainer is more distracting than the teaching.)
 
 ### Visual shell
 
@@ -64,7 +108,7 @@ Every protocol spec must include a **§ Lobby explainer** section listing:
 
 ---
 
-## 2. Device & session context (required)
+## 2. Device, join, and the facilitator (required)
 
 All virtual Moments assume:
 
@@ -72,7 +116,19 @@ All virtual Moments assume:
 |------------|---------------|
 | Phone is primary controller | "Phone is the primary controller; desktop works but is not optimized." |
 | Video call stays on laptop | Persistent norm; first lobby explainer beat teaches it |
-| Lead on phone + laptop | Lead sees facilitator controls on phone; shared screen shows join QR |
+| Lead on phone + laptop | Lead sees facilitator controls on phone; shared screen shows join QR / the public board |
+
+### Join and identity (default unless the spec opts out)
+
+- No auth. Lobby: display name.
+- Same 6-character uppercase alphanumeric join code as every Moment.
+- **New names close at Start.** Cookie / tap-your-name rejoin works for people already on the roster.
+- **No Admit late in v1** (Cover Story is the documented exception: field period + private pick links).
+- Display names on play and reveal — initials alone are insufficient.
+
+### Facilitator is a player (default)
+
+The session Lead **plays**. They also get Lead-only chrome (advance, extra round, end). Specs that keep the facilitator off the mechanic must opt out with rationale. Cover Story, Talk Track, and Zoning Rights all lock this as “they play.”
 
 ---
 
@@ -206,7 +262,7 @@ Spec § Technical constraints must mention tap reliability if participants mutat
 
 ---
 
-## 12. Authorization (when using service-role client)
+## 12. Authorization and secrets (when using service-role client)
 
 If RLS is bypassed via service client for performance:
 
@@ -215,7 +271,15 @@ Every route must verify **before** touching service client:
 2. Participant belongs to the session
 3. Pair/team scope matches caller (for scoped reads/writes)
 
-Document in spec § Authorization boundary. Acceptance bar must include cross-participant access test.
+Document in spec § Authorization boundary. Acceptance bar must include a **network-tab** test that the secret never appears on the wrong client.
+
+### Secrets do not live on an open channel
+
+Talk Track’s card words, Draw It By Ear’s image, Zoning Rights’ Zoning Manager permutation, and I Know What You Meme’s GIF owner are the same class of secret.
+
+- Do **not** put those fields on `session_state.state_json` if that column is open RLS, and do **not** put them on a session-wide Realtime channel.
+- Play-state reads are **role-filtered**: strip the secret unless the caller is allowed to see it in that phase.
+- Optimistic local UI is allowed; **server truth at lock / timer expiry / reveal**.
 
 ---
 
@@ -245,7 +309,7 @@ Customize items 3–4 per protocol; items 1, 2, 5, 6, 7 are platform-standard.
 
 The mechanic of a Moment is stable. The payload (questions, images, agencies, prompt banks) is a **content pack**. Teams that run the same Moment again get a different pack so the interaction is familiar and the items are not.
 
-Full model, console defaulting, and usage rules: [`docs/unmute-console-spec-v1.md`](../unmute-console-spec-v1.md) §8.4.
+Full model, console defaulting, and usage rules: [`docs/unmute-console-spec-v1.md`](../unmute-console-spec-v1.md) §7.4.
 
 Every new protocol spec must declare:
 
@@ -265,18 +329,22 @@ Protocol engines load content **through `sessions.content_pack_id`**. A query th
 
 Before marking a spec "locked for v1":
 
-- [ ] § Lobby explainer — beat list + sample data
+- [ ] Header — slug, type, players, envelope, pack mode, follows-conventions line
+- [ ] § What this Moment is — surface vs payload
+- [ ] § Players, join, device — facilitator-as-player called
+- [ ] § Lobby explainer — beat list + sample data (fake / not Pack A); fixed panel size
 - [ ] § Device context — phone + laptop video
 - [ ] § UI states — shape/weight table (if multi-state)
 - [ ] § Timer — durations and presentation thresholds (if timed)
 - [ ] § Persistent play instruction — exact copy
-- [ ] § Facilitator script beats
+- [ ] § Facilitator script beats — plus which Lead-only metrics appear
 - [ ] § Session end flow — scoreboard → NPS → reflection
 - [ ] § Reflection — standard prompts + optional facilitator prompt
 - [ ] § Degraded fallback
-- [ ] § Acceptance bar
+- [ ] § Acceptance bar — includes network-tab secret test when a secret exists
 - [ ] § Authorization boundary (if service-role routes)
 - [ ] § Content pack — pack-required or pack-none, and what Pack A is
+- [ ] § Locked decisions + conservative leftovers
 - [ ] § Build sequence — one step at a time, independently testable
 
 ---
@@ -294,3 +362,4 @@ Before marking a spec "locked for v1":
 | Reflection close | `app-platform/components/session/session-reflection-view.tsx` |
 | Progress bar | `app-platform/components/ui/SessionProgressBar.tsx` |
 | Registry hook | `lobbyExplainer` on `ProtocolDefinition` in `lib/protocols/registry.ts` |
+| Spec shape (copy this) | `docs/protocols/talk-track-spec-v1.md`, `docs/protocols/zoning-rights-spec-v1.md` |

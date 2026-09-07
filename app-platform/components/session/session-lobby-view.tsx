@@ -251,6 +251,8 @@ export function SessionLobbyView({
               ? "Once everyone has joined, explain how Talk Track works. Then start the demo — you will be the guesser."
               : hasEnoughToStart
               ? "Do not press Start until everyone has joined."
+              : protocolSlug === "i-know-what-you-meme"
+                ? "Need 3 to start."
               : `Start unlocks when at least ${minPlayers} ${
                   protocolSlug === "cover-story" ? "players" : "people"
                 } have joined. ${participantCount} here so far.`}

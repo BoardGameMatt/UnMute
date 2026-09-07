@@ -193,6 +193,16 @@ async function main(): Promise<void> {
       max_players: 20,
       config_schema: {},
     },
+    {
+      slug: "i-know-what-you-meme",
+      name: "I Know What You Meme",
+      description:
+        "Answer the same two prompts with a GIF, then guess who picked each one.",
+      type: "turnbased",
+      min_players: 3,
+      max_players: 20,
+      config_schema: {},
+    },
   ];
 
   const { error: protocolsError } = await supabase

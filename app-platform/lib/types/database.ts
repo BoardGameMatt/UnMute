@@ -1005,6 +1005,92 @@ export type ZoningRightsGuessInsert = Omit<ZoningRightsGuess, "id" | "created_at
   is_exact?: boolean | null;
 };
 
+export interface IkwymPrompt {
+  id: string;
+  content_pack_id: string;
+  kind: string;
+  label: string;
+  prompt: string;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export type IkwymPromptInsert = Omit<IkwymPrompt, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  active?: boolean;
+  sort_order?: number;
+};
+
+export interface IkwymSession {
+  session_id: string;
+  phase: string;
+  round_index: number;
+  r1_checkin_id: string;
+  r1_stimulus_id: string;
+  r2_checkin_id: string;
+  r2_stimulus_id: string;
+  current_reveal_item_id: string | null;
+  guess_started_at: string | null;
+  created_at: string;
+}
+
+export type IkwymSessionInsert = Omit<IkwymSession, "created_at"> & {
+  created_at?: string;
+  current_reveal_item_id?: string | null;
+  guess_started_at?: string | null;
+  phase?: string;
+  round_index?: number;
+};
+
+export interface IkwymResponse {
+  id: string;
+  session_id: string;
+  participant_id: string;
+  round: number;
+  gif_url: string;
+  open_response: string;
+  stimulus_response: string;
+  search_query: string;
+  created_at: string;
+}
+
+export type IkwymResponseInsert = Omit<IkwymResponse, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export interface IkwymRevealItem {
+  id: string;
+  session_id: string;
+  sort_index: number;
+  round: number;
+  owner_id: string;
+  gif_url: string;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+export type IkwymRevealItemInsert = Omit<IkwymRevealItem, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  resolved_at?: string | null;
+};
+
+export interface IkwymGuess {
+  id: string;
+  reveal_item_id: string;
+  participant_id: string;
+  guessed_participant_id: string;
+  locked_at: string;
+}
+
+export type IkwymGuessInsert = Omit<IkwymGuess, "id"> & {
+  id?: string;
+  locked_at?: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -1276,6 +1362,36 @@ export type Database = {
         Row: ZoningRightsGuess;
         Insert: ZoningRightsGuessInsert;
         Update: Partial<ZoningRightsGuessInsert>;
+        Relationships: [];
+      };
+      ikwym_prompts: {
+        Row: IkwymPrompt;
+        Insert: IkwymPromptInsert;
+        Update: Partial<IkwymPromptInsert>;
+        Relationships: [];
+      };
+      ikwym_sessions: {
+        Row: IkwymSession;
+        Insert: IkwymSessionInsert;
+        Update: Partial<IkwymSessionInsert>;
+        Relationships: [];
+      };
+      ikwym_responses: {
+        Row: IkwymResponse;
+        Insert: IkwymResponseInsert;
+        Update: Partial<IkwymResponseInsert>;
+        Relationships: [];
+      };
+      ikwym_reveal_items: {
+        Row: IkwymRevealItem;
+        Insert: IkwymRevealItemInsert;
+        Update: Partial<IkwymRevealItemInsert>;
+        Relationships: [];
+      };
+      ikwym_guesses: {
+        Row: IkwymGuess;
+        Insert: IkwymGuessInsert;
+        Update: Partial<IkwymGuessInsert>;
         Relationships: [];
       };
     };
