@@ -385,6 +385,13 @@ export async function dispatchIkwymAction(input: {
     const currentIndex = items.findIndex((row) => row.id === ikwym.current_reveal_item_id);
     const next = items[currentIndex + 1];
     if (!next) {
+      const leftover = items.filter((row) => !row.resolved_at).map((row) => row.id);
+      if (leftover.length > 0) {
+        await admin
+          .from("ikwym_reveal_items")
+          .update({ resolved_at: new Date().toISOString() })
+          .in("id", leftover);
+      }
       await goScoreboard(admin, sessionId);
       return { ok: true };
     }

@@ -209,7 +209,11 @@ export async function buildIkwymPlayState(input: {
     eligibleCount: eligible.length,
     canBroadcast: isLead && PROMPT_PHASES.has(ikwym.phase),
     canNext: isLead && ikwym.phase === "REVEAL_SHOW",
-    canWrap: isLead && ikwym.phase === "REVEAL_SHOW",
+    canWrap:
+      isLead &&
+      ikwym.phase === "REVEAL_SHOW" &&
+      Boolean(current) &&
+      revealIndex < items.length - 1,
     canResumeReveal:
       isLead && ikwym.phase === "SCOREBOARD" && items.some((row) => !row.resolved_at),
     canAdvanceRecap: isLead && ikwym.phase === "SCOREBOARD",

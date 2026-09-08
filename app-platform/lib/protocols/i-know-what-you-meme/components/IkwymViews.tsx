@@ -495,7 +495,7 @@ export function IkwymViews({ sessionId, state, pending, error, send }: ViewsProp
               )}
               {state.isLead ? (
                 <>
-                  {state.roster.length >= 11 ? (
+                  {state.canWrap && state.roster.length >= 11 ? (
                     <p className="text-center font-body text-sm text-slate">
                       Wrap after roughly one GIF per person, or sooner.
                     </p>
@@ -506,9 +506,11 @@ export function IkwymViews({ sessionId, state, pending, error, send }: ViewsProp
                   >
                     {lastGif ? "See scores" : "Next GIF"}
                   </PrimaryButton>
-                  <NavyButton disabled={pending || !state.canWrap} onClick={() => void send({ type: "wrap" })}>
-                    Wrap things up
-                  </NavyButton>
+                  {state.canWrap ? (
+                    <NavyButton disabled={pending} onClick={() => void send({ type: "wrap" })}>
+                      Wrap things up
+                    </NavyButton>
+                  ) : null}
                 </>
               ) : (
                 <p className="text-center font-body text-slate">Waiting for the facilitator.</p>
