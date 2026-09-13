@@ -81,6 +81,12 @@ If the Moment has a second mode (team play, Sitting B, extra cycles), the **v1 l
 
 The looping panel is **one fixed size for every beat** (CSS grid overlap so the stage is as tall as the tallest beat). Do not grow/shrink the shell as captions change. (Zoning Rights playtest: resizing the explainer is more distracting than the teaching.)
 
+### Beat dots (required)
+
+Looping explainers show **visible progress dots under the stage** — one dot per beat, current beat filled `unmute-navy`, idle dots `cloud-grey`/`slate` outline. Dots are indicators, not controls: they do not skip beats. Shared component: `LobbyExplainerDots` in `app-platform/components/ui/LobbyExplainerDots.tsx`.
+
+`useReducedMotion()` stacked panels omit the dots (every beat is already on screen).
+
 ### Visual shell
 
 ```tsx
@@ -103,7 +109,8 @@ The looping panel is **one fixed size for every beat** (CSS grid overlap so the 
 
 Every protocol spec must include a **§ Lobby explainer** section listing:
 - Beat sequence (caption text for each beat)
-- Sample data used (must be obviously fake / easy)
+- Sample data used (must be obviously fake / easy), **or** an explicit “no sample words / clues / answers” rule with rationale
+- Beat-dot count matching the loop
 - Which play UI components are reused
 
 ---
@@ -354,6 +361,7 @@ Before marking a spec "locked for v1":
 | Pattern | Implementation |
 |---------|----------------|
 | Lobby explainer | `app-platform/lib/protocols/wrong-answers-only/components/WaoLobbyExplainer.tsx` |
+| Lobby explainer dots | `app-platform/components/ui/LobbyExplainerDots.tsx` |
 | Item visual states | `app-platform/lib/protocols/wrong-answers-only/components/WaoItemFace.tsx` |
 | Timer | `app-platform/lib/protocols/wrong-answers-only/components/WaoPlayTimer.tsx` |
 | Reveal buckets | `app-platform/lib/protocols/wrong-answers-only/components/WaoRevealView.tsx` |

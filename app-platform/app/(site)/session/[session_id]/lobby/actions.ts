@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import { writeSessionEvent } from "@/lib/console/session-events";
 import { resetCoverStorySessionToLobby } from "@/lib/cover-story/session";
+import { resetCodeSwitchToLobby, startCodeSwitch } from "@/lib/protocols/code-switch/actions";
 import { resetIkwymToLobby, startIkwym } from "@/lib/protocols/i-know-what-you-meme/actions";
 import { resetTalkTrackToLobby, startTalkTrack } from "@/lib/protocols/talk-track/actions";
 import { resetZoningRightsToLobby, startZoningRights } from "@/lib/protocols/zoning-rights/actions";
@@ -171,6 +172,19 @@ export async function startSessionAction(
     }
   }
 
+  if (protocolSlug === "code-switch") {
+    const { count, error: countErr } = await supabase
+      .from("session_participants")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { error: "Could not count the room." };
+    }
+    if ((count ?? 0) < 4) {
+      return { error: "Need 4 to start." };
+    }
+  }
+
   // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
@@ -217,6 +231,20 @@ export async function startSessionAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not start I Know What You Meme.",
+      };
+    }
+  }
+
+  if (protocolSlug === "code-switch") {
+    try {
+      const admin = createServiceClient();
+      const started = await startCodeSwitch(admin, sessionId);
+      if (!started.ok) {
+        return { error: started.error };
+      }
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not start SwitchCode.",
       };
     }
   }
@@ -341,6 +369,17 @@ export async function returnToLobbyAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not reset I Know What You Meme.",
+      };
+    }
+  }
+
+  if (protocolSlug === "code-switch") {
+    try {
+      const admin = createServiceClient();
+      await resetCodeSwitchToLobby(admin, sessionId);
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not reset SwitchCode.",
       };
     }
   }

@@ -66,6 +66,14 @@ export function SessionLobbyView({
   const hasLead = participants.some((p) => p.roleInSession === "lead");
   const leadName =
     participants.find((p) => p.roleInSession === "lead")?.displayName ?? null;
+  const joinHintHost = useMemo(() => {
+    try {
+      const host = new URL(joinUrl).host;
+      return host ? `${host}/join` : JOIN_URL_DISPLAY;
+    } catch {
+      return JOIN_URL_DISPLAY;
+    }
+  }, [joinUrl]);
 
   // After transferring lead away, this client is no longer lead — refresh role.
   useEffect(() => {
@@ -170,7 +178,7 @@ export function SessionLobbyView({
           </div>
           <p className="text-center font-body text-sm text-slate">
             <span className="font-body">Can&apos;t scan? Go to </span>
-            <span className="font-mono text-unmute-navy">{JOIN_URL_DISPLAY}</span>
+            <span className="font-mono text-unmute-navy">{joinHintHost}</span>
             <span className="font-body"> and enter this code</span>
           </p>
         </section>
@@ -253,6 +261,8 @@ export function SessionLobbyView({
               ? "Do not press Start until everyone has joined."
               : protocolSlug === "i-know-what-you-meme"
                 ? "Need 3 to start."
+              : protocolSlug === "code-switch"
+                ? "Need 4 to start."
               : `Start unlocks when at least ${minPlayers} ${
                   protocolSlug === "cover-story" ? "players" : "people"
                 } have joined. ${participantCount} here so far.`}

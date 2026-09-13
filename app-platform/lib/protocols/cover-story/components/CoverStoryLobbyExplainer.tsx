@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { LobbyExplainerDots } from "@/components/ui/LobbyExplainerDots";
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 const BEATS = [
@@ -81,6 +82,7 @@ export function CoverStoryLobbyExplainer() {
           <p className="mt-2 font-body text-base text-charcoal">{current.body}</p>
         </motion.div>
       </AnimatePresence>
+      <LobbyExplainerDots count={BEATS.length} current={beat} />
     </section>
   );
 }
