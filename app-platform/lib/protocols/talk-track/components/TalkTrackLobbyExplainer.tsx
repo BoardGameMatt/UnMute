@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { LobbyExplainerDots } from "@/components/ui/LobbyExplainerDots";
 import { TrainOrder } from "./TrainOrder";
 
 const EASE = [0.4, 0, 0.2, 1] as const;
@@ -288,21 +289,6 @@ function RulesPane() {
   );
 }
 
-function PaneDots({ current }: { current: number }) {
-  return (
-    <div className="mt-4 flex justify-center gap-2" aria-hidden="true">
-      {Array.from({ length: PANE_COUNT }, (_, i) => (
-        <span
-          key={i}
-          className={`h-1.5 w-1.5 rounded-full ${
-            i === current ? "bg-unmute-navy" : "bg-cloud-grey"
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
-
 function Stage({ pane, wordStep }: { pane: number; wordStep: number }) {
   return (
     <div className="h-full">
@@ -365,7 +351,7 @@ export function TalkTrackLobbyExplainer() {
           </motion.div>
         </AnimatePresence>
       </div>
-      <PaneDots current={pane} />
+      <LobbyExplainerDots count={PANE_COUNT} current={pane} />
     </Shell>
   );
 }

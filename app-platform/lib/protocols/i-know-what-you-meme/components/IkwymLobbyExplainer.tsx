@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { LobbyExplainerDots } from "@/components/ui/LobbyExplainerDots";
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 const PANE_MS = 5000;
@@ -221,25 +222,6 @@ function PaneBody({ index }: { index: number }) {
   );
 }
 
-function PaneDots({ current }: { current: number }) {
-  return (
-    <div
-      className="mt-5 flex justify-center gap-2.5"
-      role="img"
-      aria-label={`How it works, step ${current + 1} of ${PANES.length}`}
-    >
-      {PANES.map((pane, i) => (
-        <span
-          key={pane.caption}
-          className={`h-2.5 w-2.5 rounded-full ${
-            i === current ? "bg-unmute-navy" : "border-2 border-slate bg-transparent"
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
-
 export function IkwymLobbyExplainer() {
   const reduce = useReducedMotion();
   const [beat, setBeat] = useState(0);
@@ -282,7 +264,7 @@ export function IkwymLobbyExplainer() {
           <PaneBody index={beat} />
         </motion.div>
       </div>
-      <PaneDots current={beat} />
+      <LobbyExplainerDots count={PANES.length} current={beat} />
     </Shell>
   );
 }

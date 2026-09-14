@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { LobbyExplainerDots } from "@/components/ui/LobbyExplainerDots";
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 const PANE_MS = 5000;
@@ -208,21 +209,6 @@ function PaneBody({ index }: { index: number }) {
   );
 }
 
-function PaneDots({ current }: { current: number }) {
-  return (
-    <div className="mt-4 flex justify-center gap-2" aria-hidden="true">
-      {PANES.map((pane, i) => (
-        <span
-          key={pane.caption}
-          className={`h-1.5 w-1.5 rounded-full ${
-            i === current ? "bg-unmute-navy" : "bg-cloud-grey"
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
-
 export function ZoningRightsLobbyExplainer() {
   const reduce = useReducedMotion();
   const [beat, setBeat] = useState(0);
@@ -265,7 +251,7 @@ export function ZoningRightsLobbyExplainer() {
           <PaneBody index={beat} />
         </motion.div>
       </div>
-      <PaneDots current={beat} />
+      <LobbyExplainerDots count={PANES.length} current={beat} />
     </Shell>
   );
 }

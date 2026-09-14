@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { WaoItemVisualState } from "@/lib/wao/types";
+import { LobbyExplainerDots } from "@/components/ui/LobbyExplainerDots";
 import { WaoItemFace } from "./WaoItemFace";
 
 /**
@@ -316,6 +317,7 @@ function AnimatedLoop() {
   }, [beat]);
 
   return (
+    <div className="flex flex-col">
     <div
       className="grid"
       aria-label="How Wrong Answers Only works"
@@ -375,6 +377,8 @@ function AnimatedLoop() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+    </div>
+      <LobbyExplainerDots count={BEAT_COUNT} current={beat} />
     </div>
   );
 }
