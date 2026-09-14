@@ -11,6 +11,7 @@ import {
   pickGuesser,
   pickWord,
   rankShownStats,
+  publicRevealFields,
   roundTypeLabel,
   roundTypeRule,
   timerHasExpired,
@@ -123,6 +124,34 @@ describe("clocks", () => {
     const startMs = Date.parse(start);
     assert.equal(timerHasExpired(start, startMs + 29_999, 30), false);
     assert.equal(timerHasExpired(start, startMs + 30_000, 30), true);
+  });
+});
+
+describe("publicRevealFields", () => {
+  it("strips the secret word when the round was abandoned", () => {
+    const fields = publicRevealFields({
+      phase: "reveal",
+      endReason: "abandoned",
+      word: "OCEAN",
+      guessText: "sea",
+      isHit: false,
+    });
+    assert.equal(fields.abandoned, true);
+    assert.equal(fields.targetWord, null);
+    assert.equal(fields.guessText, null);
+    assert.equal(fields.isHit, null);
+  });
+
+  it("still publishes the word on a normal miss", () => {
+    const fields = publicRevealFields({
+      phase: "reveal",
+      endReason: "timer",
+      word: "OCEAN",
+      guessText: null,
+      isHit: false,
+    });
+    assert.equal(fields.abandoned, false);
+    assert.equal(fields.targetWord, "OCEAN");
   });
 });
 

@@ -4,6 +4,7 @@ import { abandonIfGuesserGone, expireIfNeeded, shownStatsForSession } from "./ac
 import {
   GUESS_SECONDS,
   WRITE_SECONDS,
+  publicRevealFields,
   rankShownStats,
 } from "./engine";
 import {
@@ -30,7 +31,8 @@ function instructionFor(
   phase: CodeSwitchPhase,
   role: ViewerRole,
   roundType: "shared" | "unique" | null,
-  guesserName: string
+  guesserName: string,
+  abandoned: boolean
 ): { instruction: string; persistent: string } {
   if (role === "guesser") {
     if (phase === "write") {
@@ -66,6 +68,12 @@ function instructionFor(
     };
   }
   if (phase === "reveal") {
+    if (abandoned) {
+      return {
+        instruction: "The guesser left. This round doesn’t count.",
+        persistent: "",
+      };
+    }
     return { instruction: "That’s the word.", persistent: "" };
   }
   if (phase === "scoreboard") {
@@ -106,7 +114,20 @@ export async function buildCodeSwitchPlayState(input: {
   const secretWord = secretOk && wordRow ? wordRow.word : null;
 
   const guesserName = round ? names[round.guesser_id] ?? "Guesser" : "Guesser";
-  const copy = instructionFor(cs?.phase ?? "lobby", viewerRole, roundType, guesserName);
+  const reveal = publicRevealFields({
+    phase: cs?.phase ?? "lobby",
+    endReason: round?.end_reason,
+    word: wordRow?.word ?? null,
+    guessText: round?.guess_text ?? null,
+    isHit: round?.is_hit ?? null,
+  });
+  const copy = instructionFor(
+    cs?.phase ?? "lobby",
+    viewerRole,
+    roundType,
+    guesserName,
+    reveal.abandoned
+  );
 
   const present = connectedIds(roster);
   const giverPool =
@@ -130,11 +151,12 @@ export async function buildCodeSwitchPlayState(input: {
   const consumed = rounds.filter((row) => row.end_reason !== "abandoned").length;
   const remainingWords = Math.max(0, packWords.length - consumed);
 
-  const showBoard = cs?.phase === "guess" || cs?.phase === "reveal" || cs?.phase === "scoreboard";
-  const showReveal = cs?.phase === "reveal" || cs?.phase === "scoreboard";
+  const showBoard =
+    cs?.phase === "guess" ||
+    ((cs?.phase === "reveal" || cs?.phase === "scoreboard") && !reveal.abandoned);
 
   let breakdown: ClueBreakdownRow[] | null = null;
-  if (cs?.phase === "reveal" && viewerRole === "clueGiver" && round) {
+  if (cs?.phase === "reveal" && viewerRole === "clueGiver" && round && !reveal.abandoned) {
     breakdown = clues.map((clue) => ({
       displayName: names[clue.participant_id] ?? "Player",
       text: clue.raw_text,
@@ -181,9 +203,10 @@ export async function buildCodeSwitchPlayState(input: {
     word: secretWord,
     roundType,
     filteredClues: showBoard ? round?.filtered_clues_json ?? [] : [],
-    targetWord: showReveal ? wordRow?.word ?? null : null,
-    guessText: showReveal ? round?.guess_text ?? null : null,
-    isHit: showReveal ? round?.is_hit ?? null : null,
+    abandoned: reveal.abandoned,
+    targetWord: reveal.targetWord,
+    guessText: reveal.guessText,
+    isHit: reveal.isHit,
     breakdown,
     shownLeaderboard: stats,
     shownTheMostName: shownTheMost && shownTheMost.shownCount > 0 ? shownTheMost.displayName : null,

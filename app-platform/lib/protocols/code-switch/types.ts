@@ -60,6 +60,8 @@ export type CodeSwitchPlayState = {
   /** Clue givers only during write. Never on guesser or display. */
   roundType: RoundType | null;
   filteredClues: string[];
+  /** True when the guesser dropped after deal. Secret word stays off every client. */
+  abandoned: boolean;
   targetWord: string | null;
   guessText: string | null;
   isHit: boolean | null;

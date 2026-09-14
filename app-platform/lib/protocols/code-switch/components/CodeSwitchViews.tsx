@@ -251,26 +251,37 @@ export function CodeSwitchViews({
       {state.phase === "reveal" ? (
         <>
           <div className="rounded-lg border border-cloud-grey bg-warm-white p-6 text-center">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
-              {state.isHit ? "Got it" : "Miss"}
-            </p>
-            <p className="mt-2 font-display text-3xl font-bold text-unmute-navy">
-              {state.targetWord}
-            </p>
-            <p className="mt-2 font-body text-slate">
-              Guess: {state.guessText?.trim() ? state.guessText : "—"}
-            </p>
-            {state.isHit ? (
-              <p className="mt-2 font-display text-xl text-unmute-navy" aria-hidden="true">
-                ✓
-              </p>
-            ) : null}
+            {state.abandoned ? (
+              <>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
+                  Round skipped
+                </p>
+                <p className="mt-2 font-body text-charcoal">{state.instruction}</p>
+              </>
+            ) : (
+              <>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">
+                  {state.isHit ? "Got it" : "Miss"}
+                </p>
+                <p className="mt-2 font-display text-3xl font-bold text-unmute-navy">
+                  {state.targetWord}
+                </p>
+                <p className="mt-2 font-body text-slate">
+                  Guess: {state.guessText?.trim() ? state.guessText : "—"}
+                </p>
+                {state.isHit ? (
+                  <p className="mt-2 font-display text-xl text-unmute-navy" aria-hidden="true">
+                    ✓
+                  </p>
+                ) : null}
+              </>
+            )}
             <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-steel-blue">
               Team score
             </p>
             <p className="font-display text-4xl font-bold text-unmute-navy">{state.teamScore}</p>
           </div>
-          <ClueTiles clues={state.filteredClues} />
+          {state.abandoned ? null : <ClueTiles clues={state.filteredClues} />}
           {state.breakdown ? (
             <ul className="space-y-2">
               {state.breakdown.map((row) => (

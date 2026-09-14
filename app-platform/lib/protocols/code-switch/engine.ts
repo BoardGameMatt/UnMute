@@ -159,3 +159,27 @@ export function rankShownStats(rows: ShownStat[]): ShownStat[] {
     return a.displayName.localeCompare(b.displayName);
   });
 }
+
+/** Abandoned rounds must not publish the secret word, guess, or hit/miss. */
+export function publicRevealFields(input: {
+  phase: string;
+  endReason: string | null | undefined;
+  word: string | null;
+  guessText: string | null;
+  isHit: boolean | null;
+}): {
+  abandoned: boolean;
+  targetWord: string | null;
+  guessText: string | null;
+  isHit: boolean | null;
+} {
+  const abandoned = input.endReason === "abandoned";
+  const showReveal =
+    !abandoned && (input.phase === "reveal" || input.phase === "scoreboard");
+  return {
+    abandoned,
+    targetWord: showReveal ? input.word : null,
+    guessText: showReveal ? input.guessText : null,
+    isHit: showReveal ? input.isHit : null,
+  };
+}
