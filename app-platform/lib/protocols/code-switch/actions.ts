@@ -345,8 +345,7 @@ export async function dispatchCodeSwitchAction(input: {
       raw_text: action.text.trim(),
       normalized: valid.normalized,
     });
-    if (error) {
-      if (error.code === "23505") return { ok: true };
+    if (error && error.code !== "23505") {
       return fail(500, error.message);
     }
     await maybeAdvanceWrite(admin, sessionId, round, roster);
