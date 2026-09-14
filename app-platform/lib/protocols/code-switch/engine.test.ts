@@ -12,6 +12,7 @@ import {
   pickWord,
   rankShownStats,
   publicRevealFields,
+  roundTypeChrome,
   roundTypeLabel,
   roundTypeRule,
   timerHasExpired,
@@ -102,7 +103,7 @@ describe("pickGuesser", () => {
 });
 
 describe("rankShownStats", () => {
-  it("ranks by rate then count", () => {
+  it("ranks by how many clues reached the guesser", () => {
     const ranked = rankShownStats([
       { participantId: "m", displayName: "Maya", clueRounds: 2, shownCount: 1, shownRate: 0.5 },
       { participantId: "j", displayName: "Jordan", clueRounds: 3, shownCount: 2, shownRate: 2 / 3 },
@@ -110,20 +111,21 @@ describe("rankShownStats", () => {
     ]);
     assert.equal(ranked[0]?.displayName, "Jordan");
     assert.equal(ranked[1]?.displayName, "Maya");
+    assert.equal(ranked[2]?.displayName, "Steve");
   });
 });
 
 describe("clocks", () => {
-  it("uses 30 seconds for both write and guess", () => {
-    assert.equal(WRITE_SECONDS, 30);
-    assert.equal(GUESS_SECONDS, 30);
+  it("uses 60 seconds for both write and guess", () => {
+    assert.equal(WRITE_SECONDS, 60);
+    assert.equal(GUESS_SECONDS, 60);
   });
 
   it("expires after the duration", () => {
     const start = "2026-09-11T12:00:00.000Z";
     const startMs = Date.parse(start);
-    assert.equal(timerHasExpired(start, startMs + 29_999, 30), false);
-    assert.equal(timerHasExpired(start, startMs + 30_000, 30), true);
+    assert.equal(timerHasExpired(start, startMs + 59_999, 60), false);
+    assert.equal(timerHasExpired(start, startMs + 60_000, 60), true);
   });
 });
 
@@ -159,6 +161,8 @@ describe("round type copy", () => {
   it("maps stored filters to Assemble and Disperse", () => {
     assert.equal(roundTypeLabel("shared"), "Assemble");
     assert.equal(roundTypeLabel("unique"), "Disperse");
+    assert.equal(roundTypeChrome("shared").banner, "bg-unmute-navy");
+    assert.equal(roundTypeChrome("unique").banner, "bg-signal-amber");
     assert.equal(
       roundTypeRule("shared"),
       "Only clues provided by more than one participant will be shown to the guesser"

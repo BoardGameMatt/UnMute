@@ -2,7 +2,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SessionLobbyView } from "@/components/session/session-lobby-view";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
-import { getProtocol } from "@/lib/protocols";
+import { displayProtocolName, getProtocol } from "@/lib/protocols";
 import { buildJoinUrl, resolveAppOrigin } from "@/lib/session/app-origin";
 import { mapSessionParticipantRows } from "@/lib/session/map-lobby-participants";
 import { createClient } from "@/lib/supabase/server";
@@ -29,7 +29,7 @@ function protocolFromSession(session: {
   }
   return {
     slug: row.slug ?? "",
-    name: row.name ?? "Session",
+    name: displayProtocolName(row.slug ?? "", row.name ?? "Session"),
   };
 }
 
