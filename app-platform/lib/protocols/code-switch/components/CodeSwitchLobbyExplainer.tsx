@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { LobbyExplainerDots } from "@/components/ui/LobbyExplainerDots";
+import { roundTypeChrome } from "../engine";
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 const PANE_MS = 6000;
@@ -68,17 +69,27 @@ function WriteBeat() {
 }
 
 function AssembleDisperseBeat() {
+  const assemble = roundTypeChrome("shared");
+  const disperse = roundTypeChrome("unique");
   return (
     <div className="mx-auto grid w-full max-w-[18rem] grid-cols-2 gap-2">
-      <div className="rounded-lg border border-cloud-grey bg-warm-white p-3">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-unmute-navy">Assemble</p>
-        <p className="mt-2 font-body text-xs leading-relaxed text-charcoal">
+      <div className={`overflow-hidden rounded-lg bg-warm-white ${assemble.card}`}>
+        <div className={`px-2 py-3 text-center ${assemble.banner}`}>
+          <p className={`font-display text-sm font-bold uppercase tracking-widest ${assemble.word}`}>
+            Assemble
+          </p>
+        </div>
+        <p className="px-3 py-3 font-body text-xs leading-relaxed text-charcoal">
           Duplicated clues reach the guesser
         </p>
       </div>
-      <div className="rounded-lg border border-cloud-grey bg-warm-white p-3">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-unmute-navy">Disperse</p>
-        <p className="mt-2 font-body text-xs leading-relaxed text-charcoal">
+      <div className={`overflow-hidden rounded-lg bg-warm-white ${disperse.card}`}>
+        <div className={`px-2 py-3 text-center ${disperse.banner}`}>
+          <p className={`font-display text-sm font-bold uppercase tracking-widest ${disperse.word}`}>
+            Disperse
+          </p>
+        </div>
+        <p className="px-3 py-3 font-body text-xs leading-relaxed text-charcoal">
           Unique clues reach the guesser
         </p>
       </div>
@@ -106,7 +117,7 @@ function ScoreBeat() {
       <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-steel-blue">
         Shown the most
       </p>
-      <p className="mt-1 font-body text-sm text-charcoal">Maya</p>
+      <p className="mt-1 font-body text-sm text-charcoal">Maya · 2</p>
     </div>
   );
 }

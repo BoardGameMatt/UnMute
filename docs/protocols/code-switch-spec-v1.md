@@ -209,11 +209,10 @@ A clue is **shown** when that person was a clue giver, locked a clue, and the no
 |---|---|
 | `clue_rounds` | Rounds they locked a clue (guesser rounds, no-locks, and `abandoned` do not count) |
 | `shown_count` | Those clue rounds where the clue was shown |
-| `shown_rate` | `shown_count / clue_rounds` (0 if `clue_rounds` is 0) |
 
-The final scoreboard **leaderboard ranks by `shown_rate`** (“how regularly”). Display both the rate (as a percent) and `shown_count`. Tie-break: higher `shown_count`, then display name A–Z. Shared first is allowed.
+The final scoreboard **leaderboard ranks by `shown_count`**. Display the count only — **no percentages**. Tie-break: display name A–Z. Shared first is allowed.
 
-Call out the person with the highest `shown_count` as **shown the most often** (a named highlight, not a second ranking). If that is a different person than the rate leader, show both — do not collapse them.
+Call out the person with the highest `shown_count` as **shown the most**. If two people tie, both may share first; the callout is the first name after the sort.
 
 Empty board: you wrote something and it was filtered → not shown. You never locked → that round is omitted from `clue_rounds`.
 
@@ -230,15 +229,15 @@ Round 3 Shared, target `PIZZA`. Clues: Maya `cheese`, Jordan `cheese`, Steve `sl
 After three rounds (each person guessed once; Priya guessed twice so fewer clue rounds):
 
 - Team total: **2**
-- Maya: 1/2 shown (50%). Jordan: 2/3 (67%). Steve: 1/3 (33%). Alex: 1/2 (50%). Priya: 0/1 (0%).
-- Rate leader: Jordan. Shown the most often: Jordan (`shown_count` 2).
+- Jordan 2, Maya 1, Steve 1, Alex 1, Priya 0.
+- Shown the most: Jordan (`shown_count` 2).
 
 ### 6.4 When scores are visible
 
 | Moment | Visible? |
 |---|---|
 | Clue write | No |
-| During the 30s guess | No |
+| During the 60s guess | No |
 | Reveal | This round hit/miss + running **team** total only. No personal shown-rate. |
 | Scoreboard | Hero **team total**; then the clue-shown leaderboard (§6.2). `font-display` values, `font-mono` labels |
 
@@ -271,14 +270,16 @@ Lead **Wrap things up** from `REVEAL` jumps to `SCOREBOARD` in one click (I Know
 
 | Phase | Who acts | Timer | Advance |
 |---|---|---|---|
-| `LOBBY` | Join; Lead Start at ≥4; Lead may pin room display | none | Lead Start |
-| `WRITE` | Clue givers lock one word | **30s** | All connected givers locked, or server timer |
-| `GUESS` | Guesser locks one word | **30s** | Guesser locked, or server timer |
+| `LOBBY` | Join; Lead Start at ≥4; Lead may pin room display | none | Lead Start, then SwitchCode share-stop confirm |
+| `WRITE` | Clue givers lock one word | **60s** | All connected givers locked, or server timer |
+| `GUESS` | Guesser locks one word | **60s** | Guesser locked, or server timer |
 | `REVEAL` | Session Lead | none | Another round / Wrap things up |
 | `SCOREBOARD` | Session Lead **Continue to debrief**. Everyone sees team total + clue-shown leaderboard | none | Existing NPS route |
 | NPS / reflection | Platform | — | Standard Season path |
 
 `startProtocol` is Lead-only, lobby-only. It does not deal the first word until Start. First round begins `WRITE` immediately (no practice round in v1).
+
+**Screen-share stop (required).** Start does not begin `WRITE` until the Lead clicks **I have stopped sharing** on a full-screen confirm. The secret word appears on clue-giver phones at the same moment play starts; a live share leaks it. Back returns to lobby without starting. There is no skip, timer, or checkbox. The confirm is Lead-only and SwitchCode-only.
 
 Progress bar: `SessionProgressBar`, 3px navy on cloud-grey, no labels. Expected total = roster size at Start (one guesser rotation). Extra rounds after a full rotation do not grow the denominator; the bar sits full through those reveals and SCOREBOARD.
 
@@ -290,7 +291,14 @@ Protocol label: `font-mono uppercase tracking-widest text-[10px]` — `SWITCHCOD
 
 Play cards: `warm-white`, `cloud-grey` border, `rounded-lg`, `p-6` minimum. Session Lead panel: `FACILITATOR` mono label. Room display does **not** show that panel.
 
-States cannot be color-only. Amber is reserved for the primary action (Lock in / Another round / Continue to debrief), selected-field treatment, and timer urgency — not a fill on chips or the scoreboard.
+States cannot be color-only. Amber is reserved for the primary action (Lock in / Another round / Continue to debrief), selected-field treatment, timer urgency, **and the Disperse type banner**. Do not use amber fill on chips or the scoreboard.
+
+**Round-type color keys** (clue-giver phones and lobby explainer only; never on guesser or room display):
+
+| Type | Key |
+|---|---|
+| Assemble | `unmute-navy` banner, `warm-white` **ASSEMBLE** in `font-display` large caps |
+| Disperse | `signal-amber` banner, `deep-navy` **DISPERSE** in `font-display` large caps |
 
 ### 9.1 UI states
 
@@ -304,17 +312,20 @@ States cannot be color-only. Amber is reserved for the primary action (Lock in /
 | Roster chip, not in | `warm-white`, `cloud-grey` border, display name |
 | Roster chip, locked | navy fill, warm-white name |
 | Guesser sit-write | navy panel, `font-mono` copy; no word; no type |
+| Assemble type banner (clue-giver phone + lobby) | `unmute-navy` fill, large `font-display` **ASSEMBLE** in `warm-white` |
+| Disperse type banner (clue-giver phone + lobby) | `signal-amber` fill, large `font-display` **DISPERSE** in `deep-navy` |
 | Reveal: hit | `font-display` word under `GOT IT` mono label, sunrise-gold check |
 | Reveal: miss | Target word; typed guess; no discarded-clue dump |
 | Clue-giver breakdown (phone, reveal only) | Raw strings + counts; survived vs filtered; fill + border + glyph, not color-only |
 | Scoreboard hero | Team total in `font-display`; `TEAM SCORE` / `HITS` in `font-mono` uppercase |
-| Scoreboard row | Rank + display name + shown rate + shown count. Idle: `warm-white`, 1px navy @ 20% |
-| Scoreboard row, rate leader | 2px solid navy, navy left bar. Not amber fill. |
-| Shown-the-most callout | Display name under `SHOWN THE MOST` mono label. If it is also the rate leader, one row; if not, a second named chip. |
+| Scoreboard row | Rank + display name + `shown_count` only. Idle: `warm-white`, 1px navy @ 20% |
+| Scoreboard row, shown the most | 2px solid navy. Not amber fill. |
+| Shown-the-most callout | Display name under `SHOWN THE MOST` mono label. Same person as rank 1. |
 
 ### 9.2 Buttons
 
 - Lock in (clue or guess): grey (unavailable) → **amber** when the field is a non-rejected word.
+- **I have stopped sharing** (Start confirm): amber. Full-screen `deep-navy`. Required. No skip.
 - Another round: amber (the one action after reveal).
 - Wrap things up: navy (secondary). Confirm.
 - Scoreboard **Continue to debrief**: amber, Lead-only, advances **everyone** to NPS.
@@ -340,8 +351,8 @@ Follow moment-conventions §3 (`WaoPlayTimer`) on **both** clocks. This is requi
 
 | Phase | Duration | When it runs | Treatment |
 |---|---|---|---|
-| `WRITE` | **30s** | From round start until all connected clue givers lock, or T=0 | Depleting circular arc, **no numerals**. Track `cloud-grey`, fill `unmute-navy` |
-| `GUESS` | **30s** | From the moment the filtered clue list is shown, until the guesser locks, or T=0 | Same chrome |
+| `WRITE` | **60s** | From round start until all connected clue givers lock, or T=0 | Depleting circular arc, **no numerals**. Track `cloud-grey`, fill `unmute-navy` |
+| `GUESS` | **60s** | From the moment the filtered clue list is shown, until the guesser locks, or T=0 | Same chrome |
 | Final ~15s of either clock | — | Arc shifts to `signal-amber`, subtle pulse (1s cycle) | |
 | Final ~3s of either clock | — | Large numeric 3-2-1 (accessibility exception) | |
 | T=0 / all locked | — | Numerals gone. Write → filter → guess, or guess → reveal. No settle window | |
@@ -435,7 +446,7 @@ Every SwitchCode route that uses a service-role client must, before touching it:
 3. For play-state reads during `WRITE`: include `word` and `roundType` **only** if the caller is a clue giver **and** this browser is **not** the room-display pin. Guesser payload strips both. Room-display payload strips both. Do not include other people’s in-flight clue text.
 4. For play-state reads during `GUESS`: include the shuffled surviving list. Still strip `word` and `roundType` for guesser and room display. Clue givers may keep `word` (they already had it) but **not** a pre-guess survival breakdown. Do not include the guesser’s in-flight text on other clients.
 5. For play-state reads during `REVEAL`: `word` and the guess string are public. `roundType` still stripped from guesser and room-display payloads. Discarded clues / per-person raw clues only on clue-giver phones.
-6. For play-state reads during `SCOREBOARD`: public team total plus each participant’s `shown_count` / `shown_rate` / display name. Still strip `roundType`. Do not include clue strings on the guesser or room-display payload.
+6. For play-state reads during `SCOREBOARD`: public team total plus each participant’s `shown_count` and display name. Still strip `roundType`. Do not include percents or clue strings on the guesser or room-display payload.
 7. Clue lock: caller must be a clue giver this round. Reject if caller is the guesser. Reject §5.2 strings.
 8. Guess lock: caller must be the current guesser. Reject if caller is a clue giver.
 9. Start / Another round / Wrap / End: session Lead.
@@ -456,9 +467,9 @@ Optimistic local UI on the clue field is allowed; **server truth at lock and at 
 2. Name the mechanic: one person guesses; everyone else writes one secret word; only some clues get through; they type one guess on a clock; we score only if they get it.
 3. Name Assemble vs Disperse once, the same way the lobby does: clue givers will see which kind before they write. **The guesser does not know which kind it is. Don’t tell them.**
 4. Name the illegal list once: one word, not the target or a form of it, no proper nouns, no other languages, no spelling, no rhymes, no extra channel.
-5. Start. Don’t narrate people’s clues while they write. Don’t announce Assemble or Disperse on the call.
+5. Start. Full-screen: **Stop sharing your screen.** Click **I have stopped sharing**. Don’t narrate people’s clues while they write. Don’t announce Assemble or Disperse on the call.
 6. After a full guesser rotation (or when energy drops): Wrap. Don’t apologize — the payload already happened.
-7. On the scoreboard: read the team total, then who got their clues through most regularly. Then NPS, then the two reflection questions.
+7. On the scoreboard: read the team total, then who got their clues through the most (the counts). Then NPS, then the two reflection questions.
 
 Lead-only metrics: round index, guesser display name, `locked / clue givers`, words remaining, running team total **on reveal only**, Wrap available after first reveal.
 
@@ -595,7 +606,7 @@ code_switch_clues
   UNIQUE (round_id, participant_id)
 ```
 
-`round_type` and `word_id` stay server-side for guesser / room-display reads until the rules in §13 say otherwise. `filtered_clues_json` is public during `GUESS`. Per-person `raw_text` is never on the guesser or room-display payload. `is_hit` and `guess_text` become public at `REVEAL`. `survived` aggregates (`shown_count`, `shown_rate`) become public on `SCOREBOARD` only — names and rates, not the clue strings.
+`round_type` and `word_id` stay server-side for guesser / room-display reads until the rules in §13 say otherwise. `filtered_clues_json` is public during `GUESS`. Per-person `raw_text` is never on the guesser or room-display payload. `is_hit` and `guess_text` become public at `REVEAL`. `shown_count` becomes public on `SCOREBOARD` only — names and counts, not percents, not the clue strings.
 
 ---
 
@@ -616,10 +627,10 @@ code_switch_clues
 | Wrap | Confirm, from reveal, to scoreboard |
 | End copy | Scoreboard **Continue to debrief** (NPS) |
 | Confirm / lock | Final; no edit |
-| Clue clock | 30s write, WAO timer chrome (`WaoPlayTimer`), server timestamp. All-lock ends early. |
-| Guess clock | 30s, starts when the filtered clues appear. Same chrome. T=0 with no submit = miss. |
+| Clue clock | 60s write, WAO timer chrome (`WaoPlayTimer`), server timestamp. All-lock ends early. |
+| Guess clock | 60s, starts when the filtered clues appear. Same chrome. T=0 with no submit = miss. |
 | Team scoring | +1 on hit; 0 otherwise |
-| Final scoreboard | Hero team total + leaderboard ranked by clue `shown_rate`; call out highest `shown_count` |
+| Final scoreboard | Hero team total + leaderboard ranked by `shown_count`; count only, no percents |
 | Wrong / discarded | Not on guesser or room display during play |
 | Pre-guess survival breakdown | No. Clue-giver phones get it at reveal only |
 | Late join | Closed after Start |
@@ -659,12 +670,12 @@ What is lost: private typed guess, lock chips, pack uniqueness, role-filtered pa
 8. Timer expiry with no clues: empty board, guess still runs. Timer expiry with no guess: miss; word still revealed.
 9. Disconnect before clue lock does not stall the room. Guesser drop after deal abandons without revealing the word and without promoting a clue giver.
 10. Throttled-network: double Lock does not write two clues or two guesses; first valid write wins.
-11. Scoreboard Continue to debrief goes to existing NPS, then reflection — no Replay reload. Scoreboard shows team total plus a `shown_rate` ranking; it does not print `roundType` per round.
+11. Scoreboard Continue to debrief goes to existing NPS, then reflection — no Replay reload. Scoreboard shows team total plus a `shown_count` ranking; it does not print percents or `roundType` per round.
 12. Degraded fallback in the facilitator notes.
 13. Lobby explainer never shows a target word or clue string; panel size does not jump between beats; five beat dots. Beats name Assemble vs Disperse **and** that the guesser does not know which.
 14. Lead laptop after pin never mounts the clue field. Copy “Pick on your phone. Leave this laptop on the shared screen.” is visible before Start.
 15. Round 1 deals an `easy` word when any remain. Later rounds follow §16.4 weights (unit-testable).
-16. Both clocks use WAO timer chrome: 30s write, 30s guess from clue-reveal; amber last ~15s; 3-2-1 last ~3s.
+16. Both clocks use WAO timer chrome: 60s write, 60s guess from clue-reveal; amber last ~15s; 3-2-1 last ~3s.
 
 ---
 
@@ -675,7 +686,7 @@ Conversation resolved the load-bearing forks (devices, typed guess, blind write,
 | Topic | Conservative lock |
 |---|---|
 | Team scoring extras | No miss penalty, no speed bonus, no individual points for the word |
-| Leaderboard rank | `shown_rate` first; `shown_count` callout is separate |
+| Leaderboard rank | `shown_count` only; no percents |
 | Start floor | 4 |
 | Sitting length | Lead-gated. Recommend one guesser rotation. No auto-end |
 | Void / review phase | No in v1 |
@@ -703,11 +714,11 @@ One step at a time. Each independently testable.
 2. Normalize + filter + suffix-reject unit tests (Shared / Unique / empty / forms of the target / guess match). Ease-first deal unit tests (§16.4).
 3. Lobby explainer (no target/clue strings; Assemble vs Disperse named; guesser doesn’t know; beat dots) + Start gate at 4 + room-display pin control.
 4. Role-filtered play payload (strip `word` / `roundType` for guesser and room display). Load-bearing security step — do not defer. Network-tab tests in §20.3–20.5.
-5. `WRITE`: blind field, roster chips, 30s WAO timer, connected-only advance, lock final / idempotent.
-6. Filter → `GUESS`: shuffled surviving list, 30s WAO timer from clue-reveal, typed lock, empty-board copy.
+5. `WRITE`: blind field, roster chips, 60s WAO timer, connected-only advance, lock final / idempotent.
+6. Filter → `GUESS`: shuffled surviving list, 60s WAO timer from clue-reveal, typed lock, empty-board copy.
 7. `REVEAL`: hit/miss, team +1, clue-giver breakdown on phones only. Persist `survived` on each clue row.
 8. Guesser fairness pool + Another round / Wrap.
-9. Scoreboard: team total + `shown_rate` leaderboard + shown-the-most callout. Continue to debrief → existing NPS → existing reflection. Delete any Replay impulse.
+9. Scoreboard: team total + `shown_count` leaderboard + shown-the-most callout. Continue to debrief → existing NPS → existing reflection. Delete any Replay impulse.
 10. Disconnect rules in §12.
 11. Tight RLS on `code_switch_*` tables.
 12. Console pack row in `docs/unmute-console-spec-v1.md` §7.4.2 once this is on `main`.

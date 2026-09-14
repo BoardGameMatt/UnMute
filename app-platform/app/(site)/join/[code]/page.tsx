@@ -5,6 +5,7 @@ import { ActiveSessionRejoin } from "@/components/join/active-session-rejoin";
 import { CoverStoryTapNameRoster } from "@/components/join/cover-story-tap-name-roster";
 import { LobbyGuestJoinForm } from "@/components/join/lobby-guest-join-form";
 import { RequireAuthPanel } from "@/components/join/require-auth-panel";
+import { displayProtocolName } from "@/lib/protocols";
 import { createClient } from "@/lib/supabase/server";
 import { PARTICIPANT_COOKIE, JOIN_CODE_LENGTH, normalizeJoinCode } from "@/lib/constants";
 
@@ -44,7 +45,7 @@ export default async function JoinCodePage({ params, searchParams }: JoinCodePag
 
   const { data: session, error: sessionError } = await supabase
     .from("sessions")
-    .select("id, status, team_id, protocols ( slug )")
+    .select("id, status, team_id, protocols ( slug, name )")
     .eq("join_code", code)
     .maybeSingle();
 
@@ -97,12 +98,12 @@ export default async function JoinCodePage({ params, searchParams }: JoinCodePag
 
   const protocolEmbed = (
     session as {
-      protocols?: { slug?: string } | { slug?: string }[] | null;
+      protocols?: { slug?: string; name?: string } | { slug?: string; name?: string }[] | null;
     }
   ).protocols;
-  const protocolSlug = Array.isArray(protocolEmbed)
-    ? protocolEmbed[0]?.slug
-    : protocolEmbed?.slug;
+  const protocolRow = Array.isArray(protocolEmbed) ? protocolEmbed[0] : protocolEmbed;
+  const protocolSlug = protocolRow?.slug;
+  const protocolName = displayProtocolName(protocolSlug ?? "", protocolRow?.name ?? "Welcome");
   const isCoverStory = protocolSlug === "cover-story";
 
   const cookieStore = cookies();
@@ -183,7 +184,7 @@ export default async function JoinCodePage({ params, searchParams }: JoinCodePag
                 You&apos;re joining
               </p>
               <h1 className="font-display text-3xl font-bold text-unmute-navy">
-                Welcome
+                {protocolName}
               </h1>
               <p className="font-body text-lg text-slate">
                 Choose a display name your team will see in the room.

@@ -44,3 +44,11 @@ export function registerProtocol(definition: ProtocolDefinition): void {
 export function getProtocol(slug: string): ProtocolDefinition | undefined {
   return protocolRegistry.get(slug);
 }
+
+/** Product display name. Registry wins so DB drift (e.g. Code Switch) cannot leak. */
+export function displayProtocolName(slug: string, fallback = "Session"): string {
+  const registered = getProtocol(slug)?.name?.trim();
+  if (registered) return registered;
+  const fromDb = fallback.trim();
+  return fromDb || "Session";
+}

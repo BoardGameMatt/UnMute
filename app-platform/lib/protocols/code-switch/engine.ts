@@ -1,5 +1,5 @@
-export const WRITE_SECONDS = 30;
-export const GUESS_SECONDS = 30;
+export const WRITE_SECONDS = 60;
+export const GUESS_SECONDS = 60;
 export const MIN_PLAYERS = 4;
 export const MAX_PLAYERS = 20;
 
@@ -17,6 +17,26 @@ export function roundTypeRule(type: RoundType): string {
   return type === "unique"
     ? "Only clues which are unique among participants will be shown to the guesser"
     : "Only clues provided by more than one participant will be shown to the guesser";
+}
+
+/** Assemble = navy. Disperse = amber. Type banner only — not chips or scoreboard. */
+export function roundTypeChrome(type: RoundType): {
+  banner: string;
+  word: string;
+  card: string;
+} {
+  if (type === "unique") {
+    return {
+      banner: "bg-signal-amber",
+      word: "text-deep-navy",
+      card: "border-2 border-signal-amber",
+    };
+  }
+  return {
+    banner: "bg-unmute-navy",
+    word: "text-warm-white",
+    card: "border-2 border-unmute-navy",
+  };
 }
 
 export function displayStorageKey(sessionId: string): string {
@@ -154,7 +174,6 @@ export type ShownStat = {
 
 export function rankShownStats(rows: ShownStat[]): ShownStat[] {
   return [...rows].sort((a, b) => {
-    if (b.shownRate !== a.shownRate) return b.shownRate - a.shownRate;
     if (b.shownCount !== a.shownCount) return b.shownCount - a.shownCount;
     return a.displayName.localeCompare(b.displayName);
   });

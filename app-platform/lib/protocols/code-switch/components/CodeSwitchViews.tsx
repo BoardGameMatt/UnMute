@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SessionProgressBar } from "@/components/ui/SessionProgressBar";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
-import { roundTypeLabel, roundTypeRule } from "../engine";
+import { roundTypeChrome, roundTypeLabel, roundTypeRule } from "../engine";
 import type { CodeSwitchAction, CodeSwitchPlayState } from "../types";
 
 type Props = {
@@ -131,11 +131,18 @@ export function CodeSwitchViews({
             {state.guesserName} is guessing. {state.lockedCount}/{state.clueGiverCount} locked in.
           </p>
           {state.word && state.roundType ? (
-            <div className="rounded-lg border border-cloud-grey bg-warm-white p-6">
-              <p className="font-mono text-[10px] font-medium uppercase tracking-widest text-unmute-navy">
-                {roundTypeLabel(state.roundType)}
-              </p>
-              <p className="mt-2 font-body text-sm leading-relaxed text-charcoal">
+            <div
+              className={`overflow-hidden rounded-lg bg-warm-white ${roundTypeChrome(state.roundType).card}`}
+            >
+              <div className={`px-5 py-5 text-center ${roundTypeChrome(state.roundType).banner}`}>
+                <p
+                  className={`font-display text-4xl font-bold uppercase tracking-[0.18em] ${roundTypeChrome(state.roundType).word}`}
+                >
+                  {roundTypeLabel(state.roundType)}
+                </p>
+              </div>
+              <div className="p-6">
+              <p className="font-body text-sm leading-relaxed text-charcoal">
                 {roundTypeRule(state.roundType)}
               </p>
               <p className="mt-3 font-body text-xs text-slate">Don’t say the type out loud.</p>
@@ -178,6 +185,7 @@ export function CodeSwitchViews({
                   </PrimaryButton>
                 </form>
               )}
+              </div>
             </div>
           ) : state.viewerRole === "guesser" && !isDisplay ? (
             <div className="rounded-lg border border-cloud-grey bg-unmute-navy p-6 text-center">
@@ -358,7 +366,7 @@ export function CodeSwitchViews({
               <li
                 key={row.participantId}
                 className={`flex items-center justify-between rounded-lg border bg-warm-white px-4 py-3 ${
-                  row.displayName === state.rateLeaderName
+                  row.displayName === state.shownTheMostName
                     ? "border-2 border-unmute-navy"
                     : "border-cloud-grey"
                 }`}
@@ -366,9 +374,7 @@ export function CodeSwitchViews({
                 <span className="font-display font-semibold text-unmute-navy">
                   {index + 1}. {row.displayName}
                 </span>
-                <span className="font-mono text-sm text-unmute-navy">
-                  {Math.round(row.shownRate * 100)}% · {row.shownCount}
-                </span>
+                <span className="font-mono text-sm text-unmute-navy">{row.shownCount}</span>
               </li>
             ))}
           </ol>

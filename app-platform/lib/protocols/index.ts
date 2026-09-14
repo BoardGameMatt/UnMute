@@ -14,6 +14,7 @@ import "./i-know-what-you-meme";
 import "./code-switch";
 
 export {
+  displayProtocolName,
   getProtocol,
   protocolRegistry,
   registerProtocol,

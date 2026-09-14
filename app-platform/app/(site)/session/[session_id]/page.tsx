@@ -4,7 +4,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import { BackToLobbyLink } from "@/components/session/back-to-lobby-link";
 import { SessionCompletedRedirect } from "@/components/session/session-completed-redirect";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
-import { getProtocol } from "@/lib/protocols";
+import { displayProtocolName, getProtocol } from "@/lib/protocols";
 import { createClient } from "@/lib/supabase/server";
 import type { Session, SessionStatus } from "@/lib/types/database";
 
@@ -30,7 +30,7 @@ function protocolFromSession(session: {
   }
   return {
     slug: row.slug ?? "",
-    name: row.name ?? "Session",
+    name: displayProtocolName(row.slug ?? "", row.name ?? "Session"),
   };
 }
 

@@ -54,6 +54,7 @@ export function SessionLobbyView({
   const [isPending, startTransition] = useTransition();
   const [isStarting, setIsStarting] = useState(false);
   const [transferringId, setTransferringId] = useState<string | null>(null);
+  const [shareAckOpen, setShareAckOpen] = useState(false);
 
   // Cover Story: floor is 2 members plus the facilitator (who also plays).
   const participantCount =
@@ -126,6 +127,7 @@ export function SessionLobbyView({
   const handleStart = () => {
     setStartError(null);
     setIsStarting(true);
+    setShareAckOpen(false);
     startTransition(async () => {
       const result = await startSessionAction(sessionId);
       if (result && "error" in result && result.error) {
@@ -133,6 +135,15 @@ export function SessionLobbyView({
         setStartError(result.error);
       }
     });
+  };
+
+  const handleStartClick = () => {
+    if (protocolSlug === "code-switch") {
+      setStartError(null);
+      setShareAckOpen(true);
+      return;
+    }
+    handleStart();
   };
 
   const handleMakeLead = (targetParticipantId: string) => {
@@ -245,7 +256,7 @@ export function SessionLobbyView({
           <button
             type="button"
             disabled={!canStart}
-            onClick={handleStart}
+            onClick={handleStartClick}
             className="w-full max-w-md rounded-md bg-signal-amber px-6 py-4 font-display text-lg font-semibold text-deep-navy shadow-sm transition hover:bg-sunrise-gold disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isStarting
@@ -287,6 +298,47 @@ export function SessionLobbyView({
           Could not determine your role in this session.
         </p>
       )}
+
+      {shareAckOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-deep-navy px-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="switchcode-share-ack-title"
+        >
+          <div className="w-full max-w-lg text-center">
+            <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-sunrise-gold">
+              Before you start
+            </p>
+            <h2
+              id="switchcode-share-ack-title"
+              className="mt-4 font-display text-4xl font-bold leading-tight text-warm-white sm:text-5xl"
+            >
+              Stop sharing your screen
+            </h2>
+            <p className="mt-5 font-body text-lg leading-relaxed text-warm-white">
+              The secret word is about to appear on phones. Anyone still watching
+              a shared screen will see it.
+            </p>
+            <button
+              type="button"
+              disabled={isStarting || isPending}
+              onClick={handleStart}
+              className="mt-8 w-full rounded-md bg-signal-amber px-6 py-4 font-display text-lg font-semibold text-deep-navy transition-colors hover:bg-sunrise-gold disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isStarting ? "Starting…" : "I have stopped sharing"}
+            </button>
+            <button
+              type="button"
+              disabled={isStarting || isPending}
+              onClick={() => setShareAckOpen(false)}
+              className="mt-3 w-full rounded-md border border-steel-blue px-6 py-3 font-display text-base font-semibold text-warm-white transition-colors hover:bg-unmute-navy disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Back
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

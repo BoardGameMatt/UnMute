@@ -2,6 +2,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { HostClaimForm } from "@/components/join/host-claim-form";
+import { displayProtocolName } from "@/lib/protocols";
 import { createClient } from "@/lib/supabase/server";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 
@@ -39,7 +40,7 @@ export default async function HostTokenPage({ params }: HostTokenPageProps) {
   const supabase = createClient();
   const { data: session, error } = await supabase
     .from("sessions")
-    .select("id, status, protocols ( name )")
+    .select("id, status, protocols ( slug, name )")
     .eq("host_token", token)
     .maybeSingle();
 
@@ -113,16 +114,9 @@ export default async function HostTokenPage({ params }: HostTokenPageProps) {
 function protocolNameFromSession(session: unknown): string {
   if (!session || typeof session !== "object") return "Session";
   const protocols = (session as { protocols?: unknown }).protocols;
-  if (protocols == null) return "Session";
-  if (Array.isArray(protocols)) {
-    const p = protocols[0];
-    if (p && typeof p === "object" && "name" in p) {
-      return String((p as { name: string }).name) || "Session";
-    }
-    return "Session";
-  }
-  if (typeof protocols === "object" && "name" in protocols) {
-    return String((protocols as { name: string }).name) || "Session";
-  }
-  return "Session";
+  const row = Array.isArray(protocols) ? protocols[0] : protocols;
+  if (!row || typeof row !== "object") return "Session";
+  const slug = "slug" in row ? String((row as { slug?: string }).slug ?? "") : "";
+  const name = "name" in row ? String((row as { name?: string }).name ?? "") : "";
+  return displayProtocolName(slug, name || "Session");
 }
