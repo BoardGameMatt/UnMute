@@ -19,6 +19,23 @@ export function roundTypeRule(type: RoundType): string {
     : "Only clues provided by more than one participant will be shown to the guesser";
 }
 
+/** Empty guess board. Names the live round so the room knows why nothing reached the guesser. */
+export function emptyBoardCopy(roundType: RoundType, lockedCount: number): string {
+  if (lockedCount === 0) {
+    return "No clues were locked in.";
+  }
+  if (roundType === "unique") {
+    return "No other clues are shown this Disperse round. Only unique words reach the guesser.";
+  }
+  return "No other clues are shown this Assemble round. Only words written by more than one person reach the guesser.";
+}
+
+export function filteredClueNote(roundType: RoundType): string {
+  return roundType === "unique"
+    ? "not shown this Disperse round"
+    : "not shown this Assemble round";
+}
+
 /** Assemble = navy. Disperse = amber. Type banner only — not chips or scoreboard. */
 export function roundTypeChrome(type: RoundType): {
   banner: string;

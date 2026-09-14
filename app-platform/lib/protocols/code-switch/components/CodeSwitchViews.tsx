@@ -59,11 +59,11 @@ function NavyButton({
   );
 }
 
-function ClueTiles({ clues }: { clues: string[] }) {
+function ClueTiles({ clues, emptyCopy }: { clues: string[]; emptyCopy: string }) {
   if (clues.length === 0) {
     return (
       <div className="rounded-lg border-2 border-dashed border-unmute-navy bg-warm-white px-4 py-6 text-center font-body text-slate">
-        No clues made it through.
+        {emptyCopy}
       </div>
     );
   }
@@ -214,7 +214,7 @@ export function CodeSwitchViews({
 
       {state.phase === "guess" ? (
         <>
-          <ClueTiles clues={state.filteredClues} />
+          <ClueTiles clues={state.filteredClues} emptyCopy={state.emptyBoardCopy} />
           {state.viewerRole === "guesser" && !isDisplay ? (
             state.myGuessLocked ? (
               <p className="text-center font-body text-slate">Locked in.</p>
@@ -289,7 +289,9 @@ export function CodeSwitchViews({
             </p>
             <p className="font-display text-4xl font-bold text-unmute-navy">{state.teamScore}</p>
           </div>
-          {state.abandoned ? null : <ClueTiles clues={state.filteredClues} />}
+          {state.abandoned ? null : (
+            <ClueTiles clues={state.filteredClues} emptyCopy={state.emptyBoardCopy} />
+          )}
           {state.breakdown ? (
             <ul className="space-y-2">
               {state.breakdown.map((row) => (
@@ -305,7 +307,7 @@ export function CodeSwitchViews({
                   <p className="font-body text-sm text-slate">
                     {row.displayName}
                     {row.isMine ? " · yours" : ""}
-                    {row.survived ? " · shown" : " · filtered"}
+                    {row.survived ? " · shown" : ` · ${row.filterNote}`}
                   </p>
                 </li>
               ))}

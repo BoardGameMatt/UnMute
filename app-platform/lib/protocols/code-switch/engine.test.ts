@@ -4,7 +4,9 @@ import {
   GUESS_SECONDS,
   WRITE_SECONDS,
   bandWeight,
+  emptyBoardCopy,
   filterClues,
+  filteredClueNote,
   guessMatches,
   isFormOfTarget,
   normalizeClue,
@@ -171,5 +173,19 @@ describe("round type copy", () => {
       roundTypeRule("unique"),
       "Only clues which are unique among participants will be shown to the guesser"
     );
+  });
+
+  it("explains an empty board with the live round type", () => {
+    assert.equal(emptyBoardCopy("shared", 0), "No clues were locked in.");
+    assert.equal(
+      emptyBoardCopy("shared", 3),
+      "No other clues are shown this Assemble round. Only words written by more than one person reach the guesser."
+    );
+    assert.equal(
+      emptyBoardCopy("unique", 3),
+      "No other clues are shown this Disperse round. Only unique words reach the guesser."
+    );
+    assert.equal(filteredClueNote("shared"), "not shown this Assemble round");
+    assert.equal(filteredClueNote("unique"), "not shown this Disperse round");
   });
 });

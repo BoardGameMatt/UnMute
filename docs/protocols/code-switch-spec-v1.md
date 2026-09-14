@@ -103,8 +103,8 @@ One team. One guesser per round. Everyone else clues. Facilitator-paced: after e
 5. Server normalizes the locked clues (§5.3), builds the multiset, then filters:
    - **Assemble (`shared`):** keep a clue iff its count ≥ 2. Emit each surviving string **once**.
    - **Disperse (`unique`):** keep a clue iff its count = 1.
-6. Shuffle the surviving list. That list is what the guesser, the clue givers, and the room display all see during guess. No names. No ×N. No round type. Empty list is legal — copy: “No clues made it through.” Do not explain why.
-7. **30-second** guess clock. Guesser types one word and taps **Lock in**. Grey → navy (field non-empty) → amber (locked). Lock is final. Clue givers see the same board and **Don’t help.** They have no guess control.
+6. Shuffle the surviving list. That list is what the guesser, the clue givers, and the room display all see during guess. No names. No ×N. Empty list is legal. Copy names the live round and the filter (playtest): Assemble — “No other clues are shown this Assemble round. Only words written by more than one person reach the guesser.” Disperse — “No other clues are shown this Disperse round. Only unique words reach the guesser.” Zero locks: “No clues were locked in.” The `roundType` field stays off guesser and room-display payloads; the empty-board sentence is the exception.
+7. **60-second** guess clock. Guesser types one word and taps **Lock in**. Grey → navy (field non-empty) → amber (locked). Lock is final. Clue givers see the same board and **Don’t help.** They have no guess control.
 8. Two paths to resolve: guesser locked, **or** the server timer expires with no submit (miss).
 9. Reveal (§4.4). Then Lead: **Another round** (amber) or **Wrap things up** (navy).
 
@@ -128,7 +128,7 @@ Everyone sees:
 
 **Guesser** and **room display** never see: round type, discarded clues, who wrote what.
 
-**Clue-giver phones** after reveal (not before): the raw clue list with counts, which strings were filtered, and whether *their* clue survived. Faces can leak the filter if this lands *before* the guess — so it waits until reveal. Round type still does not appear on guesser or room-display surfaces. Clue givers already saw it during write; do not re-banner it on the shared screen.
+**Clue-giver phones** after reveal (not before): the raw clue list with counts, which strings were filtered, and whether *their* clue survived. Filtered rows say “not shown this Assemble round” or “not shown this Disperse round.” Faces can leak the filter if this lands *before* the guess — so it waits until reveal. Do not re-banner the type on the shared screen. Empty-board copy on the public tiles may name the round (§4.1).
 
 Wrong-guess details stay off the public board (same as I Know What You Meme not listing wrong names). Miss is miss.
 
@@ -308,7 +308,7 @@ States cannot be color-only. Amber is reserved for the primary action (Lock in /
 | One-word field, filled | 2px solid navy, navy left bar |
 | One-word field, locked | input disabled; check glyph; do not grey the board |
 | Clue tile (guess board) | `warm-white`, 1px navy @ 20%, `font-display` word, shuffled order |
-| Clue tile, empty board | Dashed 2px navy, copy “No clues made it through.” |
+| Clue tile, empty board | Dashed 2px navy. Assemble: “No other clues are shown this Assemble round…” Disperse: “…this Disperse round…” Zero locks: “No clues were locked in.” |
 | Roster chip, not in | `warm-white`, `cloud-grey` border, display name |
 | Roster chip, locked | navy fill, warm-white name |
 | Guesser sit-write | navy panel, `font-mono` copy; no word; no type |
@@ -401,7 +401,7 @@ Do **not** put Assemble / Disperse language on the guesser phone or the room dis
 |---|---|---|---|
 | Session Lead | Phone + pinned laptop | Player UI for their current role **plus** Start / Another round / Wrap / `n/N` locks / round index / team total on reveal. Laptop = public board only | `word` / `roundType` on the laptop at any time; discarded clues on the laptop; other people’s in-flight clue text |
 | Clue giver | Phone | Word + type during write; filtered board during guess; breakdown after reveal | Other people’s in-flight text; guesser’s typed characters until reveal |
-| Guesser | Phone | Sit-write copy; filtered board + field during guess; target + own guess at reveal | `word` before reveal; `roundType` **ever**; discarded clues; who wrote what; in-flight clue text |
+| Guesser | Phone | Sit-write copy; filtered board + field during guess; target + own guess at reveal | `word` before reveal; `roundType` field **ever**; discarded clues; who wrote what; in-flight clue text. Empty-board copy may name the round when the list is empty. |
 | Room display | Pinned Lead laptop | Public board per §9.3 | `word` before reveal; `roundType` ever; discarded clues; guess field keystrokes |
 
 `word` is Talk Track’s card / Draw It By Ear’s image / Zoning Rights’ permutation / I Know What You Meme’s owner id. `roundType` is the same class **for the guesser and the room display**, for the whole sitting.
@@ -428,7 +428,7 @@ Do **not** put Assemble / Disperse language on the guesser phone or the room dis
 | Late join | Closed after Start. |
 | Double-submit Lock | Idempotent. First valid write wins. |
 | Rejected clue | Stays editable; does not count as locked. |
-| Empty filtered list | Legal. Guess still runs. |
+| Empty filtered list | Legal. Guess still runs. Public copy names Assemble or Disperse and restates that round’s filter. |
 | Pack starve | Another round disabled. Lead is forced to Wrap. |
 | Lead’s phone dies | Host-token / cookie rejoin. Write/guess clocks keep running — room can wait out the clock or the Lead rejoins. |
 | Lead is guesser | Phone = guess console. Pinned laptop stays public. Never mount word/type on the laptop. |
@@ -444,7 +444,7 @@ Every SwitchCode route that uses a service-role client must, before touching it:
 1. Verify caller participant identity from the cookie.
 2. Confirm that participant belongs to the session.
 3. For play-state reads during `WRITE`: include `word` and `roundType` **only** if the caller is a clue giver **and** this browser is **not** the room-display pin. Guesser payload strips both. Room-display payload strips both. Do not include other people’s in-flight clue text.
-4. For play-state reads during `GUESS`: include the shuffled surviving list. Still strip `word` and `roundType` for guesser and room display. Clue givers may keep `word` (they already had it) but **not** a pre-guess survival breakdown. Do not include the guesser’s in-flight text on other clients.
+4. For play-state reads during `GUESS`: include the shuffled surviving list. Still strip `word` and `roundType` for guesser and room display. If the surviving list is empty, include `emptyBoardCopy` that names Assemble or Disperse (§4.1) — that string is the allowed leak. Clue givers may keep `word` (they already had it) but **not** a pre-guess survival breakdown. Do not include the guesser’s in-flight text on other clients.
 5. For play-state reads during `REVEAL`: `word` and the guess string are public. `roundType` still stripped from guesser and room-display payloads. Discarded clues / per-person raw clues only on clue-giver phones.
 6. For play-state reads during `SCOREBOARD`: public team total plus each participant’s `shown_count` and display name. Still strip `roundType`. Do not include percents or clue strings on the guesser or room-display payload.
 7. Clue lock: caller must be a clue giver this round. Reject if caller is the guesser. Reject §5.2 strings.
@@ -487,16 +487,12 @@ Reflection is the final screen. Do not park on NPS thank-you. Do not reload the 
 
 NPS is the platform feedback step (1–10 + optional comment).
 
-Standard Season prompts, ninety seconds each, display-only:
+SwitchCode prompts, ninety seconds each, display-only:
 
-1. What did you assume that turned out to be wrong?
-2. Where does that same assumption show up in how we work?
+1. As a guesser, did you feel more supported by the convergent or divergent rounds?
+2. What's a recent example of a time when a colleague presented a different perspective that helped add nuance/clarity to a situation?
 
-**Facilitator prompt if the room is quiet:**
-
-*“When the board came back thin, did you assume other people would write what you wrote — or that they wouldn’t? Where do we do that on the job without a shared code?”*
-
-Do not name which *round* was Assemble or Disperse on the scoreboard or in the reflection UI. The lobby already taught that both exist. If the room says a given round’s type out loud in debrief, that is the conversation, not a platform leak.
+Do not name which *round* was Assemble or Disperse on the scoreboard. Reflection may use convergent / divergent as the two filters; that is the debrief, not a live-round leak. If the room names a given round’s type out loud, that is the conversation, not a platform leak.
 
 ---
 
@@ -662,12 +658,12 @@ What is lost: private typed guess, lock chips, pack uniqueness, role-filtered pa
 
 1. Two consecutive full-scale rehearsals, 8+ real people on real phones, zero facilitator intervention to explain “write on your phone, don’t look.”
 2. Self-service QR join works without assistance.
-3. During `WRITE` and `GUESS`, a guesser’s network tab **never** contains `roundType`. During `WRITE` and `GUESS`, it **never** contains `word`. After reveal, `word` may; `roundType` still must not.
+3. During `WRITE` and `GUESS`, a guesser’s network tab **never** contains the `roundType` field. During `WRITE` and `GUESS`, it **never** contains `word`. After reveal, `word` may; `roundType` still must not. When the surviving list is empty, `emptyBoardCopy` may name Assemble or Disperse; that string is the playtest exception in §4.1.
 4. Pinned room-display client: same network-tab bar as the guesser for `word` / `roundType`. It never contains in-flight clue text or the guesser’s keystrokes.
 5. During `WRITE`, participant A’s client does not contain participant B’s clue text.
 6. Headcounts 4, 8, 20: Start gate at 4; guesser rotation does not repeat until the pool is exhausted; Shared/Unique both appear across a sitting (do not fake the RNG in rehearsal).
 7. Guesser cannot lock a clue; clue giver cannot lock a guess; both return an error if forced.
-8. Timer expiry with no clues: empty board, guess still runs. Timer expiry with no guess: miss; word still revealed.
+8. Timer expiry with no clues: empty board names the live round and restates that filter; guess still runs. Timer expiry with no guess: miss; word still revealed.
 9. Disconnect before clue lock does not stall the room. Guesser drop after deal abandons without revealing the word and without promoting a clue giver.
 10. Throttled-network: double Lock does not write two clues or two guesses; first valid write wins.
 11. Scoreboard Continue to debrief goes to existing NPS, then reflection — no Replay reload. Scoreboard shows team total plus a `shown_count` ranking; it does not print percents or `roundType` per round.
@@ -745,7 +741,7 @@ One step at a time. Each independently testable.
 - [x] § Persistent play instruction — exact copy
 - [x] § Facilitator script beats — plus which Lead-only metrics appear
 - [x] § Session end flow — scoreboard → NPS → reflection
-- [x] § Reflection — standard prompts + optional facilitator prompt
+- [x] § Reflection — SwitchCode prompts (convergent/divergent; recent different perspective)
 - [x] § Degraded fallback
 - [x] § Acceptance bar — includes network-tab secret test
 - [x] § Authorization boundary

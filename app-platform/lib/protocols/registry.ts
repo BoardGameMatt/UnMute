@@ -31,6 +31,11 @@ export interface ProtocolDefinition {
    * reveal-date capture before Start.
    */
   lobbyLeadControls?: ComponentType<{ sessionId: string }>;
+  /** Optional display-only close prompts. Omit to keep the Season defaults. */
+  reflectionPrompts?: {
+    prompt1: string;
+    prompt2: string;
+  };
   /** Optional JSON-schema-shaped or app-specific config metadata */
   configSchema?: Json;
 }

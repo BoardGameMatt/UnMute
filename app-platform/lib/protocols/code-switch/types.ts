@@ -28,6 +28,7 @@ export type ClueBreakdownRow = {
   text: string;
   survived: boolean;
   isMine: boolean;
+  filterNote: string;
 };
 
 export type CodeSwitchPlayState = {
@@ -60,6 +61,8 @@ export type CodeSwitchPlayState = {
   /** Clue givers only during write. Never on guesser or display. */
   roundType: RoundType | null;
   filteredClues: string[];
+  /** Empty-board explanation. Names Assemble/Disperse when clues locked but none survived. */
+  emptyBoardCopy: string;
   /** True when the guesser dropped after deal. Secret word stays off every client. */
   abandoned: boolean;
   targetWord: string | null;
