@@ -32,6 +32,7 @@ export function useCodeSwitchPlay(sessionId: string) {
   const [isDisplay, setIsDisplay] = useState(false);
   const inflight = useRef(0);
   const fetchGen = useRef(0);
+  const timerRetry = useRef(0);
 
   useEffect(() => {
     setIsDisplay(readDisplayPin(sessionId));
@@ -84,6 +85,20 @@ export function useCodeSwitchPlay(sessionId: string) {
           return false;
         }
         if (body.state) setState(body.state);
+        if (
+          action.type === "timerExpired" &&
+          body.state &&
+          (body.state.phase === "write" || body.state.phase === "guess")
+        ) {
+          if (timerRetry.current < 6) {
+            timerRetry.current += 1;
+            window.setTimeout(() => {
+              void send({ type: "timerExpired" });
+            }, 400);
+          }
+        } else if (action.type === "timerExpired") {
+          timerRetry.current = 0;
+        }
         return true;
       } catch {
         setError("Network error. Try again.");

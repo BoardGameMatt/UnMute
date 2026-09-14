@@ -179,14 +179,14 @@ export function CodeSwitchViews({
                 </form>
               )}
             </div>
-          ) : (
+          ) : state.viewerRole === "guesser" && !isDisplay ? (
             <div className="rounded-lg border border-cloud-grey bg-unmute-navy p-6 text-center">
               <p className="font-mono text-[10px] uppercase tracking-widest text-sunrise-gold">
                 You’re guessing
               </p>
               <p className="mt-2 font-body text-warm-white">{state.instruction}</p>
             </div>
-          )}
+          ) : null}
           <div className="flex flex-wrap justify-center gap-2">
             {state.roster.map((chip) => (
               <span

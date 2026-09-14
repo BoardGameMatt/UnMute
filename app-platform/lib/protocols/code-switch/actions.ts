@@ -364,6 +364,7 @@ export async function dispatchCodeSwitchAction(input: {
   }
 
   if (action.type === "timerExpired") {
+    await expireIfNeeded(admin, sessionId);
     return { ok: true };
   }
 
