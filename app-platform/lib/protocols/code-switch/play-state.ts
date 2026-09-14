@@ -4,6 +4,8 @@ import { abandonIfGuesserGone, expireIfNeeded, shownStatsForSession } from "./ac
 import {
   GUESS_SECONDS,
   WRITE_SECONDS,
+  emptyBoardCopy,
+  filteredClueNote,
   publicRevealFields,
   rankShownStats,
 } from "./engine";
@@ -157,11 +159,13 @@ export async function buildCodeSwitchPlayState(input: {
 
   let breakdown: ClueBreakdownRow[] | null = null;
   if (cs?.phase === "reveal" && viewerRole === "clueGiver" && round && !reveal.abandoned) {
+    const filteredNote = filteredClueNote(round.round_type);
     breakdown = clues.map((clue) => ({
       displayName: names[clue.participant_id] ?? "Player",
       text: clue.raw_text,
       survived: clue.survived === true,
       isMine: clue.participant_id === participantId,
+      filterNote: clue.survived === true ? "shown" : filteredNote,
     }));
   }
 
@@ -203,6 +207,10 @@ export async function buildCodeSwitchPlayState(input: {
     word: secretWord,
     roundType,
     filteredClues: showBoard ? round?.filtered_clues_json ?? [] : [],
+    emptyBoardCopy:
+      showBoard && round && (round.filtered_clues_json ?? []).length === 0
+        ? emptyBoardCopy(round.round_type, clues.length)
+        : "No clues were locked in.",
     abandoned: reveal.abandoned,
     targetWord: reveal.targetWord,
     guessText: reveal.guessText,

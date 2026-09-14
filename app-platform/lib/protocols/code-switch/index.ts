@@ -14,4 +14,10 @@ registerProtocol({
   component: CodeSwitchProtocol,
   lobbyExplainer: CodeSwitchLobbyExplainer,
   lobbyLeadControls: CodeSwitchRoomDisplayPin,
+  reflectionPrompts: {
+    prompt1:
+      "As a guesser, did you feel more supported by the convergent or divergent rounds?",
+    prompt2:
+      "What's a recent example of a time when a colleague presented a different perspective that helped add nuance/clarity to a situation?",
+  },
 });

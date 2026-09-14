@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SessionReflectionView } from "@/components/session/session-reflection-view";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
+import { getProtocol } from "@/lib/protocols";
 import { createClient } from "@/lib/supabase/server";
 
 type PageProps = {
@@ -31,7 +32,7 @@ export default async function SessionReflectionPage({ params }: PageProps) {
 
   const { data: session, error: sessionErr } = await supabase
     .from("sessions")
-    .select("id, status")
+    .select("id, status, protocols ( slug )")
     .eq("id", sessionId)
     .maybeSingle();
 
@@ -54,5 +55,15 @@ export default async function SessionReflectionPage({ params }: PageProps) {
     redirect("/join");
   }
 
-  return <SessionReflectionView />;
+  const protocolEmbed = (
+    session as {
+      protocols?: { slug?: string } | { slug?: string }[] | null;
+    }
+  ).protocols;
+  const protocolRow = Array.isArray(protocolEmbed) ? protocolEmbed[0] : protocolEmbed;
+  const prompts = getProtocol(protocolRow?.slug ?? "")?.reflectionPrompts;
+
+  return (
+    <SessionReflectionView prompt1={prompts?.prompt1} prompt2={prompts?.prompt2} />
+  );
 }
