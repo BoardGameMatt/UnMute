@@ -263,6 +263,7 @@ export async function expireIfNeeded(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
+  await abandonIfGuesserGone(admin, sessionId);
   const cs = await loadCodeSwitchSession(admin, sessionId);
   if (!cs?.current_round_id) return;
   const round = await loadRound(admin, cs.current_round_id);
@@ -321,8 +322,8 @@ export async function dispatchCodeSwitchAction(input: {
 }): Promise<CodeSwitchActionResult> {
   const { admin, sessionId, participantId, isLead, action } = input;
 
-  await expireIfNeeded(admin, sessionId);
   await abandonIfGuesserGone(admin, sessionId);
+  await expireIfNeeded(admin, sessionId);
 
   const cs = await loadCodeSwitchSession(admin, sessionId);
   if (!cs) return fail(404, "SwitchCode has not started.");

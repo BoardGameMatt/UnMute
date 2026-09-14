@@ -93,8 +93,8 @@ export async function buildCodeSwitchPlayState(input: {
   const { admin, sessionId, participantId, isLead, isDisplay, skipMaintenance } = input;
 
   if (!skipMaintenance) {
-    await expireIfNeeded(admin, sessionId);
     await abandonIfGuesserGone(admin, sessionId);
+    await expireIfNeeded(admin, sessionId);
   }
 
   const cs = await loadCodeSwitchSession(admin, sessionId);
