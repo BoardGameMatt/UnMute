@@ -12,6 +12,7 @@ import "./talk-track";
 import "./zoning-rights";
 import "./i-know-what-you-meme";
 import "./code-switch";
+import "./rank-and-file";
 
 export {
   displayProtocolName,

@@ -50,6 +50,16 @@ WITH expected AS (
   UNION ALL SELECT '023_ikwym.sql', 'table', 'ikwym_responses', NULL
   UNION ALL SELECT '023_ikwym.sql', 'table', 'ikwym_reveal_items', NULL
   UNION ALL SELECT '023_ikwym.sql', 'table', 'ikwym_guesses', NULL
+  -- SwitchCode (025)
+  UNION ALL SELECT '025_code_switch.sql', 'table', 'code_switch_words', NULL
+  UNION ALL SELECT '025_code_switch.sql', 'table', 'code_switch_sessions', NULL
+  UNION ALL SELECT '025_code_switch.sql', 'table', 'code_switch_rounds', NULL
+  UNION ALL SELECT '025_code_switch.sql', 'table', 'code_switch_clues', NULL
+  -- Rank and File (027)
+  UNION ALL SELECT '027_rank_and_file.sql', 'table', 'rank_and_file_subjects', NULL
+  UNION ALL SELECT '027_rank_and_file.sql', 'table', 'rank_and_file_sessions', NULL
+  UNION ALL SELECT '027_rank_and_file.sql', 'table', 'rank_and_file_rounds', NULL
+  UNION ALL SELECT '027_rank_and_file.sql', 'table', 'rank_and_file_deals', NULL
 ),
 present AS (
   SELECT

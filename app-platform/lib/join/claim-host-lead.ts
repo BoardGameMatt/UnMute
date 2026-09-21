@@ -1,4 +1,5 @@
 import { normalizeDisplayName } from "@/lib/constants";
+import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import { createClient } from "@/lib/supabase/server";
 
 export type ClaimHostResult =
@@ -42,8 +43,16 @@ export async function claimHostLead(input: {
   }
 
   const existingId = input.existingParticipantId?.trim() || null;
+  const sharedScreen = isSharedScreenName(input.displayName ?? "");
 
-  if (existingId) {
+  if (sharedScreen) {
+    const reused = await reuseSharedScreenLead(supabase, session.id);
+    if (!("missing" in reused)) {
+      return reused;
+    }
+  }
+
+  if (existingId && !sharedScreen) {
     const { data: membership } = await supabase
       .from("session_participants")
       .select("id")
@@ -140,4 +149,44 @@ async function demoteLeads(
     return { ok: false, error: error.message, status: 500 };
   }
   return { ok: true };
+}
+
+async function reuseSharedScreenLead(
+  supabase: ReturnType<typeof createClient>,
+  sessionId: string
+): Promise<ClaimHostResult | { ok: false; missing: true }> {
+  const { data: rows, error } = await supabase
+    .from("session_participants")
+    .select("participant_id, participants ( display_name )")
+    .eq("session_id", sessionId);
+  if (error) {
+    return { ok: false, error: error.message, status: 500 };
+  }
+
+  const match = (rows ?? []).find((row) => {
+    const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+    const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+    return isSharedScreenName(name ?? "");
+  });
+  if (!match?.participant_id) {
+    return { ok: false, missing: true };
+  }
+
+  const demoted = await demoteLeads(supabase, sessionId);
+  if (!demoted.ok) return demoted;
+
+  const { error: promoteErr } = await supabase
+    .from("session_participants")
+    .update({ role_in_session: "lead" })
+    .eq("session_id", sessionId)
+    .eq("participant_id", match.participant_id);
+  if (promoteErr) {
+    return { ok: false, error: promoteErr.message, status: 500 };
+  }
+
+  return {
+    ok: true,
+    participantId: match.participant_id as string,
+    sessionId,
+  };
 }

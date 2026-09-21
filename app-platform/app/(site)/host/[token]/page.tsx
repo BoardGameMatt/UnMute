@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { HostClaimForm } from "@/components/join/host-claim-form";
 import { displayProtocolName } from "@/lib/protocols";
+import { RankAndFileHostEntry } from "@/lib/protocols/rank-and-file/components/RankAndFileHostEntry";
 import { createClient } from "@/lib/supabase/server";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 
@@ -40,7 +41,7 @@ export default async function HostTokenPage({ params }: HostTokenPageProps) {
   const supabase = createClient();
   const { data: session, error } = await supabase
     .from("sessions")
-    .select("id, status, protocols ( slug, name )")
+    .select("id, status, join_code, protocols ( slug, name )")
     .eq("host_token", token)
     .maybeSingle();
 
@@ -74,7 +75,18 @@ export default async function HostTokenPage({ params }: HostTokenPageProps) {
     );
   }
 
-  const protocolName = protocolNameFromSession(session);
+  const protocol = protocolFromSession(session);
+  if (protocol.slug === "rank-and-file") {
+    return (
+      <RankAndFileHostEntry
+        hostToken={token}
+        sessionId={session.id}
+        joinCode={String(session.join_code ?? "")}
+      />
+    );
+  }
+
+  const protocolName = protocol.name;
   const cookieStore = cookies();
   const participantCookie = cookieStore.get(PARTICIPANT_COOKIE)?.value ?? null;
 
@@ -111,12 +123,16 @@ export default async function HostTokenPage({ params }: HostTokenPageProps) {
   );
 }
 
-function protocolNameFromSession(session: unknown): string {
-  if (!session || typeof session !== "object") return "Session";
+function protocolFromSession(session: unknown): { slug: string; name: string } {
+  if (!session || typeof session !== "object") {
+    return { slug: "", name: "Session" };
+  }
   const protocols = (session as { protocols?: unknown }).protocols;
   const row = Array.isArray(protocols) ? protocols[0] : protocols;
-  if (!row || typeof row !== "object") return "Session";
+  if (!row || typeof row !== "object") {
+    return { slug: "", name: "Session" };
+  }
   const slug = "slug" in row ? String((row as { slug?: string }).slug ?? "") : "";
   const name = "name" in row ? String((row as { name?: string }).name ?? "") : "";
-  return displayProtocolName(slug, name || "Session");
+  return { slug, name: displayProtocolName(slug, name || "Session") };
 }

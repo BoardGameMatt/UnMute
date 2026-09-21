@@ -1,0 +1,52 @@
+id,theme,low_end,high_end,category
+0,Breakfast foods,Sad,Glorious,example
+1,Things you do when you're in a good mood,Don't do,Do,general_calibration
+2,Things that are still fashionable today,Not at all,Absolutely,general_calibration
+3,Things you'd do differently if nobody could see you,Same either way,Completely different,general_calibration
+4,Things you'd cancel plans for,Wouldn't cancel,Cancel instantly,general_calibration
+5,Things worth waking up early for,Not a chance,Set two alarms,general_calibration
+6,Things you'd admit to a stranger on a plane,Never,Immediately,general_calibration
+7,Ways people show they care,Doesn't land for me,Lands completely,general_calibration
+8,Ways to spend an unexpected free hour,Wasted it,Perfect use of it,general_calibration
+9,Things people pretend to enjoy,Genuinely enjoy it,Pure performance,general_calibration
+10,Skills you'd want if you had to start over,Useless now,Would change everything,general_calibration
+11,Compliments,Means nothing,Would make my month,general_calibration
+12,Things worth paying extra for,Never worth it,Always worth it,general_calibration
+13,Advice you were given growing up,Terrible,Held up perfectly,general_calibration
+14,Things people are secretly competitive about,Nobody cares,Absolutely ruthless,general_calibration
+15,Ways to be remembered,Forgotten in a week,Talked about for years,general_calibration
+16,Things that are harder than they look,Exactly as hard as it looks,Far harder,general_calibration
+17,Things you'd do to avoid making a phone call,Just make the call,Anything but that,general_calibration
+18,Things worth waiting in line for,Walk away,Wait two hours,general_calibration
+19,Music you'd admit to liking,Proud of it,Would deny it under oath,general_calibration
+20,Ways to spend money you didn't expect,Irresponsible,Wise,general_calibration
+21,Things you'd want to know in advance,Rather be surprised,Tell me right now,general_calibration
+22,Things you'd never do again,Would do tomorrow,Never again,general_calibration
+23,Ways to react to bad news,Underreacting,Overreacting,general_calibration
+24,Things worth an argument,Let it go,Worth the fight,general_calibration
+25,Things you'd want to be good at,Wouldn't help me,Would change my life,general_calibration
+26,Things that happen in our meetings,Never,Every single time,team_behaviors
+27,Reasons to message someone at work,Would feel odd,Completely normal,team_behaviors
+28,Ways to open a work message,Cold,Warm,team_behaviors
+29,Interruptions,Welcome,Costly,team_behaviors
+30,Phrases in a work message,No urgency at all,Drop everything,team_behaviors
+31,Ways to say no to a colleague,Soft,Final,team_behaviors
+32,Things you'd ask a colleague for help with,Would just ask,Would struggle alone first,team_behaviors
+33,Requests from a colleague,You'd do it today,You'd hope they forget,team_behaviors
+34,Ways people signal they're overloaded,Nobody would catch it,Impossible to miss,team_behaviors
+35,Ways to give someone critical feedback,Gentle,Blunt,team_behaviors
+36,Things teams say they'll do,Never happens,Always happens,team_behaviors
+37,Decisions at work,One person can make it,Needs everyone in the room,team_behaviors
+38,Things worth escalating,Handle it yourself,Escalate immediately,team_behaviors
+39,Ways people find out what's really going on here,Never works,Always works,team_behaviors
+40,Ways to know someone is finished with something,Ambiguous,Unmistakable,team_behaviors
+41,Things you'd need to cover someone's job for a week,Trivial,You'd be lost,team_behaviors
+42,Reasons to follow up with someone,Would feel like nagging,Completely normal,team_behaviors
+43,Reasons to turn your camera on,Doesn't matter,Would feel wrong not to,team_behaviors
+44,Things worth putting in writing,Just say it,Always write it down,team_behaviors
+45,Ways a decision gets communicated,Everyone missed it,Nobody could miss it,team_behaviors
+46,Ways to disagree in a meeting,Wouldn't register,Would stop the meeting,team_behaviors
+47,Unwritten rules on a team,Nobody would care,Real consequences,team_behaviors
+48,Questions you could ask in a meeting,No risk at all,Room goes quiet,team_behaviors
+49,Things people notice but don't say,Not worth mentioning,Everyone is thinking it,team_behaviors
+50,Feedback you've received,Didn't stick,Changed how I work,team_behaviors

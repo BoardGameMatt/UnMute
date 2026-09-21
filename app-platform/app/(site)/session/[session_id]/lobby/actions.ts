@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import { writeSessionEvent } from "@/lib/console/session-events";
 import { resetCoverStorySessionToLobby } from "@/lib/cover-story/session";
+import { resetRankAndFileToLobby, startRankAndFile } from "@/lib/protocols/rank-and-file/actions";
+import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import { resetCodeSwitchToLobby, startCodeSwitch } from "@/lib/protocols/code-switch/actions";
 import { resetIkwymToLobby, startIkwym } from "@/lib/protocols/i-know-what-you-meme/actions";
 import { resetTalkTrackToLobby, startTalkTrack } from "@/lib/protocols/talk-track/actions";
@@ -172,6 +174,24 @@ export async function startSessionAction(
     }
   }
 
+  if (protocolSlug === "rank-and-file") {
+    const { data: rows, error: countErr } = await supabase
+      .from("session_participants")
+      .select("participants ( display_name )")
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { error: "Could not count the room." };
+    }
+    const players = (rows ?? []).filter((row) => {
+      const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+      const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+      return !isSharedScreenName(name ?? "Player");
+    });
+    if (players.length < 3) {
+      return { error: "Need 3 to start." };
+    }
+  }
+
   if (protocolSlug === "code-switch") {
     const { count, error: countErr } = await supabase
       .from("session_participants")
@@ -245,6 +265,20 @@ export async function startSessionAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not start SwitchCode.",
+      };
+    }
+  }
+
+  if (protocolSlug === "rank-and-file") {
+    try {
+      const admin = createServiceClient();
+      const started = await startRankAndFile(admin, sessionId);
+      if (!started.ok) {
+        return { error: started.error };
+      }
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not start Rank and File.",
       };
     }
   }
@@ -380,6 +414,17 @@ export async function returnToLobbyAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not reset SwitchCode.",
+      };
+    }
+  }
+
+  if (protocolSlug === "rank-and-file") {
+    try {
+      const admin = createServiceClient();
+      await resetRankAndFileToLobby(admin, sessionId);
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not reset Rank and File.",
       };
     }
   }
