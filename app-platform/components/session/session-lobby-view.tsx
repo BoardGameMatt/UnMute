@@ -17,6 +17,7 @@ import { JOIN_URL_DISPLAY } from "@/lib/constants";
 import { useSessionParticipants } from "@/hooks/useSessionParticipants";
 import { createClient } from "@/lib/supabase/client";
 import type { LobbyParticipant } from "@/lib/types/lobby";
+import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 
 type SessionLobbyViewProps = {
   sessionId: string;
@@ -60,8 +61,14 @@ export function SessionLobbyView({
   const participantCount =
     protocolSlug === "cover-story"
       ? participants.filter((p) => p.roleInSession !== "lead").length
-      : participants.length;
+      : protocolSlug === "rank-and-file"
+        ? participants.filter((p) => !isSharedScreenName(p.displayName)).length
+        : participants.length;
   const hasEnoughToStart = participantCount >= minPlayers;
+  const rosterParticipants =
+    protocolSlug === "rank-and-file"
+      ? participants.filter((p) => !isSharedScreenName(p.displayName))
+      : participants;
   const canStart =
     currentRole === "lead" && !isPending && !isStarting && hasEnoughToStart;
   const hasLead = participants.some((p) => p.roleInSession === "lead");
@@ -210,7 +217,7 @@ export function SessionLobbyView({
           In the room
         </h2>
         <ul className="flex flex-col gap-3">
-          {participants.map((p) => (
+          {rosterParticipants.map((p) => (
             <li
               key={p.sessionParticipantId}
               className="flex items-center justify-between gap-3 rounded-lg border border-cloud-grey bg-warm-white px-4 py-3 shadow-sm"
@@ -223,7 +230,7 @@ export function SessionLobbyView({
                   <span className="rounded-full bg-signal-amber/15 px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-widest text-unmute-navy">
                     Lead
                   </span>
-                ) : currentRole === "lead" ? (
+                ) : currentRole === "lead" && protocolSlug !== "rank-and-file" ? (
                   <button
                     type="button"
                     disabled={isPending || transferringId === p.participantId}
@@ -270,7 +277,7 @@ export function SessionLobbyView({
               ? "Once everyone has joined, explain how Talk Track works. Then start the demo — you will be the guesser."
               : hasEnoughToStart
               ? "Do not press Start until everyone has joined."
-              : protocolSlug === "i-know-what-you-meme"
+              : protocolSlug === "i-know-what-you-meme" || protocolSlug === "rank-and-file"
                 ? "Need 3 to start."
               : protocolSlug === "code-switch"
                 ? "Need 4 to start."
@@ -291,7 +298,11 @@ export function SessionLobbyView({
         </div>
       ) : currentRole === "member" ? (
         <p className="text-center font-body text-base text-slate">
-          Waiting for {leadName ?? "the lead"} to start.
+          Waiting for{" "}
+          {protocolSlug === "rank-and-file"
+            ? "the facilitator"
+            : leadName ?? "the lead"}{" "}
+          to start.
         </p>
       ) : (
         <p className="text-center font-body text-base text-slate">

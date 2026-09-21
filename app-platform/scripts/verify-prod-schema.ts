@@ -73,6 +73,10 @@ const CHECKS: SchemaCheck[] = [
   { migration: "025", moment: "SwitchCode", table: "code_switch_sessions" },
   { migration: "025", moment: "SwitchCode", table: "code_switch_rounds" },
   { migration: "025", moment: "SwitchCode", table: "code_switch_clues" },
+  { migration: "027", moment: "Rank and File", table: "rank_and_file_subjects" },
+  { migration: "027", moment: "Rank and File", table: "rank_and_file_sessions" },
+  { migration: "027", moment: "Rank and File", table: "rank_and_file_rounds" },
+  { migration: "027", moment: "Rank and File", table: "rank_and_file_deals" },
 ];
 
 async function checkObject(
