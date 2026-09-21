@@ -20,6 +20,34 @@ export type ScoringQuestion = {
   sort_order: number;
   stem: string;
   correct_option: string;
+  options?: { key: string; label: string }[];
+};
+
+export type ParticipantScoreCohort = "paired" | "end_only" | "pre_only";
+
+export type AnonymousParticipantScore = {
+  label: string;
+  cohort: ParticipantScoreCohort;
+  prePercent: number | null;
+  postPercent: number | null;
+  deltaPp: number | null;
+};
+
+export type MissedQuestionReview = {
+  sortOrder: number;
+  stem: string;
+  selectedLabel: string;
+  correctLabel: string;
+};
+
+export type TranePostResultsPayload = {
+  postPercent: number;
+  postCorrect: number;
+  total: number;
+  paired: boolean;
+  prePercent: number | null;
+  deltaPp: number | null;
+  missed: MissedQuestionReview[];
 };
 
 export type QuestionScoreRow = {
@@ -52,6 +80,188 @@ function mean(values: number[]): number | null {
   if (values.length === 0) return null;
   const sum = values.reduce((a, b) => a + b, 0);
   return Math.round((sum / values.length) * 10) / 10;
+}
+
+export function percentCorrect(correct: number): number {
+  return Math.round((correct / QUESTIONS_PER_COURSE) * 1000) / 10;
+}
+
+function optionLabel(question: ScoringQuestion, key: string): string {
+  const found = question.options?.find((o) => o.key === key);
+  return found?.label ?? key;
+}
+
+export function countCorrectForPhase(input: {
+  responses: ScoringResponse[];
+  questions: ScoringQuestion[];
+  participantId: string;
+  phase: TraneResponsePhase;
+}): number {
+  const byId = new Map(input.questions.map((q) => [q.id, q]));
+  let n = 0;
+  for (const r of input.responses) {
+    if (r.participant_id !== input.participantId || r.phase !== input.phase) {
+      continue;
+    }
+    const q = byId.get(r.question_id);
+    if (q && r.selected_option === q.correct_option) n += 1;
+  }
+  return n;
+}
+
+export function missedQuestionsForPhase(input: {
+  questions: ScoringQuestion[];
+  responses: ScoringResponse[];
+  participantId: string;
+  phase: TraneResponsePhase;
+}): MissedQuestionReview[] {
+  const sorted = [...input.questions].sort(
+    (a, b) => a.sort_order - b.sort_order
+  );
+  const selected = new Map<string, string>();
+  for (const r of input.responses) {
+    if (
+      r.participant_id === input.participantId &&
+      r.phase === input.phase
+    ) {
+      selected.set(r.question_id, r.selected_option);
+    }
+  }
+
+  const missed: MissedQuestionReview[] = [];
+  for (const q of sorted) {
+    const sel = selected.get(q.id);
+    if (sel === q.correct_option) continue;
+    missed.push({
+      sortOrder: q.sort_order,
+      stem: q.stem,
+      selectedLabel: sel ? optionLabel(q, sel) : "No answer",
+      correctLabel: optionLabel(q, q.correct_option),
+    });
+  }
+  return missed;
+}
+
+/**
+ * End-of-class results for the respondent. Answer keys are only for
+ * questions they missed on POST — never sent during PRE or while answering.
+ */
+export function buildParticipantPostResults(input: {
+  questions: ScoringQuestion[];
+  responses: ScoringResponse[];
+  participantId: string;
+  preCompleted: boolean;
+  postUnpaired: boolean;
+}): TranePostResultsPayload {
+  const postCorrect = countCorrectForPhase({
+    ...input,
+    phase: "post",
+  });
+  const postPercent = percentCorrect(postCorrect);
+  const paired = input.preCompleted && !input.postUnpaired;
+  let prePercent: number | null = null;
+  let deltaPp: number | null = null;
+  if (paired) {
+    const preCorrect = countCorrectForPhase({
+      ...input,
+      phase: "pre",
+    });
+    prePercent = percentCorrect(preCorrect);
+    deltaPp = Math.round((postPercent - prePercent) * 10) / 10;
+  }
+
+  return {
+    postPercent,
+    postCorrect,
+    total: QUESTIONS_PER_COURSE,
+    paired,
+    prePercent,
+    deltaPp,
+    missed: missedQuestionsForPhase({
+      questions: input.questions,
+      responses: input.responses,
+      participantId: input.participantId,
+      phase: "post",
+    }),
+  };
+}
+
+function cohortForParticipant(
+  p: ScoringParticipant
+): ParticipantScoreCohort | null {
+  const hasPre = !!p.pre_completed_at;
+  const hasPost = !!p.post_completed_at;
+  if (hasPost && hasPre && !p.post_unpaired) return "paired";
+  if (hasPost) return "end_only";
+  if (hasPre) return "pre_only";
+  return null;
+}
+
+const COHORT_ORDER: Record<ParticipantScoreCohort, number> = {
+  paired: 0,
+  end_only: 1,
+  pre_only: 2,
+};
+
+/**
+ * Anonymous per-person scores for the PDF. Labels only — no tokens or ids.
+ * Paired rows include beginning, end, and change. Single-phase rows leave
+ * the missing side blank.
+ */
+export function computeAnonymousParticipantScores(input: {
+  participants: ScoringParticipant[];
+  responses: ScoringResponse[];
+  questions: ScoringQuestion[];
+}): AnonymousParticipantScore[] {
+  const rows: Array<AnonymousParticipantScore & { id: string }> = [];
+
+  for (const p of input.participants) {
+    const cohort = cohortForParticipant(p);
+    if (!cohort) continue;
+
+    const preCorrect = countCorrectForPhase({
+      responses: input.responses,
+      questions: input.questions,
+      participantId: p.id,
+      phase: "pre",
+    });
+    const postCorrect = countCorrectForPhase({
+      responses: input.responses,
+      questions: input.questions,
+      participantId: p.id,
+      phase: "post",
+    });
+
+    const prePercent = cohort === "end_only" ? null : percentCorrect(preCorrect);
+    const postPercent = cohort === "pre_only" ? null : percentCorrect(postCorrect);
+    const deltaPp =
+      prePercent !== null && postPercent !== null
+        ? Math.round((postPercent - prePercent) * 10) / 10
+        : null;
+
+    rows.push({
+      id: p.id,
+      label: "",
+      cohort,
+      prePercent,
+      postPercent,
+      deltaPp,
+    });
+  }
+
+  rows.sort((a, b) => {
+    const cohortDiff = COHORT_ORDER[a.cohort] - COHORT_ORDER[b.cohort];
+    if (cohortDiff !== 0) return cohortDiff;
+    return a.id.localeCompare(b.id);
+  });
+
+  return rows.map((row, index) => ({
+    label: `Participant ${index + 1}`,
+    cohort: row.cohort,
+    prePercent: row.prePercent,
+    postPercent: row.postPercent,
+    deltaPp: row.deltaPp,
+  }));
 }
 
 /**

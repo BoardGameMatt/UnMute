@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { requireParticipant } from "@/lib/trane-quiz/auth";
 import { TRANE_QUIZ_PARTICIPANT_COOKIE } from "@/lib/trane-quiz/constants";
 import { responsePhaseForOffering } from "@/lib/trane-quiz/phases";
+import { buildParticipantPostResults } from "@/lib/trane-quiz/scoring";
 import type {
   TraneQuestion,
   TraneQuestionOption,
@@ -23,7 +24,7 @@ function parseOptions(raw: unknown): TraneQuestionOption[] {
   );
 }
 
-/** Participant-facing state. Never includes correct_option. */
+/** Participant-facing state. Answer keys are included only after POST completes, and only for missed questions. */
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
@@ -45,7 +46,7 @@ export async function GET(
 
   const { data: questions, error: qErr } = await admin
     .from("trane_questions")
-    .select("id, sort_order, stem, options")
+    .select("id, sort_order, stem, options, correct_option")
     .eq("course_id", offering.course_id)
     .order("sort_order", { ascending: true });
 
@@ -58,7 +59,7 @@ export async function GET(
 
   const qRows = questions as Pick<
     TraneQuestion,
-    "id" | "sort_order" | "stem" | "options"
+    "id" | "sort_order" | "stem" | "options" | "correct_option"
   >[];
 
   let answeredKeys: string[] = [];
@@ -104,6 +105,32 @@ export async function GET(
     options: parseOptions(q.options),
   }));
 
+  let results = null;
+  if (participant.post_completed_at) {
+    const { data: scoredResponses } = await admin
+      .from("trane_responses")
+      .select("participant_id, question_id, phase, selected_option")
+      .eq("offering_id", offering.id)
+      .eq("participant_id", participant.id);
+
+    results = buildParticipantPostResults({
+      questions: qRows.map((q) => ({
+        id: q.id,
+        sort_order: q.sort_order,
+        stem: q.stem,
+        correct_option: q.correct_option,
+        options: parseOptions(q.options),
+      })),
+      responses: (scoredResponses ?? []) as Pick<
+        TraneResponse,
+        "participant_id" | "question_id" | "phase" | "selected_option"
+      >[],
+      participantId: participant.id,
+      preCompleted: !!participant.pre_completed_at,
+      postUnpaired: participant.post_unpaired,
+    });
+  }
+
   return NextResponse.json({
     offeringPhase: offering.phase,
     activePhase,
@@ -117,5 +144,6 @@ export async function GET(
     answeredCount: answered.size,
     currentQuestionIndex,
     questions: publicQuestions,
+    results,
   });
 }

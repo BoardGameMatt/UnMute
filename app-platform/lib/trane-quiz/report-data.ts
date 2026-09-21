@@ -8,7 +8,12 @@ import type {
   TraneQuestionOption,
   TraneResponse,
 } from "@/lib/types/database";
-import { computeScoringSummary, type ScoringSummary } from "./scoring";
+import {
+  computeAnonymousParticipantScores,
+  computeScoringSummary,
+  type AnonymousParticipantScore,
+  type ScoringSummary,
+} from "./scoring";
 
 export type TraneReportPayload = {
   courseTitle: string;
@@ -17,6 +22,7 @@ export type TraneReportPayload = {
   label: string | null;
   generatedAt: string;
   summary: ScoringSummary;
+  participantScores: AnonymousParticipantScore[];
 };
 
 function parseOptions(raw: unknown): TraneQuestionOption[] {
@@ -78,15 +84,24 @@ export async function buildReportPayload(
     options: parseOptions(q.options),
   }));
 
+  const scoringQuestions = questionRows.map((q) => ({
+    id: q.id,
+    sort_order: q.sort_order,
+    stem: q.stem,
+    correct_option: q.correct_option,
+    options: q.options,
+  }));
+
   const summary = computeScoringSummary({
     participants: participants as TraneParticipant[],
     responses: responses as TraneResponse[],
-    questions: questionRows.map((q) => ({
-      id: q.id,
-      sort_order: q.sort_order,
-      stem: q.stem,
-      correct_option: q.correct_option,
-    })),
+    questions: scoringQuestions,
+  });
+
+  const participantScores = computeAnonymousParticipantScores({
+    participants: participants as TraneParticipant[],
+    responses: responses as TraneResponse[],
+    questions: scoringQuestions,
   });
 
   return {
@@ -96,5 +111,6 @@ export async function buildReportPayload(
     label: offering.label,
     generatedAt: new Date().toISOString(),
     summary,
+    participantScores,
   };
 }

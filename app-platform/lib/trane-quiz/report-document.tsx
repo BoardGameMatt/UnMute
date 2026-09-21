@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Document,
   Image,
@@ -122,6 +123,25 @@ const styles = StyleSheet.create({
   colPre: { width: "14%" },
   colPost: { width: "14%" },
   colDelta: { width: "14%" },
+  page2Body: {
+    paddingHorizontal: 28,
+    paddingTop: 16,
+  },
+  page2Intro: {
+    fontSize: 9,
+    color: "#111111",
+    marginBottom: 12,
+    lineHeight: 1.4,
+  },
+  pColLabel: { width: "34%" },
+  pColPre: { width: "22%" },
+  pColPost: { width: "22%" },
+  pColDelta: { width: "22%" },
+  cohortNote: {
+    fontSize: 7,
+    color: "#666666",
+    marginTop: 1,
+  },
 });
 
 function fmt(n: number | null): string {
@@ -138,6 +158,14 @@ function fmtDelta(n: number | null): string {
 function truncate(s: string, max: number): string {
   if (s.length <= max) return s;
   return `${s.slice(0, max - 1)}…`;
+}
+
+function cohortCaption(
+  cohort: TraneReportPayload["participantScores"][number]["cohort"]
+): string {
+  if (cohort === "paired") return "Beginning and end on this phone";
+  if (cohort === "end_only") return "End quiz only";
+  return "Beginning quiz only";
 }
 
 type TraneReportDocumentProps = {
@@ -191,7 +219,7 @@ export function TraneReportDocument({
           <View style={styles.deltaBlock}>
             <Text style={styles.deltaTitle}>Paired learning delta</Text>
             <Text>
-              Before {fmt(summary.meanPrePercent)} → After{" "}
+              Before {fmt(summary.meanPrePercent)} to After{" "}
               {fmt(summary.meanPostPercent)} ({fmtDelta(summary.deltaPp)})
             </Text>
             {summary.endOnly > 0 ? (
@@ -230,11 +258,75 @@ export function TraneReportDocument({
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              Anonymous responses. Same-device pairing when available. No
-              individual scores.
+              Anonymous responses. Same-device pairing when available.
+              Individual scores on the next page are unlabeled.
             </Text>
-            {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image */}
-            <Image src={logoSrc} style={styles.logo} />
+            {logoSrc ? (
+              // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image
+              <Image src={logoSrc} style={styles.logo} />
+            ) : null}
+          </View>
+        </View>
+      </Page>
+
+      <Page size="LETTER" style={styles.page}>
+        <View style={styles.header}>
+          <Text style={styles.headerEyebrow}>
+            Product Management Training — Knowledge Check
+          </Text>
+          <Text style={styles.headerTitle}>Individual scores (anonymous)</Text>
+          <Text style={styles.headerMeta}>{designation}</Text>
+        </View>
+
+        <View style={styles.page2Body}>
+          <Text style={styles.page2Intro}>
+            Each row is one unlabeled participant. Paired rows took both
+            quizzes on the same phone and show beginning score, end score, and
+            change. Single-phase rows show only the quiz they completed.
+          </Text>
+
+          <View style={styles.tableHeader} wrap={false}>
+            <Text style={[styles.th, styles.pColLabel]}>Participant</Text>
+            <Text style={[styles.th, styles.pColPre]}>Beginning</Text>
+            <Text style={[styles.th, styles.pColPost]}>End</Text>
+            <Text style={[styles.th, styles.pColDelta]}>Change</Text>
+          </View>
+
+          {payload.participantScores.length === 0 ? (
+            <View style={styles.row}>
+              <Text style={styles.cell}>No completed quizzes yet.</Text>
+            </View>
+          ) : (
+            payload.participantScores.map((row) => (
+              <View key={row.label} style={styles.row} wrap={false}>
+                <View style={styles.pColLabel}>
+                  <Text style={styles.cell}>{row.label}</Text>
+                  <Text style={styles.cohortNote}>
+                    {cohortCaption(row.cohort)}
+                  </Text>
+                </View>
+                <Text style={[styles.cell, styles.pColPre]}>
+                  {fmt(row.prePercent)}
+                </Text>
+                <Text style={[styles.cell, styles.pColPost]}>
+                  {fmt(row.postPercent)}
+                </Text>
+                <Text style={[styles.cell, styles.pColDelta]}>
+                  {fmtDelta(row.deltaPp)}
+                </Text>
+              </View>
+            ))
+          )}
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              No names, emails, or device tokens. Labels are assigned for this
+              report only and are not a roster.
+            </Text>
+            {logoSrc ? (
+              // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image
+              <Image src={logoSrc} style={styles.logo} />
+            ) : null}
           </View>
         </View>
       </Page>
