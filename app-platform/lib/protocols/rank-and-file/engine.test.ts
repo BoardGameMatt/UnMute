@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  applyRailOrder,
   canWrap,
   dealNumbers,
   insertDealAt,
   isExactOrder,
+  isSharedScreenName,
   kCapped,
   kForRound,
   mayExposeNamedTiles,
@@ -18,8 +20,8 @@ import {
   teamRowShowsNumbers,
   timerHasExpired,
   validateClue,
-  isSharedScreenName,
 } from "./engine";
+import type { RankTile } from "./types";
 
 describe("kForRound", () => {
   it("uses 3 / 4 / 6 / 8 then 8", () => {
@@ -192,6 +194,33 @@ describe("scoring helpers", () => {
     assert.deepEqual(placeInSlot([null, null, null], "a", 1), [null, "a", null]);
     assert.deepEqual(placeInSlot([null, "a", null], "a", 0), ["a", null, null]);
     assert.deepEqual(swapSlots(["a", "b", null], 0, 1), ["b", "a", null]);
+  });
+
+  it("moves a tray card onto the rail without waiting for a round trip", () => {
+    const tray: RankTile[] = [
+      { dealId: "a", clueText: "snoring", displayName: "Maya", dealtNumber: null },
+      { dealId: "b", clueText: "bathroom", displayName: "Priya", dealtNumber: null },
+    ];
+    const next = applyRailOrder([null, null], tray, ["a", null]);
+    assert.equal(next.rail[0]?.dealId, "a");
+    assert.deepEqual(
+      next.tray.map((tile) => tile.dealId),
+      ["b"]
+    );
+  });
+
+  it("returns a placed card to the remaining tray order", () => {
+    const a: RankTile = { dealId: "a", clueText: "a", displayName: "Maya", dealtNumber: null };
+    const b: RankTile = { dealId: "b", clueText: "b", displayName: "Priya", dealtNumber: null };
+    const next = applyRailOrder([a, null], [b], [null, null]);
+    assert.deepEqual(
+      next.rail.map((tile) => tile?.dealId ?? null),
+      [null, null]
+    );
+    assert.deepEqual(
+      next.tray.map((tile) => tile.dealId),
+      ["b", "a"]
+    );
   });
 
   it("expires from a start timestamp", () => {

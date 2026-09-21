@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameState } from "@/components/providers/SessionProvider";
-import { displayStorageKey } from "./engine";
+import { displayStorageKey, withOptimisticRail } from "./engine";
 import type { RankAndFileAction, RankAndFilePlayState } from "./types";
 
 export function readDisplayPin(sessionId: string): boolean {
@@ -33,20 +33,24 @@ export function useRankAndFilePlay(sessionId: string) {
   const inflight = useRef(0);
   const fetchGen = useRef(0);
   const timerRetry = useRef(0);
+  const railBusy = useRef(false);
+  const railQueued = useRef<(string | null)[] | null>(null);
 
   useEffect(() => {
     setIsDisplay(readDisplayPin(sessionId));
   }, [sessionId]);
 
   const reload = useCallback(async () => {
-    if (inflight.current > 0) return;
+    if (inflight.current > 0 || railBusy.current || railQueued.current) return;
     const gen = fetchGen.current;
     const display = readDisplayPin(sessionId);
     const res = await fetch(
       `/api/rank-and-file/session/${sessionId}/play${display ? "?display=1" : ""}`
     );
     const body = (await res.json()) as { state?: RankAndFilePlayState; error?: string };
-    if (gen !== fetchGen.current || inflight.current > 0) return;
+    if (gen !== fetchGen.current || inflight.current > 0 || railBusy.current || railQueued.current) {
+      return;
+    }
     if (!res.ok) {
       setError(body.error ?? "Could not load Rank and File.");
       return;
@@ -59,8 +63,8 @@ export function useRankAndFilePlay(sessionId: string) {
     void reload();
   }, [reload, phase, stateJson, isDisplay]);
 
-  const send = useCallback(
-    async (action: RankAndFileAction): Promise<boolean> => {
+  const postAction = useCallback(
+    async (action: RankAndFileAction): Promise<{ ok: boolean; state?: RankAndFilePlayState }> => {
       inflight.current += 1;
       fetchGen.current += 1;
       const gen = fetchGen.current;
@@ -77,36 +81,84 @@ export function useRankAndFilePlay(sessionId: string) {
           }
         );
         const body = (await res.json()) as { state?: RankAndFilePlayState; error?: string };
-        if (gen !== fetchGen.current) return false;
+        if (gen !== fetchGen.current) return { ok: false };
         if (!res.ok) {
           setError(body.error ?? "Action failed.");
-          inflight.current = 0;
-          await reload();
-          return false;
+          return { ok: false };
         }
-        if (body.state) setState(body.state);
-        if (action.type === "timerExpired" && body.state && body.state.phase === "write") {
-          if (timerRetry.current < 6) {
-            timerRetry.current += 1;
-            window.setTimeout(() => {
-              void send({ type: "timerExpired" });
-            }, 400);
-          }
-        } else if (action.type === "timerExpired") {
-          timerRetry.current = 0;
-        }
-        return true;
+        return { ok: true, state: body.state };
       } catch {
         setError("Network error. Try again.");
+        return { ok: false };
+      } finally {
+        inflight.current = Math.max(0, inflight.current - 1);
+        if (inflight.current === 0 && !railBusy.current && !railQueued.current) {
+          setPending(false);
+        }
+      }
+    },
+    [sessionId]
+  );
+
+  const flushRail = useCallback(async () => {
+    if (railBusy.current) return;
+    railBusy.current = true;
+    setPending(true);
+    try {
+      while (railQueued.current) {
+        const dealIds = railQueued.current;
+        railQueued.current = null;
+        const result = await postAction({ type: "setRail", dealIds });
+        if (!result.ok) {
+          railQueued.current = null;
+          inflight.current = 0;
+          await reload();
+          return;
+        }
+        const queued = railQueued.current;
+        if (result.state) {
+          setState(queued ? withOptimisticRail(result.state, queued) : result.state);
+        }
+      }
+    } finally {
+      railBusy.current = false;
+      if (railQueued.current) {
+        void flushRail();
+        return;
+      }
+      if (inflight.current === 0) setPending(false);
+    }
+  }, [postAction, reload]);
+
+  const send = useCallback(
+    async (action: RankAndFileAction): Promise<boolean> => {
+      if (action.type === "setRail") {
+        setState((prev) => (prev ? withOptimisticRail(prev, action.dealIds) : prev));
+        railQueued.current = action.dealIds;
+        await flushRail();
+        return true;
+      }
+
+      const result = await postAction(action);
+      if (!result.ok) {
         inflight.current = 0;
         await reload();
         return false;
-      } finally {
-        inflight.current = Math.max(0, inflight.current - 1);
-        setPending(false);
       }
+      if (result.state) setState(result.state);
+      if (action.type === "timerExpired" && result.state && result.state.phase === "write") {
+        if (timerRetry.current < 6) {
+          timerRetry.current += 1;
+          window.setTimeout(() => {
+            void send({ type: "timerExpired" });
+          }, 400);
+        }
+      } else if (action.type === "timerExpired") {
+        timerRetry.current = 0;
+      }
+      return true;
     },
-    [reload, sessionId]
+    [flushRail, postAction, reload]
   );
 
   const pinDisplay = useCallback(

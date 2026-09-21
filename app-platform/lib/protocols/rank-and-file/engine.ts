@@ -1,4 +1,4 @@
-import type { RankAndFilePhase } from "./types";
+import type { RankAndFilePhase, RankAndFilePlayState, RankTile } from "./types";
 
 export const WRITE_DISPLAY_SECONDS = 60;
 export const WRITE_SECONDS = 65;
@@ -218,6 +218,47 @@ export function swapSlots(
 
 export function returnToTray(slots: (string | null)[], dealId: string): (string | null)[] {
   return slots.map((id) => (id === dealId ? null : id));
+}
+
+export function applyRailOrder(
+  rail: (RankTile | null)[],
+  tray: RankTile[],
+  dealIds: (string | null)[]
+): { rail: (RankTile | null)[]; tray: RankTile[] } {
+  const byId = new Map<string, RankTile>();
+  for (const tile of rail) {
+    if (tile) byId.set(tile.dealId, tile);
+  }
+  for (const tile of tray) byId.set(tile.dealId, tile);
+
+  const placed = new Set(dealIds.filter((id): id is string => Boolean(id)));
+  const nextRail = dealIds.map((id) => (id ? byId.get(id) ?? null : null));
+  const nextTray: RankTile[] = [];
+  const seen = new Set<string>();
+  for (const tile of tray) {
+    if (placed.has(tile.dealId) || seen.has(tile.dealId)) continue;
+    seen.add(tile.dealId);
+    nextTray.push(tile);
+  }
+  for (const tile of rail) {
+    if (!tile || placed.has(tile.dealId) || seen.has(tile.dealId)) continue;
+    seen.add(tile.dealId);
+    nextTray.push(tile);
+  }
+  return { rail: nextRail, tray: nextTray };
+}
+
+export function withOptimisticRail(
+  state: RankAndFilePlayState,
+  dealIds: (string | null)[]
+): RankAndFilePlayState {
+  const next = applyRailOrder(state.rail, state.tray, dealIds);
+  return {
+    ...state,
+    rail: next.rail,
+    tray: next.tray,
+    canCommit: next.rail.length > 0 && next.rail.every((tile) => tile !== null),
+  };
 }
 
 export function seededRandom(seed: string): () => number {
