@@ -10,6 +10,23 @@ type Question = {
   options: Option[];
 };
 
+type MissedQuestion = {
+  sortOrder: number;
+  stem: string;
+  selectedLabel: string;
+  correctLabel: string;
+};
+
+type PostResults = {
+  postPercent: number;
+  postCorrect: number;
+  total: number;
+  paired: boolean;
+  prePercent: number | null;
+  deltaPp: number | null;
+  missed: MissedQuestion[];
+};
+
 type PlayState = {
   offeringPhase: string;
   activePhase: "pre" | "post" | null;
@@ -22,6 +39,15 @@ type PlayState = {
   answeredCount: number;
   currentQuestionIndex: number;
   questions: Question[];
+  results: PostResults | null;
+};
+
+const fmtPct = (n: number): string =>
+  `${n % 1 === 0 ? n.toFixed(0) : n.toFixed(1)}%`;
+
+const fmtDelta = (n: number): string => {
+  const sign = n > 0 ? "+" : "";
+  return `${sign}${n % 1 === 0 ? n.toFixed(0) : n.toFixed(1)} pp`;
 };
 
 type TranePlayClientProps = {
@@ -139,27 +165,88 @@ export function TranePlayClient({ offeringId }: TranePlayClientProps) {
     );
   }
 
+  // Finished end quiz — show score even if the facilitator has closed
+  if (state.postCompleted) {
+    const results = state.results;
+    return (
+      <main className="mx-auto flex min-h-screen max-w-lg flex-col gap-6 px-5 py-12">
+        <header className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest text-trane-deep">
+            End-of-class knowledge check
+          </p>
+          <h1 className="text-2xl text-trane-purple">You’re done</h1>
+          <p className="text-base text-[#111]">
+            Return to the training room. Thank you.
+          </p>
+        </header>
+
+        {results ? (
+          <>
+            <section className="rounded-lg border border-[#EEE] bg-[#F7F4FF] p-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-trane-deep">
+                Your score
+              </p>
+              <p className="mt-2 text-4xl font-bold text-trane-purple">
+                {fmtPct(results.postPercent)}
+              </p>
+              <p className="mt-1 text-sm text-trane-gray">
+                {results.postCorrect} of {results.total} correct
+              </p>
+              {results.paired &&
+              results.prePercent !== null &&
+              results.deltaPp !== null ? (
+                <p className="mt-4 text-base text-[#111]">
+                  Beginning {fmtPct(results.prePercent)} → End{" "}
+                  {fmtPct(results.postPercent)} ({fmtDelta(results.deltaPp)})
+                </p>
+              ) : null}
+            </section>
+
+            {results.missed.length === 0 ? (
+              <p className="text-base text-[#111]">
+                You answered every question correctly.
+              </p>
+            ) : (
+              <section className="space-y-3">
+                <h2 className="text-lg text-trane-purple">
+                  Review the ones you missed
+                </h2>
+                <ul className="flex flex-col gap-3">
+                  {results.missed.map((item) => (
+                    <li
+                      key={item.sortOrder}
+                      className="rounded-lg border border-[#EEE] p-6"
+                    >
+                      <p className="text-xs font-bold uppercase tracking-widest text-trane-deep">
+                        Question {item.sortOrder}
+                      </p>
+                      <p className="mt-2 text-base leading-snug text-[#111]">
+                        {item.stem}
+                      </p>
+                      <p className="mt-3 text-sm text-trane-gray">
+                        Your answer: {item.selectedLabel}
+                      </p>
+                      <p className="mt-1 text-sm text-[#111]">
+                        Correct answer: {item.correctLabel}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
+        ) : null}
+      </main>
+    );
+  }
+
   // Closed session
   if (state.offeringPhase === "closed") {
     return (
       <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-5 py-16 text-center">
         <h1 className="text-2xl text-trane-purple">
-          {state.postCompleted || state.preCompleted
-            ? "You’re done"
-            : "This quiz is closed"}
+          {state.preCompleted ? "You’re done" : "This quiz is closed"}
         </h1>
-        <p className="text-base text-[#111]">
-          Return to the training room. Thank you.
-        </p>
-      </main>
-    );
-  }
-
-  // Finished end quiz
-  if (state.postCompleted) {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-5 py-16 text-center">
-        <h1 className="text-2xl text-trane-purple">You’re done</h1>
         <p className="text-base text-[#111]">
           Return to the training room. Thank you.
         </p>

@@ -86,9 +86,14 @@ Host token properties:
 - One question per screen.
 - Tap a single answer option (selectable row).
 - **Submit** button: disabled until an option is selected → active when selected → confirmed on tap.
-- On Submit: record answer, **auto-advance** to next question (no “correct/incorrect” feedback).
+- On Submit: record answer, **auto-advance** to next question (no “correct/incorrect” feedback **during** the quiz).
 - Progress: “Question N of 10” or thin bar — environmental, not gamified.
-- After Q10 Submit: thank-you / “You’re done — return to the training room.” No score shown.
+- After Q10 Submit on **PRE:** thank-you / “You’re done for now. Keep this page open or come back on this same phone for the end-of-class quiz.” No score shown.
+- After Q10 Submit on **POST:** thank-you plus **end-of-class results**:
+  - Percent of questions correct (and N of 10)
+  - For each missed question: stem, the answer they chose, and the correct answer (not the full key for questions they got right)
+  - If this phone also completed PRE (paired): beginning % and end % with change in percentage points
+  - End-only (unpaired) respondents see POST results only — no baseline comparison
 - Own pace; no shared timer forcing advancement.
 - **No edit after submit (locked):** once an answer is submitted, the participant cannot go back to change it.
 
@@ -124,7 +129,7 @@ That confirmation is required before the first POST question. Confirmed unpaired
 2. Stored in an HTTP-only cookie scoped to Trane Quiz + `localStorage` backup for the offering.
 3. Not derived from name, email, or fingerprinting beyond “this browser kept the cookie.”
 4. Answers keyed by `(offering_id, participant_token, phase)`.
-5. PDF report never shows tokens — aggregates only.
+5. PDF report never shows tokens — aggregates on page 1; unlabeled individual scores on page 2.
 6. Facilitator console shows counts only — never a named roster.
 
 **Limit (honest):** Same phone → linked for before/after. Different phone for the end quiz → treated as unpaired (confirmation required). Facilitator should still say: “Use the same phone you used this morning if you can.”
@@ -183,7 +188,9 @@ No live per-question leaderboard. Counts only.
 **Format:** PDF download — not a separate L&D web app.  
 **Visual system:** Trane PM Training visual standards (§8).
 
-### 5.1 Report contents (one page preferred; two max)
+### 5.1 Report contents (two pages)
+
+**Page 1 — room aggregates**
 
 Header band (Deep Purple `#32007E`, white type):
 
@@ -206,16 +213,22 @@ By-question table (flat, white ground, purple headers):
 
 Footer:
 
-- Short note: “Anonymous responses. Same-device pairing when available. No individual scores.”
+- Short note: “Anonymous responses. Same-device pairing when available. Individual scores on the next page are unlabeled.”
 - Trane logo lockup bottom right (`trane-technologies-logo.png` — do not rebuild in type)
 - Unmute Labs production credit only if required operationally; keep visually secondary
 
-**Room signal (optional second page or bottom of page 1 if space):**
+**Page 2 — anonymous individual scores**
 
-- Largest gains (top 2–3 questions)
-- Still weakest after class (top 2–3) — teach-back candidates
+- Header: “Individual scores (anonymous)” + class designation
+- One row per participant who completed at least one phase (joined-but-empty rows omitted)
+- Labels only (`Participant 1`, `Participant 2`, …) — never names, emails, or device tokens
+- Columns: Beginning % · End % · Change (percentage points)
+- **Paired** (both quizzes on the same phone): both scores and change
+- **End only:** end score; beginning and change blank
+- **Beginning only:** beginning score; end and change blank
+- Footnote: labels are assigned for this report only and are not a roster
 
-No raw answer dumps. No participant-level rows.
+No raw answer dumps. No identifying fields.
 
 ### 5.2 Scoring definition
 
@@ -271,7 +284,7 @@ Constraints:
 
 - Unique `(offering, participant, phase, question)`
 - At most one completed PRE and one completed POST per participant per offering
-- Answer key never sent to participant clients
+- Answer key never sent to participant clients **while answering**. After POST completes, the respondent’s own results payload may include correct answers **only for questions they missed** on POST (plus their POST % and, if paired, PRE %). Questions they got right do not include a key. PRE never returns scores or keys.
 - Host token never appears on participant screens or QR
 
 ---
@@ -357,7 +370,7 @@ PM courses 01–06: PDFs are the content source of truth. Course 07 (Business St
 
 - Route tree under `app-platform`: suggested `/trane-quiz/...`
 - Do not register as an Unmute protocol / Season Moment
-- Participants = anonymous cookies; cannot read others’ responses or answer keys
+- Participants = anonymous cookies; cannot read others’ responses. Answer keys are withheld until that respondent finishes POST, and then only for questions they missed.
 - Facilitator actions require valid `host_token` for that offering
 - PDF download requires same host token
 - Reuse Unmute QR / join URL builder patterns where practical
@@ -379,9 +392,9 @@ PM courses 01–06: PDFs are the content source of truth. Course 07 (Business St
 2. ≥8 real participants complete before and after on phones; counts match ±0.
 3. Same-phone before/after pairs correctly; PDF paired N matches.
 4. Participant with no PRE who starts POST sees confirmation; Cancel returns to waiting; Continue allows end-only quiz; PDF footnotes end-only count and keeps headline delta paired-only.
-5. Participants never see correct answers or personal scores; no edit after submit.
-6. PDF downloads with Trane tokens, logo, overall delta, and per-question before/after/change for a fixture dataset.
-7. Answer key absent from participant network payloads.
+5. During the quiz, no correct/incorrect feedback and no edit after submit. After POST completes, the respondent sees their end-of-class %, missed-question correct answers, and (if paired) beginning vs end %.
+6. PDF downloads with Trane tokens, logo, overall delta, per-question before/after/change, and a second page of unlabeled individual beginning/end/change scores.
+7. Answer key absent from participant network payloads until POST is complete; then only missed-question keys for that respondent.
 8. Host token rotation: each new offering gets a new host URL.
 
 ---
@@ -420,6 +433,8 @@ None blocking. Optional later:
 - [x] Courses 01–06: PDFs are content source. Course 07 (Business Storytelling) sourced from the Word knowledge check.
 - [x] **No edit after submit**
 - [x] **POST without PRE allowed**, with required participant confirmation; unpaired excluded from headline paired delta
+- [x] **End-of-class results for the respondent:** POST % + missed-question correct answers; paired respondents also see beginning vs end %
+- [x] **PDF page 2:** anonymous per-participant beginning/end/change (no names or tokens)
 
 ---
 
@@ -430,8 +445,8 @@ None blocking. Optional later:
 - [x] Create-offering entry point
 - [x] Anonymity + before/after linking
 - [x] Unpaired POST + confirmation
-- [x] Participant UX (incl. no edit after submit)
+- [x] Participant UX (incl. no edit after submit; POST results after Q10)
 - [x] Facilitator console
-- [x] PDF report (not L&D web app)
+- [x] PDF report (aggregates + anonymous individual scores; not an L&D web app)
 - [x] Trane visual tokens + logo asset
 - [x] Question bank companion
