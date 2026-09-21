@@ -3,7 +3,7 @@
 **Status:** Build spec, locked for v1  
 **Slug:** `rank-and-file`  
 **Type:** Real-time (simultaneous secret clue write; facilitator-paced ranking on the shared screen; server-authoritative clocks)  
-**Players:** 3–20 (optimal 6–12). Facilitator is a player.  
+**Players:** 3–20 (optimal 6–12). Facilitator plays on their phone. The host laptop is **Shared screen**, not a player.  
 **Envelope:** ~15–25 minutes at optimal headcount. Rounds 1–5 are the sitting; Wrap is first offered after round 5.  
 **Owner:** Matt Hendricks  
 **Pack mode:** `required`. Pack A is the 51-subject library in §12 and `docs/protocols/rank-and-file-pack-a.csv`.
@@ -20,9 +20,9 @@ Surface inspiration: a numbered scale (1–99) with a topic from sad-to-glorious
 
 ## 1. What this Moment is
 
-Each round, a **subset** of the room is dealt one unique number from a shuffled deck of **1–99**. Everyone sees the same **subject** and its two poles (for example: Breakfast foods, Sad → Glorious). The people who were dealt a number have one minute to write an **example** that belongs at their place on that scale. They must not name numbers, values, or quantities. Then the whole room — including people who were not dealt a card — has two minutes to **rank those examples from low to high** on a shared rail that starts at **0** and ends at **100**. Each tile shows **who wrote it**. The number stays secret until reveal.
+Each round, a **subset** of the room is dealt one unique number from a shuffled deck of **1–99**. Everyone sees the same **subject** and its two poles (for example: Breakfast foods, **0** Sad → **100** Glorious). The people who were dealt a number have one minute to write an **example** that belongs at their place on that scale. They must not name numbers, values, or quantities. Then the whole room — including people who were not dealt a card — has three minutes to **rank those examples from low to high** on a shared rail that starts at **0** (top) and ends at **100** (bottom). Each tile shows **who wrote it**. The number stays secret until reveal.
 
-If the left-to-right order matches the hidden numbers exactly, the **team** scores +1. If even one tile is off, the round scores 0 and the truth is shown under the team’s row: the correct order with each number on the named tile.
+If the top-to-bottom order matches the hidden numbers exactly (lowest at **0**, highest at **100**), the **team** scores +1. If even one tile is off, the round scores 0 and the truth is shown under the team’s row: the correct order with each number on the named tile.
 
 Round 1 is a scored teaching round (Breakfast foods, three clue givers). Later rounds add more clue givers and, from round 5, subjects about how this team actually works.
 
@@ -37,23 +37,23 @@ Round 1 is a scored teaching round (Breakfast foods, three clue givers). Later r
 
 ## 2. Players, join, device
 
-- **Start floor: 3.** Below 3, Start stays disabled. Copy: “Need 3 to start.”
+- **Start floor: 3 real players.** The shared-screen laptop does not count. Below 3 phones in the room, Start stays disabled. Copy: “Need 3 to start.”
 - **Cap: 20.**
 - **Optimal: 6–12.** Below 6, most of the room is clue-giving every round. Above 12, ranking eight named examples is still the work; do not grow the clue-giver cap past 8.
-- **The facilitator is a player.** They are dealt numbers when selected, they write clues, they rank with the room. They also get Lead-only chrome (Start, place/reorder/Commit on the rail, Another round, Wrap). They are **one roster identity**, not two joins.
-- No auth. Lobby: display name. Same 6-character join code as every Moment.
+- **The facilitator is a player on their phone.** They are dealt numbers when selected, they write clues, they rank with the room. Ranking controls, Next round, and Wrap stay on the shared laptop.
+- No auth. Same 6-character join code as every Moment. Phones join with a display name. The host laptop does not.
 - **Phone is the primary controller; desktop works but is not optimized.** Video call stays on the laptop. The **shared laptop is the room display** (QR, then the public board / ranking rail). Phones carry private numbers during write — same split as SwitchCode’s room-display pin and I Know What You Meme’s “pick on your phone.”
 - **New names close at Start.** Cookie / tap-your-name rejoin works for people already on the roster. No Admit late in v1.
 
-### 2.1 Room display pin (Lead laptop)
+### 2.1 Shared screen (host laptop)
 
-Same participant cookie on laptop and phone would otherwise paint the Lead’s **number** on the projector the moment they are a clue giver.
+The facilitator always has this laptop on the projector. They do not enter clues here.
 
-- When the session Lead’s laptop is in lobby, it is **positioned as the shared screen**. Copy: **This is the shared screen.** Toggling **This is the shared screen** (navy / ghost) pins `localStorage` for this `sessionId` on that browser.
-- The Lead is **prompted to join on their phone as well.** Copy under the pin: **Join on your phone too. Your number stays on the phone — not on this screen.**
+- Opening the host link **does not prompt for a name.** That browser auto-claims as **Shared screen**, auto-pins `localStorage` for this `sessionId`, and copy says **Join immediately on your phone.**
+- **Shared screen is not a player.** It is excluded from the Start count, the lobby roster, Lead transfer, and the clue-giver pool. The three-player floor is three phones.
 - A pinned browser **only ever mounts the public board** (§7.3). It never receives `dealt_number` in its play payload.
-- The Lead’s phone (unpinned) is the personal console: clue field when they are dealt in, plus `FACILITATOR` chrome. During `RANK`, the facilitator is already on the two-row board (drag onto slots, arrows to reorder). Other phones show talk copy only.
-- Start does **not** block on the pin. Facilitator script names it. If they forget, the room-display payload is still stripped; the risk is they share the *phone* tab by mistake.
+- The facilitator’s phone is the personal console: clue field when they are dealt in. During `RANK`, phones show talk copy only. The laptop is the ranking board (drag onto slots, up/down arrows to reorder).
+- Start does **not** block on the pin. The host link pins automatically. If they forget the phone, the room-display payload is still stripped; the risk is they share a *phone* tab by mistake.
 
 ---
 
@@ -74,10 +74,10 @@ The looping panel is **one fixed size for every beat** (CSS grid overlap). Do no
 | # | Caption | What they see |
 |---|---|---|
 | 1 | To join, scan the QR with your phone. Play on your phone. Leave the laptop on the shared screen so nobody sees your number. | Phone + laptop with a video grid. QR lives in the lobby chrome beside this loop. **No numbers.** |
-| 2 | Each of you gets a secret number. Write a clue for where that number sits on the scale. Keep the number to yourself. | Subject card *Kitchen gadgets* with poles *Pointless* → *Couldn't cook without it*. A **YOUR NUMBER** card showing `?`. |
+| 2 | Each of you gets a secret number. Write a clue for where that number sits on the scale. Keep the number to yourself. | Subject card *Kitchen gadgets* with poles **0** *Pointless* → **100** *Couldn't cook without it*. A **YOUR NUMBER** card showing `?`. |
 | 3 | Your phone shows the number and the clue you are writing. Qualifiers and adjectives are fair game. No counts, numbers, or measures. | **YOUR NUMBER** `48` plus Priya writing *Whisk from IKEA*. |
-| 4 | Then the team ranks the examples from low to high — not yet in the right order. Everyone talks. The facilitator moves the cards. | Four named tiles, scrambled: Jordan / *Twisting garlic press*, Maya / *Plastic crab cracker*, Sam / *Parmesan grater like Olive Garden’s*, Priya / *Whisk from IKEA*. |
-| 5 | Exact order scores. The truth row shows each name and its number. | Correct low-to-high row with names and numbers: Maya 8, Priya 48, Jordan 72, Sam 92. |
+| 4 | Then the team ranks the examples from 0 to 100 — not yet in the right order. Everyone talks. The facilitator moves the cards. | Vertical column: **0** at the top, **100** at the bottom; unranked named tiles on the right, aligned to empty slots. Four scrambled tiles: Jordan / *Twisting garlic press*, Maya / *Plastic crab cracker*, Sam / *Parmesan grater like Olive Garden’s*, Priya / *Whisk from IKEA*. |
+| 5 | Exact order scores. The truth row shows each name and its number. | Correct low-to-high column with names and numbers: Maya 8, Priya 48, Jordan 72, Sam 92. |
 
 **Sample data (obviously fake, not in Pack A):** theme *Kitchen gadgets*; low *Pointless*; high *Couldn't cook without it*; four named clues as above. Never show 1–99 in beats 1–2.
 
@@ -91,14 +91,14 @@ One team. Facilitator-paced. After rounds 1–4 the Lead taps **Next round** onl
 
 ### 4.1 A round
 
-1. Server picks **k clue givers** from the connected roster (§4.6), shuffles the **1–99** deck, and deals each of those people **one unique number**. In the same action it draws the round’s **subject** (§4.7). Deal is one server action at round start. No client-side pick.
+1. Server picks **k clue givers** from the connected **players** (§4.6) — never the Shared screen sentinel — shuffles the **1–99** deck, and deals each of those people **one unique number**. In the same action it draws the round’s **subject** (§4.7). Deal is one server action at round start. No client-side pick.
 2. Everyone sees the subject and its two poles. Clue givers also see **only their own number**, on their **phone**. The room display and everyone else see no numbers.
 3. **60-second** write clock. Clue givers type one example and tap **Lock in**. Grey → navy (field non-empty and not rejected) → amber (locked). Lock is final. People who were not dealt a card see the subject, the poles, who is writing (roster chips), and **Don’t help with examples.** They have no field.
 4. Two paths to close write: every **connected** clue giver has locked, **or** the server timer expires. No 3-second tap-settle. Unlocked givers at T=0 contribute **nothing** — no tile, their number is unused this round.
 5. Submitted clues become **named tiles** (clue text + author’s display name). The **number** stays secret until reveal.
-6. **`RANK` (180 seconds).** Two rows: **N empty slots** on top (`0` left, `100` right), submitted tiles in a **random-order tray** below. The whole room talks. **The facilitator** drags a card onto a top slot, then taps a placed card for left/right arrows. Every other phone is read-only with talk copy. Commit is the score event and can fire before the clock ends.
-7. **Commit** (Lead, amber, on the shared laptop) enables only when the tray is empty (every submitted tile is on the rail). Commit is the score event.
-8. Reveal (§4.4). Then: rounds 1–4 → Lead **Next round** only. Round 5+ → **Another round** (amber) or **Wrap things up** (navy).
+6. **`RANK` (180 seconds).** Two columns: **N empty slots** in a **left** vertical rail (`0` top, `100` bottom), submitted tiles in a **random-order Unranked** column on the right, each unranked card aligned to an empty left slot. The whole room talks. **The shared laptop** (session Lead) drags a card onto a left slot, then uses **↑ / ↓** on a placed card. Every phone is read-only with talk copy. Commit is the score event and can fire before the clock ends.
+7. **Commit** (Lead, amber, on the shared laptop) enables only when Unranked is empty (every submitted tile is on the rail). Commit is the score event. Drops apply on the laptop **immediately** (optimistic rail); the client serializes `setRail` so an earlier POST cannot overwrite a later layout.
+8. Reveal (§4.4). Then: rounds 1–4 → Lead **Next round** only (laptop). Round 5+ → **Another round** (amber) or **Wrap things up** (navy), also on the laptop.
 
 ### 4.2 What a clue lock means
 
@@ -108,13 +108,13 @@ Honor system on workplace fit and on spelled quantities the server cannot see (�
 
 ### 4.3 Ranking controls (facilitator)
 
-The facilitator is dropped straight into the ranking board. No extra pin/click to “start moving cards.”
+The shared laptop is dropped straight into the ranking board. No extra pin/click to “start moving cards.”
 
-- **Layout:** two rows. Top: **N empty slots** between `0` and `100`. Bottom: submitted tiles in random order.
-- **Place:** drag a bottom card onto a top slot, or tap a card then tap an empty slot.
-- **Reorder:** tap a placed card; left/right arrows appear (one arrow only at an end).
-- **Return to tray:** drag a placed card back to the bottom row.
-- **Commit:** amber once every top slot is filled. One tap, no confirm. Ends the round early.
+- **Layout:** two columns. Left: **N empty slots** between **0** (top) and **100** (bottom), with the subject’s low/high words under those anchors. Right: submitted tiles in random order, one card per empty left slot so rows stay aligned. Right column labeled **Unranked**.
+- **Place:** drag an Unranked card onto a left slot, or tap a card then tap an empty slot. The card appears in the slot immediately.
+- **Reorder:** **↑ / ↓** on a placed card (↑ disabled on the top slot, ↓ on the bottom).
+- **Return to Unranked:** drag a placed card back to the right column.
+- **Commit:** amber once every left slot is filled. One tap, no confirm. Ends the round early.
 
 Everyone else, including inactive players, sees:
 
@@ -128,9 +128,9 @@ The **180s** clock is pacing, not auto-commit. Commit stays facilitator-gated af
 
 Everyone sees, top to bottom:
 
-1. The team’s committed row (clue text + display name, left = lowest). **No numbers yet.**
-2. Hit: sunrise-gold check under a `IN ORDER` mono label. Miss: no check. Copy: **One card off.** (Even if several are off.)
-3. On a miss only: a **truth row directly under the team row** — same named tiles in correct numerical order, each now showing **the number**.
+1. The team’s committed column (clue text + display name, **0** at the top = lowest, **100** at the bottom = highest). **No numbers yet.**
+2. Hit: `IN ORDER` mono label, **Exact order** in `font-display` sunrise-gold, and a large check with expanding rings (`HitSoundwave`; static large check under `useReducedMotion`). Miss: no check. Copy: **One card off.** (Even if several are off.)
+3. On a miss only: a **truth column directly under the team column** — same named tiles in correct numerical order, each now showing **the number**.
 4. On a hit: numbers annotate the same named tiles (do not skip them). Names were already visible.
 5. Running **team** total (`font-display` value, `font-mono` uppercase `ROUNDS IN ORDER`).
 
@@ -164,7 +164,7 @@ Round 1 is **scored**. It is the teaching subject, not a Talk Track-style unscor
 
 1. Count clue-giver turns so far for every connected player (unsubmitted / disconnected deals still count as a turn if they were dealt).
 2. Fill `k` seats from the lowest count bucket, uniformly at random inside the bucket, then the next bucket, until `k` are seated.
-3. The facilitator is in the pool.
+3. The facilitator (phone join) is in the pool. **Shared screen is never in the pool.**
 
 Do **not** re-deal a dropped clue giver mid-write. Do not promote a spectator into a live write after numbers are out.
 
@@ -239,12 +239,12 @@ Trim leading/trailing whitespace. Preserve internal spacing and case for display
 
 ### 6.1 Math
 
-**+1** to the **team** if the committed left-to-right order is exactly the dealt numbers, lowest to highest.  
+**+1** to the **team** if the committed top-to-bottom order is exactly the dealt numbers, lowest at **0** to highest at **100**.  
 **0** if any adjacent pair is inverted, or if Commit never happens (Wrap mid-rank is not a v1 path; see §9).
 
 No partial credit. No leftover-time bonus. No individual leaderboard. Unsubmitted clue givers do not create a tile; the round is scored on the tiles that exist.
 
-If **zero** tiles were submitted, the round is a miss (0). Copy: **No examples were locked in.** Advance as usual for that round index (Next round on 1–4; Another round / Wrap on 5+). Do not show an empty truth row.
+If **zero** tiles were submitted, the round is a miss (0). Copy: **No examples were locked in.** Advance as usual for that round index (Next round on 1–4; Another round / Wrap on 5+). Do not show an empty truth column.
 
 ### 6.2 Worked example
 
@@ -277,7 +277,7 @@ Percent = `hits / committed_rounds`, displayed as a whole percent (2 of 5 → **
 
 Protocol label: `font-mono uppercase tracking-widest text-[10px]` — `RANK AND FILE`.
 
-Play cards: `warm-white`, `cloud-grey` border, `rounded-lg`, `p-6` minimum. Session Lead panel: `FACILITATOR` mono label. Room display **does** host ranking controls (this is the point of the shared screen). It does **not** show anyone’s secret number. `FACILITATOR` metrics chrome (round index, `locked / k`) sits on the Lead **phone** during write. During rank, keep laptop chrome to the rail + Commit; Lead phone stays read-only.
+Play cards: `warm-white`, `cloud-grey` border, `rounded-lg`, `p-6` minimum. Session Lead panel: `FACILITATOR` mono label. Room display **does** host ranking controls, Next round, Wrap, and Continue (this is the point of the shared screen). It does **not** show anyone’s secret number. During write, keep laptop chrome to the public board. During rank, keep laptop chrome to the rail + Commit. Phones stay read-only on rank.
 
 States cannot be color-only. Amber is reserved for Lock in, Commit, Another round, Continue to debrief, selected-tile treatment, and timer urgency.
 
@@ -285,7 +285,7 @@ States cannot be color-only. Amber is reserved for Lock in, Commit, Another roun
 
 | State | Treatment |
 |---|---|
-| Subject card | `warm-white`, 1px navy @ 20%, theme in `font-display`, poles in `font-body` with a low → high caption |
+| Subject card | `warm-white`, 1px navy @ 20%, theme in `font-display`. Poles: **0** and **100** in `font-mono` above the low/high words |
 | Number (clue-giver phone only) | `font-display` large, `font-mono` label `YOUR NUMBER`. Never on room display |
 | Clue field, empty | `warm-white`, 1px navy @ 20% |
 | Clue field, filled | 2px solid navy, navy left bar |
@@ -294,40 +294,40 @@ States cannot be color-only. Amber is reserved for Lock in, Commit, Another roun
 | Roster chip, not locked | `warm-white`, `cloud-grey` border, display name |
 | Roster chip, locked | navy fill, warm-white name |
 | Spectator sit-write | navy panel, `font-mono` copy; no number; no field |
-| Rail anchor `0` | `font-mono`, fixed left cell, not draggable. Low-end word as caption under it |
-| Rail anchor `100` | `font-mono`, fixed right cell, not draggable. High-end word as caption under it |
-| Slot, empty | dashed 2px navy, `cloud-grey` fill |
-| Tile in tray | `warm-white`, 1px navy @ 20%, clue text + display name, **no number** |
+| Rail anchor `0` | `font-mono`, fixed **top** of the left column, not draggable. Low-end word as caption under it |
+| Rail anchor `100` | `font-mono`, fixed **bottom** of the left column, not draggable. High-end word as caption under it |
+| Slot, empty | dashed 2px navy, `cloud-grey` fill, copy `Drop here`. Same height as the Unranked card in that row |
+| Tile in Unranked | `warm-white`, 1px navy @ 20%, clue text + display name, **no number**. Right column, aligned to empty left slots |
 | Tile selected (Lead laptop) | 2px solid navy, navy left bar |
-| Tile placed | same named card on the rail; still no number |
-| Commit disabled | opacity-40 (tray not empty) |
-| Reveal: hit | `IN ORDER` mono label, sunrise-gold check |
-| Reveal: miss | team row unchanged; truth row under it, 2px solid navy, number + display name on each tile |
+| Tile placed | same named card on the left rail; still no number; **↑ / ↓** beside it when the laptop can rank |
+| Commit disabled | opacity-40 (Unranked not empty) |
+| Reveal: hit | `IN ORDER` mono label, **Exact order** display headline, large sunrise-gold check with expanding rings |
+| Reveal: miss | team column unchanged; truth column under it, 2px solid navy, number + display name on each tile |
 | Scoreboard hero | `font-display` fraction and percent; `ROUNDS IN ORDER` / `IN ORDER` in `font-mono` uppercase |
 
 ### 7.2 Buttons
 
 - Lock in: grey → navy (legal text) → amber (locked).
-- Commit: grey until tray empty, then **amber**. Lead laptop only.
-- Next round: amber after reveals 1–4. The only action. No Wrap.
-- Another round: amber after reveal 5+. The one action if they keep playing.
-- Wrap things up: navy / ghost, **first offered after round 5**. Confirm on Wrap (SwitchCode). Next/Another round does not confirm.
-- Continue to debrief: amber on scoreboard.
-- This is the shared screen: ghost / navy, Lead laptop, lobby and persistent.
+- Commit: grey until Unranked is empty, then **amber**. Lead laptop only.
+- Next round: amber after reveals 1–4. The only action. No Wrap. Lead laptop.
+- Another round: amber after reveal 5+. The one action if they keep playing. Lead laptop.
+- Wrap things up: navy / ghost, **first offered after round 5**. Confirm on Wrap (SwitchCode). Next/Another round does not confirm. Lead laptop.
+- Continue to debrief: amber on scoreboard. Lead laptop.
+- Host laptop does not get a name field. Opening the host link auto-claims **Shared screen** and auto-pins. Lobby copy: **Join on your phone now.** A leftover **This is the shared screen** toggle remains only if a Lead browser is somehow unpinned.
 
 Disabled: opacity-40, cursor-not-allowed.
 
 ### 7.3 Role screens
 
-| Phase | Shared laptop (pinned room display) | Phone |
+| Phase | Shared laptop (pinned room display / session Lead) | Phone |
 |---|---|---|
-| Lobby | QR + explainer + roster. Pin copy: this is the shared screen; join on your phone. | Join / wait. Lead phone: Start + pin reminder |
-| Write | Subject + poles + lock chips `n/k` + timer. **No numbers. No live clue text.** | Clue giver: number + field. Spectator: sit-write copy. Lead chrome on Lead phone |
-| Rank | Rail `0` … tiles … `100` + tray + Commit. Named tiles. **No numbers.** | All phones: read-only rail. Lead phone: **Move the cards on the shared screen.** |
-| Reveal | Team row, truth row if miss, running total | Same. Lead phone: Next round (1–4) or Another round / Wrap (5+) |
-| Scoreboard | Hero stats | Same. Lead: Continue to debrief |
+| Lobby | QR + explainer + player roster (Shared screen hidden). Auto-pin. Copy: join on your phone. **Start** at ≥3 phones. | Join / wait. Facilitator’s phone is a player, not Lead. |
+| Write | Subject + **0 / 100** poles + lock chips `n/k` + timer. **No numbers. No live clue text.** | Clue giver: number + field. Spectator: sit-write copy. |
+| Rank | Left rail `0` (top) … tiles … `100` (bottom) + Unranked right + Commit. Named tiles. **No numbers.** Drops appear immediately. | All phones: talk copy only. **Move the cards on the shared screen.** |
+| Reveal | Team column, Exact order / One card off, truth column if miss, running total. **Next round** (1–4) or Another round / Wrap (5+) | Same board, read-only. No Next / Wrap. |
+| Scoreboard | Hero stats. Lead: Continue to debrief | Same. Waiting copy if not Lead |
 
-If the session Lead is a clue giver: their **phone** is the number + field; the pinned laptop stays public.
+If the facilitator is a clue giver: their **phone** is the number + field; the pinned laptop stays public.
 
 ### 7.4 Timer presentation
 
@@ -348,10 +348,10 @@ Follow moment-conventions §3 (`WaoPlayTimer`) on **both** clocks. Clients displ
 
 | Role | Device | What they see | What they must NOT see |
 |---|---|---|---|
-| Lead (player) | Phone | Own number if dealt in; clue field; FACILITATOR chrome; read-only rail during rank | Other people’s numbers until reveal; rank drag/Commit |
-| Lead (room display) | Pinned laptop | Public board per §7.3; rank controls | Any `dealt_number` before reveal; in-flight clue text during write |
+| Shared screen (session Lead) | Host laptop, auto-pinned | Public board per §7.3; rank controls; Start / Next / Wrap / Continue | Any `dealt_number` before reveal; in-flight clue text during write |
+| Facilitator (player) | Phone | Own number if dealt in; clue field; then named tiles | Other people’s numbers until reveal; rank drag/Commit (those live on the laptop) |
 | Clue giver | Phone | Own number, subject, field; then named tiles (including their own) | Other numbers until reveal |
-| Spectator this round | Phone | Subject, chips, then read-only named rail | Every number until reveal; in-flight clue text |
+| Spectator this round | Phone | Subject, chips, then talk copy during rank | Every number until reveal; in-flight clue text |
 | Member (all) | Phone | Display names, not initials | Secrets listed above |
 
 `dealt_number` is Talk Track’s card / Draw It By Ear’s image / Zoning Rights’ permutation / I Know What You Meme’s owner id / SwitchCode’s `word`. Same class.
@@ -367,14 +367,14 @@ Roster stays closed. Ghosts remain on the roster for naming; live connectivity i
 | Clue giver drops **before** lock | No tile. Number unused. Round continues. |
 | Clue giver drops **after** lock | Tile stays. Rank as usual. |
 | All clue givers drop before any lock | Zero tiles → miss at timer expiry (§6.1). |
-| Lead’s phone dies during write | Host-token / cookie rejoin. Clock keeps running. |
-| Lead’s phone dies during rank | Ranking lives on the pinned laptop; they Commit there. Phone is not required. |
+| Facilitator’s phone dies during write | Cookie rejoin on that phone. Clock keeps running. Shared screen is unaffected. |
+| Shared laptop dies during rank | Reopen the host link (Shared screen Lead is reused). Ranking lives there. Phones cannot Commit. |
 | n = 3 | Every round, everyone writes (`k` capped at n). |
 | Duplicate clue strings | Two named tiles. Rank both. |
 | Wrap during write or rank | **Not in v1.** Wrap exists on `REVEAL` **from round 5 on** (and is forced on subject starve before dealing). |
 | Wrap on reveals 1–4 | **Not offered.** Lead has Next round only. |
 | Late join | Closed after Start. |
-| Rank clock hits 0 with tiles still in tray | Lead may still place and Commit on the laptop. No auto-commit of a partial rail. |
+| Rank clock hits 0 with tiles still Unranked | Lead may still place and Commit on the laptop. No auto-commit of a partial rail. |
 | Subject starve at Another round | Another round disabled. Lead must Wrap (allowed even before round 5 if the pack is empty). |
 
 ---
@@ -386,10 +386,10 @@ If a service-role client is used: verify **before** every scoped read/write.
 1. Caller participant identity from cookie.
 2. Participant belongs to the session.
 3. For play-state reads during `WRITE`: include `dealt_number` **only** if the caller is that clue giver **and** this browser is **not** the room-display pin. Strip all other numbers. Strip other people’s in-flight clue text. Room-display payload: subject, poles, chips, timer — nothing else.
-4. For play-state reads during `RANK`: include named tiles (clue text + display name + deal id for ordering) + current rail order. Still strip every `dealt_number`. Rank mutations (`place`, `reorder`, `commit`) are **Lead-only** and accepted from the **room-display client** (the shared laptop). Reject those actions from phones.
+4. For play-state reads during `RANK`: include named tiles (clue text + display name + deal id for ordering) + current rail order. Still strip every `dealt_number`. Rank mutations (`setRail`, `commit`) are **Lead-only** and accepted from the **room-display client** (the shared laptop). Reject those actions from phones. `setRail` applies immediately on that client (optimistic); later layouts must not be overwritten by earlier POSTs.
 5. For play-state reads during `REVEAL` / `SCOREBOARD`: numbers, authors, and team total are public.
 
-Room-display reads are authorized as the Lead participant **plus** a display flag the client sends (cookie-backed, same person). The server still strips secrets for that flag. The pin is not a second roster row.
+Room-display reads are authorized as the **Shared screen** Lead participant **plus** a display flag the client sends (cookie-backed). The server still strips secrets for that flag. Shared screen **is** a roster row, named exactly `Shared screen`. It is excluded from the lobby player list, the Start count, Lead transfer to a phone, and the clue-giver pool. It is not a second human.
 
 Acceptance bar includes a network-tab test: a spectator client never contains `dealt_number` before `REVEAL`. The pinned room-display client never contains `dealt_number` before `REVEAL`. A clue-giver client contains **only their** number.
 
@@ -399,11 +399,11 @@ Do **not** put numbers on `session_state.state_json` if that column is open RLS,
 
 ## 11. Facilitator script beats
 
-1. Phones in hand. Faces on the laptop. **This laptop is the shared screen** — pin it. Join on your phone too; your number will be there, not here.
+1. Phones in hand. Faces on the laptop. **This laptop is the shared screen** — it auto-pins. Join immediately on your phone; your number will be there, not here.
 2. Name the mechanic: some of you get a secret number. Write one example at that place on the scale. Qualifiers and adjectives are fair game. No counts, numbers, or measures.
-3. Name the ranking: everyone talks, including people who did not write. I move the cards. We commit when the row looks right.
+3. Name the ranking: everyone talks, including people who did not write. I move the cards on this screen, **0 at the top to 100 at the bottom**. We commit when the column looks right.
 4. Name the leak rule: do not say your number, before or while we rank.
-5. Start. Do not over-explain Breakfast foods — the poles are on screen.
+5. Start. Do not over-explain Breakfast foods — the poles are on screen with **0** and **100**.
 6. After round 5 (first Team Behaviors subject): “Another round, or wrap?” Yes or No. No → scores, NPS, then the two reflection questions. Do not offer Wrap before that reveal.
 
 Lead-only metrics: round index, `k`, `locked / k`, subjects remaining by deck, running team total **on reveal only**. Wrap available from round 5 reveal.
@@ -548,9 +548,9 @@ LOBBY
 
 | Phase | Who acts | Timer | Advance |
 |---|---|---|---|
-| `LOBBY` | Join; Lead Start at ≥3; Lead may pin room display | none | Lead Start |
+| `LOBBY` | Join on phones; host laptop auto-claims Shared screen; Lead Start at ≥3 phones | none | Lead Start |
 | `WRITE` | Dealt players lock one example | **60s** | All connected givers locked, or server timer |
-| `RANK` | Room talks; Lead on laptop places / reorders / Commit | **120s** (pacing) | Lead Commit (enabled when tray empty) |
+| `RANK` | Room talks; Lead on laptop places / reorders / Commit | **180s** (pacing) | Lead Commit (enabled when Unranked is empty) |
 | `REVEAL` (rounds 1–4) | Session Lead | none | **Next round** only |
 | `REVEAL` (round 5+) | Session Lead | none | Another round / Wrap things up |
 | `SCOREBOARD` | Session Lead **Continue to debrief**. Everyone sees rounds in order, rounds played, percent | none | Existing NPS route |
@@ -576,8 +576,8 @@ Then Continue → `/session/[id]/feedback` (NPS 1–10 + optional comment) → `
 
 Register via `reflectionPrompts` on `registerProtocol()`. Ninety seconds each, display-only, nothing stored:
 
-1. Was there a word whose meaning we don't have a shared understanding of? Where has this turned up in our work?
-2. If you had one question you could have asked before ordering, what would it have been? As a team, do we ask those questions on the things that matter most?
+1. Were there instances in Rank & File where the team didn't have a shared understanding? When has this turned up in our work?
+2. If you had one question you could have asked before ordering responses, what would it have been? As a team, do we appropriately ask clarifying questions on the things that matter most?
 
 **Facilitator prompt if the room is quiet:**
 
@@ -589,26 +589,31 @@ Register via `reflectionPrompts` on `registerProtocol()`. Ninety seconds each, d
 
 | Topic | Locked as |
 |---|---|
-| Start floor | 3 |
+| Start floor | **3 phones.** Shared screen does not count. |
 | Headcount cap | 20 |
 | Clue-giver counts | Round 1 = 3, 2 = 4, 3 = 6, 4 = 8, 5+ = 8; if n < k, everyone writes |
 | Round 1 subject | Breakfast foods, scored |
-| Number deck | Round 1 fixed **8 / 48 / 92** among the three clue givers. Later rounds shuffle 1–99. Rail anchors **0** and **100** |
+| Number deck | Round 1 fixed **8 / 48 / 92** among the three clue givers. Later rounds shuffle 1–99. Rail anchors **0** (top) and **100** (bottom) |
 | Write clock | Looks like 60s; server expires at 65s. Last **10s** of the displayed minute flash + pulse; unsubmitted = dropped |
 | Rank clock | **180s** pacing; facilitator still Commits after T=0; no auto-commit |
-| Who places | Facilitator, immediately on rank. Other phones: talk copy only |
+| Rank layout | Single left column, 0 top / 100 bottom; Unranked on the right, row-aligned; ↑/↓ to reorder |
+| Rank latency | Optimistic `setRail` on the laptop; serialize POSTs so older writes cannot win |
+| Who places | Shared laptop (session Lead), immediately on rank. Phones: talk copy only |
 | Clue language | Qualifiers and adjectives encouraged. No counts, numbers, or measures. |
 | Rank tiles | Display name + clue text during rank; numbers at reveal |
-| Commit | Lead laptop; tray empty; exact order or 0 |
+| Commit | Lead laptop; Unranked empty; exact order or 0 |
 | Score | Team +1 / 0; no individuals |
+| Hit treatment | **Exact order** headline + large check / rings. Miss copy: **One card off.** |
 | Fairness | `max − min` clue-giver turns ≤ 1 |
 | Subjects | No repeat; ignore Earliest Week |
 | Round 5 | Forced Team Behaviors |
 | Round 6+ | 50/50 Team Behaviors vs general calibration |
-| Facilitator | Plays; one identity; laptop pinned as room display; phone for secrets |
+| Host laptop | Auto-claims display name **Shared screen**; auto-pins; no name prompt. Copy: join on your phone. |
+| Shared screen sentinel | Roster row, not a player. Excluded from Start count, lobby roster, clue-giver pool, Lead transfer. |
+| Facilitator | Plays on their phone as a normal participant. Ranking, Start, Next, Wrap stay on the laptop. |
 | Late join | Closed after Start |
 | End path | Scoreboard → NPS → reflection |
-| Reflection | Protocol-specific pair above, not Season defaults |
+| Reflection | Protocol-specific pair in §15, not Season defaults |
 | Wrap | First offered after round 5 reveal; forced on subject starve |
 
 ---
@@ -619,7 +624,7 @@ Write this into facilitator notes before the first live run. Do not improvise it
 
 1. Print or read Pack A subjects. Physical deck of 1–99 (or slips in a hat).
 2. Round 1: Breakfast foods, deal three numbers. One minute, people write on paper and pass to the facilitator **face down**.
-3. Facilitator writes the examples on a whiteboard in random order, **with names**, no numbers. Two minutes. The room orders them. Facilitator is the hands.
+3. Facilitator writes the examples on a whiteboard in random order, **with names**, no numbers. Three minutes. The room orders them **top to bottom, 0 to 100**. Facilitator is the hands.
 4. Flip the papers. Score +1 only if exact. Then next subject.
 5. From round 5, pick a Team Behaviors card. After that, ask Wrap or another round.
 6. Tally hits / rounds on the board. Then the two reflection questions without the app.
@@ -637,7 +642,7 @@ What is lost: secret numbers on a shared video grid; fairness tracking; pin/phon
 5. RLS / route checks: spectator and pinned room-display network tabs contain **no** `dealt_number` before reveal; a clue giver sees only their number.
 6. Throttled-network: double Lock in does not create two tiles; double Commit does not score twice.
 7. Degraded fallback in the facilitator notes.
-8. Rank reorder: a tile placed in the wrong gap can be moved without returning every other tile to the tray.
+8. Rank reorder: a tile placed in the wrong slot can be moved with ↑/↓ without returning every other tile to Unranked.
 9. Round 5 is a Team Behaviors subject. Round 1 is Breakfast foods. Wrap control is absent on reveals 1–4 and present on reveal 5.
 
 ---
@@ -656,8 +661,10 @@ Calls this conversation did not make. Build must not invent further mechanics.
 | Expected progress-bar denominator | **5.** |
 | Empty chosen deck at 6+ | Spill to the other deck, then starve. |
 | Practice unscored round | **No.** Round 1 is scored Breakfast foods. |
-| Rank controls on Lead phone | **No.** Shared laptop only. If the laptop is gone, they rejoin that browser. |
-| Next round on 1–4 | Lead-gated (not auto). So the room can read the truth row. |
+| Rank controls on Lead phone | **No.** Shared laptop only. If the laptop is gone, they reopen the host link. |
+| Next round on 1–4 | Lead-gated (not auto). So the room can read the truth column. |
+| Shared screen name collision | Sentinel is exact display name `Shared screen` (case-insensitive). A human must not join with that name. |
+| Rank drop wait | **No.** Apply the new rail in the UI, then flush. |
 
 ---
 
@@ -666,11 +673,11 @@ Calls this conversation did not make. Build must not invent further mechanics.
 One step at a time. Each independently testable.
 
 1. Schema + migrations. Seed Pack A from the CSV. Pack id on the session.
-2. Lobby explainer (fake kitchen-gadgets sample; beat dots) + Start gate at 3 + room-display pin control.
+2. Lobby explainer (fake kitchen-gadgets sample; beat dots) + Start gate at 3 phones + Shared screen auto-claim / auto-pin.
 3. Role-filtered play payload (strip `dealt_number` for spectators and room display). Load-bearing security step — do not defer. Network-tab tests in §18.5.
 4. Round-1 deal: Breakfast foods, k=3, 1–99 unique. 60s write, Lock in, digit reject.
-5. Rank rail: 0 and 100 anchors, named tiles, tray, gaps, reorder, Lead-laptop Commit. 120s pacing clock.
-6. Reveal hit/miss + truth row (numbers) + running total. Next round on 1–4; Another round / Wrap from 5.
+5. Rank rail: 0 top / 100 bottom, named tiles, Unranked right column, ↑/↓, Lead-laptop Commit. 180s pacing clock. Optimistic `setRail`.
+6. Reveal Exact order / One card off + truth column (numbers) + running total. Next round on 1–4; Another round / Wrap from 5.
 7. Clue-giver fairness + k schedule + n < k cap. Subject uniqueness + round 5 force + 6+ 50/50.
 8. SCOREBOARD percent → existing NPS → reflection prompts on the registry.
 9. Disconnect rules in §9.
@@ -685,10 +692,10 @@ None remaining from the spec conversation. The seven items below were answered 2
 | # | Asked | Locked as |
 |---|---|---|
 | 1 | Clue-giver schedule 3 / 4 / 6 / 8? | Yes. If n < k, everyone writes. |
-| 2 | Rank timer vs Commit? | 120s pacing; Lead still Commits. |
+| 2 | Rank timer vs Commit? | 180s pacing; Lead still Commits. |
 | 3 | Names on tiles during rank? | Yes. Numbers stay hidden until reveal. |
 | 4 | Who drags? | Lead only, on the shared laptop. |
-| 5 | 100 on the rail? | Yes. Anchors are 0 and 100. |
+| 5 | 100 on the rail? | Yes. Anchors are 0 (top) and 100 (bottom). |
 | 6 | Missed write timer? | Dropped. No tile. |
 | 7 | When is Wrap first offered? | After round 5. |
 
@@ -698,7 +705,7 @@ None remaining from the spec conversation. The seven items below were answered 2
 
 - [x] Header — slug, type, players, envelope, pack mode, follows-conventions line
 - [x] § What this Moment is — surface vs payload
-- [x] § Players, join, device — facilitator-as-player; room-display pin
+- [x] § Players, join, device — facilitator on phone; Shared screen sentinel; auto-pin
 - [x] § Lobby explainer — beat list + sample data (fake / not Pack A); fixed panel size; beat dots
 - [x] § Device context — phone + laptop video
 - [x] § UI states — shape/weight table
