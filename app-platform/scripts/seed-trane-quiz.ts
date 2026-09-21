@@ -3,7 +3,8 @@
  * Run from app-platform: npm run seed:trane-quiz
  *
  * Requires .env.local with NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.
- * Idempotent: upserts courses by slug; replaces questions for each course.
+ * Idempotent: upserts courses by slug. Inserts questions only when a course
+ * has none yet — never deletes existing questions (responses FK RESTRICT).
  */
 
 import { config } from "dotenv";
@@ -68,11 +69,17 @@ async function main(): Promise<void> {
         })
         .eq("id", courseId);
       if (error) throw error;
-      const { error: delErr } = await admin
+      const { count, error: countErr } = await admin
         .from("trane_questions")
-        .delete()
+        .select("id", { count: "exact", head: true })
         .eq("course_id", courseId);
-      if (delErr) throw delErr;
+      if (countErr) throw countErr;
+      if ((count ?? 0) > 0) {
+        console.log(
+          `Course ${course.slug} already has ${count} questions — skipping insert`
+        );
+        continue;
+      }
     } else {
       const { data: inserted, error } = await admin
         .from("trane_courses")

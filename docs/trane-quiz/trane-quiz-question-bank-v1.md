@@ -559,3 +559,91 @@ Which of the following are NOT a part of the standard recommended Product Growth
 - c. Portfolio Balance Review Meetings
 - d. Engineering Project Review Meetings
 - e. Strategy and AOP Review Meetings
+
+---
+
+## Course 07 — Business Storytelling
+
+**Slug:** `business-storytelling`  
+**Revision:** September 2026  
+**Display title:** Business Storytelling  
+**Source:** `Trane_Business_Storytelling_Quiz.docx` (Elevate Your Voice knowledge check)
+
+| # | Correct |
+|---|---------|
+| 1 | `b` |
+| 2 | `c` |
+| 3 | `b` |
+| 4 | `b` |
+| 5 | `c` |
+| 6 | `c` |
+| 7 | `c` |
+| 8 | `c` |
+| 9 | `b` |
+| 10 | `b` |
+
+### Q1
+A PM has a strong data set ready and plans to start building slides for a funding request. According to the Elevate Your Voice framework, what should happen before any content is selected?
+- a. Build a draft deck, then test it with a peer
+- b. Define the intended change in the audience and understand the audience's priorities
+- c. Choose the visuals and props that will open the presentation
+- d. Rehearse the delivery to find gaps in the content
+
+### Q2
+Which intention statement best meets the course standard?
+- a. I want to update leadership on the rooftop unit program.
+- b. I want to share customer feedback from Q3.
+- c. I want to change the way leadership thinks about retrofit services, from an aftermarket add-on to a platform investment.
+- d. I want to present the business case for the retrofit program.
+
+### Q3
+True or False: Because the presenter is the one delivering the message, the presenter is the hero of the communication.
+- a. True
+- b. False
+
+### Q4
+A PM’s request will require engineering to reprioritize work. What does the course recommend?
+- a. Escalate early so leadership mandates the change
+- b. Frame the request so it advances what engineering already prioritizes, knowing the gap may never fully close
+- c. Lead with data so the logic is undeniable
+- d. Minimize the ask to avoid resistance
+
+### Q5
+When presenting to a highly technical audience, which approach reflects the course guidance?
+- a. Use analytical content only; emotional content undermines credibility with engineers
+- b. Use emotional content only; data is already familiar to them
+- c. Use both, and if you naturally lean analytical, deliberately develop emotional content while judging which will move this audience
+- d. Use a 50/50 split in order to reach the broadest range of audience personas
+
+### Q6
+According to Nancy Duarte’s persuasive story pattern, the most persuasive communications:
+- a. Build steadily to a single climax, then resolve
+- b. Present the problem, then the solution, then the ask
+- c. Oscillate between “what is” and “what could be,” ending with a clear vision of what could be
+- d. Open with the conclusion and support it with evidence
+
+### Q7
+Which opening best applies the course guidance on the first 30 seconds?
+- a. An agenda slide and the presenter’s background
+- b. A thank-you to the organizers and a summary of what will be covered
+- c. A specific moment or tension that matters to the audience
+- d. The key data table, so the audience has context
+
+### Q8
+What is a “slideument”?
+- a. A slide designed to be read asynchronously as a leave-behind
+- b. A slide used as wallpaper behind the speaker
+- c. A busy slide trying to serve as both a presentation visual and a document
+- d. A slide that reveals content through builds
+
+### Q9
+True or False: Because presenters shouldn’t sound rehearsed, experienced presenters should avoid rehearsing and speak from instinct.
+- a. True
+- b. False
+
+### Q10
+According to the course, audience engagement during delivery comes primarily from:
+- a. A consistent, steady pace and volume
+- b. Contrast in pace, tone, and volume
+- c. Minimizing gestures to avoid distraction
+- d. Delivering a fully memorized script

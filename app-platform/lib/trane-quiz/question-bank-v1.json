@@ -1449,6 +1449,227 @@
           "correct_option": "d"
         }
       ]
+    },
+    {
+      "slug": "business-storytelling",
+      "title": "Business Storytelling",
+      "revision_label": "September 2026",
+      "questions": [
+        {
+          "sort_order": 1,
+          "stem": "A PM has a strong data set ready and plans to start building slides for a funding request. According to the Elevate Your Voice framework, what should happen before any content is selected?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Build a draft deck, then test it with a peer"
+            },
+            {
+              "key": "b",
+              "label": "Define the intended change in the audience and understand the audience's priorities"
+            },
+            {
+              "key": "c",
+              "label": "Choose the visuals and props that will open the presentation"
+            },
+            {
+              "key": "d",
+              "label": "Rehearse the delivery to find gaps in the content"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 2,
+          "stem": "Which intention statement best meets the course standard?",
+          "options": [
+            {
+              "key": "a",
+              "label": "I want to update leadership on the rooftop unit program."
+            },
+            {
+              "key": "b",
+              "label": "I want to share customer feedback from Q3."
+            },
+            {
+              "key": "c",
+              "label": "I want to change the way leadership thinks about retrofit services, from an aftermarket add-on to a platform investment."
+            },
+            {
+              "key": "d",
+              "label": "I want to present the business case for the retrofit program."
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 3,
+          "stem": "True or False: Because the presenter is the one delivering the message, the presenter is the hero of the communication.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 4,
+          "stem": "A PM’s request will require engineering to reprioritize work. What does the course recommend?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Escalate early so leadership mandates the change"
+            },
+            {
+              "key": "b",
+              "label": "Frame the request so it advances what engineering already prioritizes, knowing the gap may never fully close"
+            },
+            {
+              "key": "c",
+              "label": "Lead with data so the logic is undeniable"
+            },
+            {
+              "key": "d",
+              "label": "Minimize the ask to avoid resistance"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 5,
+          "stem": "When presenting to a highly technical audience, which approach reflects the course guidance?",
+          "options": [
+            {
+              "key": "a",
+              "label": "Use analytical content only; emotional content undermines credibility with engineers"
+            },
+            {
+              "key": "b",
+              "label": "Use emotional content only; data is already familiar to them"
+            },
+            {
+              "key": "c",
+              "label": "Use both, and if you naturally lean analytical, deliberately develop emotional content while judging which will move this audience"
+            },
+            {
+              "key": "d",
+              "label": "Use a 50/50 split in order to reach the broadest range of audience personas"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 6,
+          "stem": "According to Nancy Duarte’s persuasive story pattern, the most persuasive communications:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Build steadily to a single climax, then resolve"
+            },
+            {
+              "key": "b",
+              "label": "Present the problem, then the solution, then the ask"
+            },
+            {
+              "key": "c",
+              "label": "Oscillate between “what is” and “what could be,” ending with a clear vision of what could be"
+            },
+            {
+              "key": "d",
+              "label": "Open with the conclusion and support it with evidence"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 7,
+          "stem": "Which opening best applies the course guidance on the first 30 seconds?",
+          "options": [
+            {
+              "key": "a",
+              "label": "An agenda slide and the presenter’s background"
+            },
+            {
+              "key": "b",
+              "label": "A thank-you to the organizers and a summary of what will be covered"
+            },
+            {
+              "key": "c",
+              "label": "A specific moment or tension that matters to the audience"
+            },
+            {
+              "key": "d",
+              "label": "The key data table, so the audience has context"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 8,
+          "stem": "What is a “slideument”?",
+          "options": [
+            {
+              "key": "a",
+              "label": "A slide designed to be read asynchronously as a leave-behind"
+            },
+            {
+              "key": "b",
+              "label": "A slide used as wallpaper behind the speaker"
+            },
+            {
+              "key": "c",
+              "label": "A busy slide trying to serve as both a presentation visual and a document"
+            },
+            {
+              "key": "d",
+              "label": "A slide that reveals content through builds"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 9,
+          "stem": "True or False: Because presenters shouldn’t sound rehearsed, experienced presenters should avoid rehearsing and speak from instinct.",
+          "options": [
+            {
+              "key": "a",
+              "label": "True"
+            },
+            {
+              "key": "b",
+              "label": "False"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 10,
+          "stem": "According to the course, audience engagement during delivery comes primarily from:",
+          "options": [
+            {
+              "key": "a",
+              "label": "A consistent, steady pace and volume"
+            },
+            {
+              "key": "b",
+              "label": "Contrast in pace, tone, and volume"
+            },
+            {
+              "key": "c",
+              "label": "Minimizing gestures to avoid distraction"
+            },
+            {
+              "key": "d",
+              "label": "Delivering a fully memorized script"
+            }
+          ],
+          "correct_option": "b"
+        }
+      ]
     }
   ]
 }

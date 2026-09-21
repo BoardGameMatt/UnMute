@@ -149,7 +149,7 @@ No SSO, no admin role, no separate operator account. Control of a live class = p
 
 Flow:
 
-- Course picker (six courses)
+- Course picker (seven courses)
 - Class date (required)
 - Optional label
 - Create → show host URL (copy) + land on live console
@@ -345,10 +345,11 @@ Rules:
 | 04 | `in-line-action-planning` | In-Line Action Planning | Jul 2025 |
 | 05 | `value-based-pricing` | Value-Based Pricing | Dec 2025 |
 | 06 | `pgt-foundations` | **PGT Foundations** | Jan 2026 |
+| 07 | `business-storytelling` | **Business Storytelling** | Sep 2026 |
 
 Full stems, options, answer keys: [`trane-quiz-question-bank-v1.md`](./trane-quiz-question-bank-v1.md).
 
-PDFs are the content source of truth (no newer Word doc).
+PM courses 01–06: PDFs are the content source of truth. Course 07 (Business Storytelling) is sourced from `Trane_Business_Storytelling_Quiz.docx`.
 
 ---
 
@@ -387,7 +388,7 @@ PDFs are the content source of truth (no newer Word doc).
 
 ## 13. Build sequence
 
-1. Schema + seed six courses / 60 questions  
+1. Schema + seed seven courses / 70 questions  
 2. Offering create (`/trane-quiz/new`) → `host_token` + `join_code` + QR  
 3. Anonymous join + PRE quiz UX (Trane tokens)  
 4. Facilitator live counts + phase controls (host-gated)  
@@ -409,13 +410,14 @@ None blocking. Optional later:
 ## 15. Decisions locked this revision
 
 - [x] Course 06 display name = **PGT Foundations**
+- [x] Course 07 display name = **Business Storytelling**
 - [x] Two actors only (Facilitator + Participant)
 - [x] Facilitator auth = **per-offering host token** (Unmute-style)
 - [x] Create offering = unlisted `/trane-quiz/new` (link possession); control = host URL
 - [x] No L&D login — facilitator downloads PDF and emails it
 - [x] Brand tokens from Visual Standards Reference 2026-08-09
 - [x] Logo PNG from Seeklogo in repo for v1
-- [x] PDFs are content source (no newer Word doc)
+- [x] Courses 01–06: PDFs are content source. Course 07 (Business Storytelling) sourced from the Word knowledge check.
 - [x] **No edit after submit**
 - [x] **POST without PRE allowed**, with required participant confirmation; unpaired excluded from headline paired delta
 
