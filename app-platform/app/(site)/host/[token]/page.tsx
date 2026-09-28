@@ -4,6 +4,7 @@ import Link from "next/link";
 import { HostClaimForm } from "@/components/join/host-claim-form";
 import { displayProtocolName } from "@/lib/protocols";
 import { RankAndFileHostEntry } from "@/lib/protocols/rank-and-file/components/RankAndFileHostEntry";
+import { TruthIsHostEntry } from "@/lib/protocols/the-truth-is/components/TruthIsHostEntry";
 import { createClient } from "@/lib/supabase/server";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 
@@ -81,6 +82,15 @@ export default async function HostTokenPage({ params }: HostTokenPageProps) {
       <RankAndFileHostEntry
         hostToken={token}
         sessionId={session.id}
+        joinCode={String(session.join_code ?? "")}
+      />
+    );
+  }
+
+  if (protocol.slug === "the-truth-is") {
+    return (
+      <TruthIsHostEntry
+        hostToken={token}
         joinCode={String(session.join_code ?? "")}
       />
     );

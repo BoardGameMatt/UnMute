@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import {
   expireState,
   initializeGame,
@@ -55,7 +56,9 @@ export async function startTruthIs(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<ActionOk | ActionErr> {
-  const roster = await loadRoster(admin, sessionId);
+  const roster = (await loadRoster(admin, sessionId)).filter(
+    (member) => !isSharedScreenName(member.displayName)
+  );
   if (roster.length < 3) return fail(400, "Need 3 to start.");
   if (roster.length > 20) return fail(400, "The Truth Is holds 20 people.");
 
@@ -111,6 +114,9 @@ export async function dispatchTruthIsAction(input: {
       (round === 1 && state.phase === "SUBMISSION_1") ||
       (round === 2 && state.phase === "SUBMISSION_2");
     if (!phaseOk) return { ok: true };
+    if (!state.participants.some((person) => person.id === participantId)) {
+      return fail(403, "The shared screen does not write a truth.");
+    }
 
     const already = state.entries.some(
       (entry) => entry.author_id === participantId && entry.round_submitted === round
@@ -127,6 +133,9 @@ export async function dispatchTruthIsAction(input: {
   }
 
   if (action.type === "submitVote") {
+    if (!state.participants.some((person) => person.id === participantId)) {
+      return fail(403, "The shared screen does not guess.");
+    }
     const known = state.participants.some((p) => p.id === action.guessedAuthorId);
     if (!known) return fail(400, "That person is not in this session.");
     const next = reduceTruthIsState(state, {

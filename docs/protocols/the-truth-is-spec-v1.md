@@ -39,9 +39,17 @@ Everyone writes two short truths. The room then takes turns: one person reads a 
 
 - **Start floor: 3.** Below 3, Start stays disabled.
 - **Cap: 20.**
-- **The facilitator is a player.** They submit, read, guess, and can be the author. They also get Lead-only controls (skip the leaderboard, a few more, wrap up, continue to debrief).
+- **The facilitator is a player on their phone.** They submit, read, guess, and can be the author. Lead-only controls (Start, skip the leaderboard, a few more, wrap up, continue to debrief) stay on the shared laptop.
 - No auth. Lobby: display name. Same 6-character join code as every Moment.
-- **Phone is the primary controller; desktop works but is not optimized.** Video call stays on the laptop.
+- **Phone is the primary controller; desktop works but is not optimized.** Video call stays on the laptop. The laptop is the shared screen. It does not write or guess.
+
+### 2.1 Shared screen (host laptop)
+
+Opening the host link does not ask for a name. That browser joins as **Shared screen** and shows the join code with **Join on your phone.**
+
+- **Shared screen is not a player.** It is excluded from the Start count, the lobby roster, and the submission, read, and vote pool. The floor of 3 is three phones.
+- During writing and voting, that laptop shows the public board only. It never mounts the text field, the vote buttons, or the bluff banner.
+- The facilitator’s phone is their player. Start and the other Lead controls stay on the laptop.
 - **New names close at Start.** Cookie / tap-your-name rejoin works for people already on the roster. No Admit late in v1.
 - The roster is frozen at Start. Later display-name edits do not rewrite the game.
 
@@ -59,13 +67,13 @@ v1 teaches the main loop only. “A few more” is not in the lobby loop.
 
 | # | Caption | What they see |
 |---|---|---|
-| 1 | Play on your phone. Keep everyone's video up on your laptop. | Phone + laptop with a video grid. |
-| 2 | Write two truths. The second one goes further. | Two stacked cards. The second card reads MORE. |
+| 1 | Play on your phone. Keep the facilitator's video up on your laptop. | Phone + laptop with a video grid. |
+| 2 | Write two truths. The second one goes further. Don't include anything that would make it obvious that you wrote it. | Two stacked cards. The second card reads MORE. |
 | 3 | Someone reads one aloud. Don't say if it's yours. | The sample line on a card, and a reader name. |
 | 4 | Guess who wrote it, on your phone. | Three name buttons. One is selected with a heavier navy border. |
 | 5 | A correct guess scores. If you read your own and nobody catches you, you score. | “Maya +1” under the sample line. |
 
-**Sample data (obviously fake):** “I once named a houseplant Kevin.” Names: Maya, Jordan, Sam.
+**Sample data (obviously fake):** “I once sat next to Tina Fey on a train.” Names: Maya, Jordan, Sam.
 
 **Reuse:** the submission card, the name button, and the bluff line from play. No Pack A words — there is no pack.
 
@@ -203,8 +211,8 @@ Reflection prompts registered on the protocol:
 
 ## 10. Facilitator script
 
-1. Phones out. Laptops stay on the call. I’ll start when everyone’s in.
-2. You’ll write two truths. The second one should go a step further. Don’t say them out loud yet.
+1. This laptop stays shared. I join on my phone. Phones out. I’ll start when everyone’s in.
+2. You’ll write two truths. The second one should go a step further. Don’t include anything that would make it obvious you wrote it. Don’t say them out loud yet.
 3. When it’s your turn to read, read it straight. Don’t say if it’s yours.
 4. Everyone else: guess on your phone, not in the chat.
 5. If you notice you’re reading your own, your phone will tell you how that round scores. Leave it there.

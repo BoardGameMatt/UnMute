@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { SessionProgressBar } from "@/components/ui/SessionProgressBar";
 import { useSessionContext } from "@/components/providers/SessionProvider";
+import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import { BackToLobbyLink } from "@/components/session/back-to-lobby-link";
 import type { SessionProtocolProps } from "@/lib/protocols/registry";
 import { SessionIdentityBanner } from "./components/SessionIdentityBanner";
@@ -12,6 +13,7 @@ import { ReadingView } from "./components/ReadingView";
 import { ResultsView } from "./components/ResultsView";
 import { RevealView } from "./components/RevealView";
 import { SubmissionView } from "./components/SubmissionView";
+import { TruthIsRoomDisplay } from "./components/TruthIsRoomDisplay";
 import { VotingView } from "./components/VotingView";
 import { WrapUpView } from "./components/WrapUpView";
 import { useTruthIsPlay } from "./use-truth-is-play";
@@ -38,6 +40,7 @@ const TheTruthIsProtocol = ({ sessionId }: SessionProtocolProps) => {
     );
   }
 
+  const roomDisplay = isSharedScreenName(currentParticipant.display_name);
   const showProgress =
     state.phase !== "SUBMISSION_1" &&
     state.phase !== "SUBMISSION_2" &&
@@ -56,7 +59,13 @@ const TheTruthIsProtocol = ({ sessionId }: SessionProtocolProps) => {
         </p>
       ) : null}
 
-      {state.phase === "SUBMISSION_1" || state.phase === "SUBMISSION_2" ? (
+      {roomDisplay &&
+      (state.phase === "SUBMISSION_1" ||
+        state.phase === "SUBMISSION_2" ||
+        state.phase === "VOTING") ? (
+        <TruthIsRoomDisplay state={state} />
+      ) : null}
+      {!roomDisplay && (state.phase === "SUBMISSION_1" || state.phase === "SUBMISSION_2") ? (
         <SubmissionView state={state} pending={play.pending} send={play.send} />
       ) : null}
       {state.phase === "DISCUSSION" ||
@@ -64,7 +73,7 @@ const TheTruthIsProtocol = ({ sessionId }: SessionProtocolProps) => {
       state.phase === "BLUFF_RULES" ? (
         <ReadingView state={state} pending={play.pending} send={play.send} />
       ) : null}
-      {state.phase === "VOTING" ? (
+      {!roomDisplay && state.phase === "VOTING" ? (
         <VotingView state={state} pending={play.pending} send={play.send} />
       ) : null}
       {state.phase === "REVEAL" && state.reveal ? (

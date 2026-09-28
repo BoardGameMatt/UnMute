@@ -61,12 +61,12 @@ export function SessionLobbyView({
   const participantCount =
     protocolSlug === "cover-story"
       ? participants.filter((p) => p.roleInSession !== "lead").length
-      : protocolSlug === "rank-and-file"
+      : protocolSlug === "rank-and-file" || protocolSlug === "the-truth-is"
         ? participants.filter((p) => !isSharedScreenName(p.displayName)).length
         : participants.length;
   const hasEnoughToStart = participantCount >= minPlayers;
   const rosterParticipants =
-    protocolSlug === "rank-and-file"
+    protocolSlug === "rank-and-file" || protocolSlug === "the-truth-is"
       ? participants.filter((p) => !isSharedScreenName(p.displayName))
       : participants;
   const canStart =
@@ -230,7 +230,9 @@ export function SessionLobbyView({
                   <span className="rounded-full bg-signal-amber/15 px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-widest text-unmute-navy">
                     Lead
                   </span>
-                ) : currentRole === "lead" && protocolSlug !== "rank-and-file" ? (
+                ) : currentRole === "lead" &&
+                  protocolSlug !== "rank-and-file" &&
+                  protocolSlug !== "the-truth-is" ? (
                   <button
                     type="button"
                     disabled={isPending || transferringId === p.participantId}
@@ -277,7 +279,9 @@ export function SessionLobbyView({
               ? "Once everyone has joined, explain how Talk Track works. Then start the demo — you will be the guesser."
               : hasEnoughToStart
               ? "Do not press Start until everyone has joined."
-              : protocolSlug === "i-know-what-you-meme" || protocolSlug === "rank-and-file"
+              : protocolSlug === "i-know-what-you-meme" ||
+                  protocolSlug === "rank-and-file" ||
+                  protocolSlug === "the-truth-is"
                 ? "Need 3 to start."
               : protocolSlug === "code-switch"
                 ? "Need 4 to start."

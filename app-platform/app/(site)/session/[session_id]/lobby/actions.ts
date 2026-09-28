@@ -207,14 +207,19 @@ export async function startSessionAction(
   }
 
   if (protocolSlug === "the-truth-is") {
-    const { count, error: countErr } = await supabase
+    const { data: rows, error: countErr } = await supabase
       .from("session_participants")
-      .select("id", { count: "exact", head: true })
+      .select("participants ( display_name )")
       .eq("session_id", sessionId);
     if (countErr) {
       return { error: "Could not count the room." };
     }
-    if ((count ?? 0) < 3) {
+    const players = (rows ?? []).filter((row) => {
+      const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+      const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+      return !isSharedScreenName(name ?? "Player");
+    });
+    if (players.length < 3) {
       return { error: "Need 3 to start." };
     }
   }

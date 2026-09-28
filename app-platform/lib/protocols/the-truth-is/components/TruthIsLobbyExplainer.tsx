@@ -7,7 +7,7 @@ import { LobbyExplainerDots } from "@/components/ui/LobbyExplainerDots";
 const EASE = [0.4, 0, 0.2, 1] as const;
 const BEAT_MS = 4000;
 
-const SAMPLE = "I once named a houseplant Kevin.";
+const SAMPLE = "I once sat next to Tina Fey on a train.";
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -103,11 +103,12 @@ function ScoreBeat() {
 
 const BEATS = [
   {
-    caption: "Play on your phone. Keep everyone's video up on your laptop.",
+    caption: "Play on your phone. Keep the facilitator's video up on your laptop.",
     body: <DeviceBeat />,
   },
   {
-    caption: "Write two truths. The second one goes further.",
+    caption:
+      "Write two truths. The second one goes further. Don't include anything that would make it obvious that you wrote it.",
     body: <WriteBeat />,
   },
   {
