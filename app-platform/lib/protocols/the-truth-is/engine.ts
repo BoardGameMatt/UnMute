@@ -14,6 +14,10 @@ const MAX_ENTRY_LENGTH = 300;
 
 /** Reveal awards itself if no phone finishes the fade. */
 export const REVEAL_SETTLE_SECONDS = 8;
+/** Reader reads the line and runs the conversation. They may open voting early. */
+export const DISCUSSION_SECONDS = 180;
+/** Everyone guesses. Reveal starts early when every vote is in. */
+export const VOTING_SECONDS = 60;
 
 export function timerDue(
   startedAt: string | null,
@@ -329,7 +333,7 @@ export function assignReader(state: TruthIsState): TruthIsState {
     current_author_id: entry.author_id,
     votes_this_round: {},
     timer_started_at: nowIso(),
-    timer_duration_seconds: 30,
+    timer_duration_seconds: DISCUSSION_SECONDS,
   };
 }
 
@@ -342,7 +346,7 @@ export function dismissBluffRules(state: TruthIsState): TruthIsState {
     ...state,
     phase: "DISCUSSION",
     timer_started_at: nowIso(),
-    timer_duration_seconds: 30,
+    timer_duration_seconds: DISCUSSION_SECONDS,
   };
 }
 
@@ -378,11 +382,11 @@ export function startDiscussion(state: TruthIsState): TruthIsState {
     ...state,
     phase: "DISCUSSION",
     timer_started_at: nowIso(),
-    timer_duration_seconds: 30,
+    timer_duration_seconds: DISCUSSION_SECONDS,
   };
 }
 
-/** Discussion segment elapsed — move to voting (15s). */
+/** Discussion elapsed, or the reader opens voting early. */
 export function onDiscussionTimerExpired(state: TruthIsState): TruthIsState {
   if (state.phase !== "DISCUSSION") {
     return state;
@@ -391,7 +395,7 @@ export function onDiscussionTimerExpired(state: TruthIsState): TruthIsState {
     ...state,
     phase: "VOTING",
     timer_started_at: nowIso(),
-    timer_duration_seconds: 15,
+    timer_duration_seconds: VOTING_SECONDS,
   };
 }
 

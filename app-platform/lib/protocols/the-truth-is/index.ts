@@ -13,7 +13,9 @@ registerProtocol({
   component: TheTruthIsProtocol,
   lobbyExplainer: TruthIsLobbyExplainer,
   reflectionPrompts: {
-    prompt1: "What did you assume about someone that turned out to be wrong?",
-    prompt2: "Where does that same assumption show up in how we work?",
+    prompt1:
+      "Was it challenging in deciding what truths to reveal about yourself? Why or why not?",
+    prompt2:
+      "Was it difficult to determine which truths belonged to the other members of your team? Why or why not?",
   },
 });

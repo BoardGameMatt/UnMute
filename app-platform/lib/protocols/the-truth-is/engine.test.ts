@@ -6,6 +6,7 @@ import {
   expireState,
   initializeGame,
   leaderFewMore,
+  onDiscussionTimerExpired,
   onSubmissionTimerExpired,
   submitEntry,
   timerDue,
@@ -103,7 +104,10 @@ describe("the truth is engine", () => {
     assert.equal(next.phase, "DISCUSSION");
     assert.equal(next.current_reader_id, "p1");
     assert.equal(next.current_author_id, "p1");
-    assert.equal(next.timer_duration_seconds, 30);
+    assert.equal(next.timer_duration_seconds, 180);
+    const voting = onDiscussionTimerExpired(next);
+    assert.equal(voting.phase, "VOTING");
+    assert.equal(voting.timer_duration_seconds, 60);
   });
 
   it("adds a few more rounds from the unused pool", () => {

@@ -77,7 +77,7 @@ export const VotingView = ({ state, pending, send }: VotingViewProps) => {
 
       <div className="mt-10 flex justify-center">
         <WaoPlayTimer
-          durationSeconds={state.timerDurationSeconds || 15}
+          durationSeconds={state.timerDurationSeconds || 60}
           startedAt={state.timerStartedAt}
           onComplete={() => void send({ type: "timerExpired" })}
         />

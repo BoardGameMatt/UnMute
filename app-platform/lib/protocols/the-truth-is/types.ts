@@ -188,6 +188,7 @@ export type TruthIsClientAction =
   | { type: "submitEntry"; text: string; round: 1 | 2 }
   | { type: "submitOnTimeout"; text: string; round: 1 | 2 }
   | { type: "timerExpired" }
+  | { type: "readyToVote" }
   | { type: "submitVote"; guessedAuthorId: string }
   | { type: "processReveal" }
   | { type: "dismissLeaderboard" }

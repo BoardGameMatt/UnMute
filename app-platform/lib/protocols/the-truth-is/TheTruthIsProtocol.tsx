@@ -66,7 +66,12 @@ const TheTruthIsProtocol = ({ sessionId }: SessionProtocolProps) => {
         <TruthIsRoomDisplay state={state} />
       ) : null}
       {!roomDisplay && (state.phase === "SUBMISSION_1" || state.phase === "SUBMISSION_2") ? (
-        <SubmissionView state={state} pending={play.pending} send={play.send} />
+        <SubmissionView
+          key={state.submissionRound ?? state.phase}
+          state={state}
+          pending={play.pending}
+          send={play.send}
+        />
       ) : null}
       {state.phase === "DISCUSSION" ||
       state.phase === "READING_ASSIGNMENT" ||

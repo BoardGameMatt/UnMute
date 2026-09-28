@@ -4,6 +4,7 @@ import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import {
   expireState,
   initializeGame,
+  onDiscussionTimerExpired,
   leaderFewMore,
   onSubmissionTimerExpired,
   processReveal,
@@ -128,6 +129,16 @@ export async function dispatchTruthIsAction(input: {
     if (action.type === "submitOnTimeout") {
       next = onSubmissionTimerExpired(next, round);
     }
+    await persist(admin, sessionId, state, next);
+    return { ok: true };
+  }
+
+  if (action.type === "readyToVote") {
+    if (state.phase !== "DISCUSSION") return { ok: true };
+    if (state.current_reader_id !== participantId) {
+      return fail(403, "Only the reader can open voting.");
+    }
+    const next = onDiscussionTimerExpired(state);
     await persist(admin, sessionId, state, next);
     return { ok: true };
   }

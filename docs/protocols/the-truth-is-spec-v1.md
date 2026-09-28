@@ -106,8 +106,9 @@ Two rounds, everyone at once.
 
 ### 4.3 Discussion and voting
 
-- Discussion: 30s. The reader sees the entry text and a facilitation prompt that rotates about every 15s. Everyone else sees “Listening to [name]” and does not get the written line on screen (they hear it). The written line is still on the play payload as the current entry, because it is the line in play — unread lines are not.
-- Then voting: 15s. Name buttons for every player. Anyone may vote, including for themselves. No vote is not a penalty.
+- Discussion: 3 minutes. The reader sees the entry text and a facilitation prompt that rotates about every 15s. Everyone else sees “Listening to [name]” and does not get the written line on screen (they hear it). The written line is still on the play payload as the current entry, because it is the line in play — unread lines are not.
+- The reader may open voting early with **Ready to vote**. Listeners do not get that button.
+- Then voting: 60s. Name buttons for every player. Anyone may vote, including for themselves. No vote is not a penalty.
 - When every player has voted, reveal starts early.
 - Persistent line on both phases, for everyone: **Guess on your phone. Don’t say if it’s yours.**
 
@@ -139,8 +140,8 @@ Server stores `timer_started_at` and `timer_duration_seconds`. Clients render `W
 | Phase | Duration | Urgent | Numerals | On expiry |
 |---|---|---|---|---|
 | Submission 1 and 2 | 42s | last 15s amber | last 3s | Skip anyone without an entry or a skip, then advance |
-| Discussion | 30s | last 15s | last 3s | Voting, 15s |
-| Voting | 15s | last 15s (the whole beat) | last 3s | Reveal |
+| Discussion | 3 min | last 15s | last 3s | Voting, 60s. The reader may open voting early |
+| Voting | 60s | last 15s | last 3s | Reveal |
 | Reveal | 8s settle, no arc | — | — | Award points and deal the next beat. The phone may call this early when the fade finishes |
 | Leaderboard | 5s, no arc, no numerals | — | — | Next read, or wrap-up |
 
@@ -202,10 +203,10 @@ Results scoreboard → NPS (/session/[id]/feedback) → Reflection (/session/[id
 
 Reflection prompts registered on the protocol:
 
-1. What did you assume about someone that turned out to be wrong?
-2. Where does that same assumption show up in how we work?
+1. Was it challenging in deciding what truths to reveal about yourself? Why or why not?
+2. Was it difficult to determine which truths belonged to the other members of your team? Why or why not?
 
-**Facilitator prompt** (said aloud if the room is quiet; not a stored field): Whose truth changed how you see them — and what does that say about what we don’t ask each other?
+**Facilitator prompt** (said aloud if the room is quiet; not a stored field): ask the two reflection questions above, one at a time.
 
 ---
 
@@ -292,7 +293,7 @@ SUBMISSION_1 → SUBMISSION_2 → DISCUSSION → VOTING → REVEAL
 | Reader may read their own entry | Yes. Bluff scoring in §4.5. Only that phone sees the banner |
 | Author sits out | No. Everyone may vote |
 | Submission clock | 42 seconds, twice |
-| Discussion / vote | 30s then 15s, not one 60s clock with votes at 30 |
+| Discussion / vote | 3 minutes, then 60s to guess. The reader may open voting early |
 | Empty submission | Skip that prompt. The player still reads and guesses |
 | Points | +1 only. No negatives |
 | Leaderboard | After round 2, then every 3 rounds. 5 seconds |

@@ -12,7 +12,7 @@ type ReadingViewProps = {
   send: (action: TruthIsClientAction) => Promise<boolean>;
 };
 
-export const ReadingView = ({ state, send }: ReadingViewProps) => {
+export const ReadingView = ({ state, pending, send }: ReadingViewProps) => {
   const [promptIndex, setPromptIndex] = useState(0);
 
   useEffect(() => {
@@ -64,12 +64,22 @@ export const ReadingView = ({ state, send }: ReadingViewProps) => {
         </p>
       ) : null}
 
-      <div className="mt-10 flex justify-center">
+      <div className="mt-10 flex flex-col items-center gap-6">
         <WaoPlayTimer
-          durationSeconds={state.timerDurationSeconds || 30}
+          durationSeconds={state.timerDurationSeconds || 180}
           startedAt={state.timerStartedAt}
           onComplete={() => void send({ type: "timerExpired" })}
         />
+        {state.youAreReader ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => void send({ type: "readyToVote" })}
+            className="w-full max-w-md rounded-md bg-signal-amber px-6 py-4 font-display text-lg font-semibold text-deep-navy transition-colors hover:bg-sunrise-gold disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Ready to vote
+          </button>
+        ) : null}
       </div>
     </div>
   );

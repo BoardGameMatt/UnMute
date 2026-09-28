@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
 import type { TruthIsClientAction, TruthIsPlayState } from "../types";
 
@@ -18,7 +18,16 @@ export const SubmissionView = ({ state, pending, send }: SubmissionViewProps) =>
   const textRef = useRef(text);
   textRef.current = text;
   const [submitted, setSubmitted] = useState(state.mySubmissionDone);
-  const locked = submitted || state.mySubmissionDone || pending;
+
+  // The same view stays mounted for both prompts. Clear round 1's draft when round 2 opens.
+  useEffect(() => {
+    setText(state.mySubmittedText ?? "");
+    setSubmitted(state.mySubmissionDone);
+    // The draft must survive later polls of this same prompt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [round]);
+
+  const locked = state.mySubmissionDone || pending;
 
   const handleSubmit = useCallback(async () => {
     if (locked) return;

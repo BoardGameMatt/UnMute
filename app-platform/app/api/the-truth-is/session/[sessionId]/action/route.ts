@@ -8,7 +8,12 @@ type RouteContext = { params: { sessionId: string } };
 
 function parseAction(body: Record<string, unknown>): TruthIsClientAction | null {
   const type = body.type;
-  if (type === "timerExpired" || type === "processReveal" || type === "dismissLeaderboard") {
+  if (
+    type === "timerExpired" ||
+    type === "readyToVote" ||
+    type === "processReveal" ||
+    type === "dismissLeaderboard"
+  ) {
     return { type };
   }
   if (type === "leaderFewMore" || type === "wrapUp" || type === "advanceRecap") {
