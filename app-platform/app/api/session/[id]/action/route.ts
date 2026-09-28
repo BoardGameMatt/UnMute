@@ -9,14 +9,6 @@ import {
   drawItByEarStateToJson,
   isDrawItByEarState,
 } from "@/lib/protocols/draw-it-by-ear/types";
-import {
-  clientPayloadToEngineAction,
-  reduceTruthIsState,
-} from "@/lib/protocols/the-truth-is/engine";
-import {
-  isTruthIsState,
-  truthIsStateToJson,
-} from "@/lib/protocols/the-truth-is/types";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/types/database";
 
@@ -222,52 +214,6 @@ export async function POST(
       }
 
       return NextResponse.json({ ok: true, changed });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Engine error";
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
-  }
-
-  if (protocolSlug === "the-truth-is") {
-    try {
-      if (actionType === "initializeGame" && isTruthIsState(row.state_json)) {
-        return NextResponse.json({ ok: true, skipped: true });
-      }
-
-      const engineAction = clientPayloadToEngineAction(actionType, payloadRecord);
-      const prior = isTruthIsState(row.state_json) ? row.state_json : null;
-      const nextState = reduceTruthIsState(prior, engineAction);
-
-      const { error: updateError } = await supabase
-        .from("session_state")
-        .update({
-          state_json: truthIsStateToJson(nextState),
-          phase: nextState.phase,
-          current_round: nextState.total_rounds_played,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", row.id);
-
-      if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
-      }
-
-      if (actionType === "endSession") {
-        const completedAt = new Date().toISOString();
-        const { error: sessionUpdateErr } = await supabase
-          .from("sessions")
-          .update({
-            status: "completed",
-            completed_at: completedAt,
-          })
-          .eq("id", sessionId);
-
-        if (sessionUpdateErr) {
-          return NextResponse.json({ error: sessionUpdateErr.message }, { status: 500 });
-        }
-      }
-
-      return NextResponse.json({ ok: true });
     } catch (e) {
       const message = e instanceof Error ? e.message : "Engine error";
       return NextResponse.json({ error: message }, { status: 400 });

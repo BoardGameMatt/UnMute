@@ -1,4 +1,5 @@
 import TheTruthIsProtocol from "./TheTruthIsProtocol";
+import { TruthIsLobbyExplainer } from "./components/TruthIsLobbyExplainer";
 import { registerProtocol } from "../registry";
 
 registerProtocol({
@@ -10,4 +11,9 @@ registerProtocol({
   minPlayers: 3,
   maxPlayers: 20,
   component: TheTruthIsProtocol,
+  lobbyExplainer: TruthIsLobbyExplainer,
+  reflectionPrompts: {
+    prompt1: "What did you assume about someone that turned out to be wrong?",
+    prompt2: "Where does that same assumption show up in how we work?",
+  },
 });

@@ -1091,6 +1091,44 @@ export type IkwymGuessInsert = Omit<IkwymGuess, "id"> & {
   locked_at?: string;
 };
 
+export interface TruthIsSessionRow {
+  session_id: string;
+  phase: string;
+  state_json: Json;
+  created_at: string;
+}
+
+export type TruthIsSessionInsert = {
+  session_id: string;
+  phase: string;
+  state_json: Json;
+  created_at?: string;
+};
+
+export interface TruthIsEntryRow {
+  id: string;
+  session_id: string;
+  author_id: string;
+  text: string;
+  round_submitted: number;
+  used: boolean;
+  guesses: Json;
+  correct_count: number;
+  created_at: string;
+}
+
+export type TruthIsEntryInsert = {
+  id: string;
+  session_id: string;
+  author_id: string;
+  text: string;
+  round_submitted: number;
+  used?: boolean;
+  guesses?: Json;
+  correct_count?: number;
+  created_at?: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -1392,6 +1430,18 @@ export type Database = {
         Row: IkwymGuess;
         Insert: IkwymGuessInsert;
         Update: Partial<IkwymGuessInsert>;
+        Relationships: [];
+      };
+      truth_is_sessions: {
+        Row: TruthIsSessionRow;
+        Insert: TruthIsSessionInsert;
+        Update: Partial<TruthIsSessionInsert>;
+        Relationships: [];
+      };
+      truth_is_entries: {
+        Row: TruthIsEntryRow;
+        Insert: TruthIsEntryInsert;
+        Update: Partial<TruthIsEntryInsert>;
         Relationships: [];
       };
     };

@@ -12,6 +12,20 @@ import { TRUTH_IS_PROTOCOL_VERSION } from "./types";
 
 const MAX_ENTRY_LENGTH = 300;
 
+/** Reveal awards itself if no phone finishes the fade. */
+export const REVEAL_SETTLE_SECONDS = 8;
+
+export function timerDue(
+  startedAt: string | null,
+  durationSeconds: number,
+  nowMs: number
+): boolean {
+  if (!startedAt || durationSeconds <= 0) return false;
+  const start = Date.parse(startedAt);
+  if (Number.isNaN(start)) return false;
+  return nowMs >= start + durationSeconds * 1000;
+}
+
 function nowIso(): string {
   return new Date().toISOString();
 }
@@ -389,8 +403,8 @@ export function onVotingTimerExpired(state: TruthIsState): TruthIsState {
   return {
     ...state,
     phase: "REVEAL",
-    timer_started_at: null,
-    timer_duration_seconds: 0,
+    timer_started_at: nowIso(),
+    timer_duration_seconds: REVEAL_SETTLE_SECONDS,
   };
 }
 
@@ -606,6 +620,29 @@ export function onLeaderboardTimerExpired(state: TruthIsState): TruthIsState {
     return state;
   }
   return dismissLeaderboard(state);
+}
+
+/** One server-clock step. Returns the same object when the clock is still running. */
+export function expireState(state: TruthIsState, nowMs: number): TruthIsState {
+  if (!timerDue(state.timer_started_at, state.timer_duration_seconds, nowMs)) {
+    return state;
+  }
+  switch (state.phase) {
+    case "SUBMISSION_1":
+      return onSubmissionTimerExpired(state, 1);
+    case "SUBMISSION_2":
+      return onSubmissionTimerExpired(state, 2);
+    case "DISCUSSION":
+      return onDiscussionTimerExpired(state);
+    case "VOTING":
+      return onVotingTimerExpired(state);
+    case "REVEAL":
+      return processReveal(state);
+    case "LEADERBOARD":
+      return onLeaderboardTimerExpired(state);
+    default:
+      return state;
+  }
 }
 
 /** Lead ends the session from WRAP_UP. */

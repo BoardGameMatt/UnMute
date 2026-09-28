@@ -60,6 +60,9 @@ WITH expected AS (
   UNION ALL SELECT '027_rank_and_file.sql', 'table', 'rank_and_file_sessions', NULL
   UNION ALL SELECT '027_rank_and_file.sql', 'table', 'rank_and_file_rounds', NULL
   UNION ALL SELECT '027_rank_and_file.sql', 'table', 'rank_and_file_deals', NULL
+  -- The Truth Is (028)
+  UNION ALL SELECT '028_the_truth_is.sql', 'table', 'truth_is_sessions', NULL
+  UNION ALL SELECT '028_the_truth_is.sql', 'table', 'truth_is_entries', NULL
 ),
 present AS (
   SELECT

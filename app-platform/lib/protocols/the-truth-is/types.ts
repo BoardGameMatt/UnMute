@@ -104,3 +104,93 @@ export function isTruthIsState(json: unknown): json is TruthIsState {
 export function truthIsStateToJson(state: TruthIsState): Json {
   return JSON.parse(JSON.stringify(state)) as Json;
 }
+
+export const PERSISTENT_INSTRUCTION = "Guess on your phone. Don’t say if it’s yours.";
+
+export interface TruthIsNameChip {
+  id: string;
+  displayName: string;
+}
+
+export interface TruthIsScoreChip {
+  id: string;
+  displayName: string;
+  score: number;
+}
+
+export interface TruthIsVoteLine {
+  voterName: string;
+  guessedName: string;
+}
+
+/** Present only while phase is REVEAL. Names, never author ids. */
+export interface TruthIsRevealView {
+  authorName: string;
+  entryText: string;
+  isBluff: boolean;
+  votes: TruthIsVoteLine[];
+  authorBluffed: boolean;
+  authorPoints: number;
+  fooledNames: string[];
+  caughtNames: string[];
+  correctGuesserNames: string[];
+}
+
+/**
+ * What one phone is allowed to render.
+ * Unread entry text and author ids are not fields on this object.
+ */
+export interface TruthIsPlayState {
+  phase: TruthIsPhase;
+  participants: TruthIsNameChip[];
+  scores: TruthIsScoreChip[];
+  currentRound: number;
+  totalRoundsPlayed: number;
+  minimumRounds: number;
+  progress: number;
+  timerStartedAt: string | null;
+  timerDurationSeconds: number;
+  submissionRound: 1 | 2 | null;
+  mySubmittedText: string | null;
+  mySubmissionDone: boolean;
+  currentEntryId: string | null;
+  /** The line in play. Null before a read and after the entry is cleared. */
+  currentEntryText: string | null;
+  currentReaderId: string | null;
+  currentReaderName: string | null;
+  youAreReader: boolean;
+  /** True only for the reader on a bluff round. */
+  youAreAuthor: boolean;
+  myGuessId: string | null;
+  entriesRemaining: number;
+  reveal: TruthIsRevealView | null;
+  mostSurprising: { text: string; authorName: string } | null;
+  isLead: boolean;
+  ended: boolean;
+  instruction: string;
+}
+
+/** Open realtime pulse. No author ids, no unread lines, no ballots. */
+export interface TruthIsPublicPulse {
+  v: 1;
+  phase: TruthIsPhase;
+  timerStartedAt: string | null;
+  timerDurationSeconds: number;
+  currentRound: number;
+  totalRoundsPlayed: number;
+  progress: number;
+  currentReaderId: string | null;
+  currentEntryText: string | null;
+  t: number;
+}
+
+export type TruthIsClientAction =
+  | { type: "submitEntry"; text: string; round: 1 | 2 }
+  | { type: "submitOnTimeout"; text: string; round: 1 | 2 }
+  | { type: "timerExpired" }
+  | { type: "submitVote"; guessedAuthorId: string }
+  | { type: "processReveal" }
+  | { type: "dismissLeaderboard" }
+  | { type: "leaderFewMore" }
+  | { type: "wrapUp" }
+  | { type: "advanceRecap" };

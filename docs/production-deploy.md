@@ -89,7 +89,7 @@ Open `app-platform/supabase/verify-schema.sql`, run the full script. Any row in 
 |--------|------|-------------------------------------|
 | Draw It By Ear | `draw-it-by-ear` | Start session → team formation |
 | Wrong Answers Only | `wrong-answers-only` | Start round → pair/tap tables |
-| The Truth Is | `the-truth-is` | Submit / advance (session_state) |
+| The Truth Is | `the-truth-is` | Start session → `truth_is_sessions` / `truth_is_entries` (needs `028`) |
 | Trane Quiz | `trane-quiz` | Create offering / join |
 | Cover Story | `cover-story` | **Deal cover cards** (needs `014`–`018`) |
 | Talk Track | `talk-track` | Start session → `talk_track_*` tables (needs `019`) |
@@ -139,6 +139,11 @@ All files live in `app-platform/supabase/migrations/`. Production must have **ev
 | 020 | `020_unmute_console.sql` | Unmute Console |
 | 021 | `021_zoning_rights.sql` | Zoning Rights |
 | 023 | `023_ikwym.sql` | I Know What You Meme |
+| 024 | `024_ikwym_precise_prompts.sql` | I Know What You Meme prompt copy |
+| 025 | `025_code_switch.sql` | SwitchCode |
+| 026 | `026_switchcode_name.sql` | SwitchCode display name |
+| 027 | `027_rank_and_file.sql` | Rank and File |
+| 028 | `028_the_truth_is.sql` | The Truth Is private session and entries |
 
 When adding migration `021+`, update this table, `verify-schema.sql`, and `scripts/verify-prod-schema.ts`.
 

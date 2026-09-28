@@ -1,45 +1,23 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { TimerArc } from "@/components/ui/TimerArc";
-import type { TruthIsState } from "../types";
+import { useState } from "react";
+import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
+import type { TruthIsClientAction, TruthIsPlayState } from "../types";
 import { BluffRulesBanner } from "./BluffRulesBanner";
 
 type VotingViewProps = {
-  state: TruthIsState;
-  participantId: string;
-  sendAction: (type: string, payload: object) => Promise<void>;
+  state: TruthIsPlayState;
+  pending: boolean;
+  send: (action: TruthIsClientAction) => Promise<boolean>;
 };
 
-export const VotingView = ({ state, participantId, sendAction }: VotingViewProps) => {
-  const [selected, setSelected] = useState<string | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
-
-  const guessOptions = useMemo(() => state.participants, [state.participants]);
-
-  const handleConfirm = useCallback(async () => {
-    if (!selected || confirmed) return;
-    setConfirmed(true);
-    await sendAction("submitVote", {
-      voterId: participantId,
-      guessedAuthorId: selected,
-    });
-  }, [selected, confirmed, sendAction, participantId]);
-
-  const handleTimerComplete = useCallback(async () => {
-    await sendAction("votingTimerExpired", {});
-  }, [sendAction]);
-
-  const isBluffRound =
-    state.current_reader_id !== null &&
-    state.current_author_id !== null &&
-    state.current_reader_id === state.current_author_id;
-  const showBluffBanner =
-    isBluffRound && state.current_reader_id === participantId;
+export const VotingView = ({ state, pending, send }: VotingViewProps) => {
+  const [selected, setSelected] = useState<string | null>(state.myGuessId);
+  const confirmed = Boolean(state.myGuessId) || pending;
 
   let submitClass =
     "mt-8 w-full rounded-md px-5 py-4 font-display text-base font-semibold transition-colors duration-200";
-  if (confirmed) {
+  if (state.myGuessId) {
     submitClass += " bg-signal-amber text-deep-navy";
   } else if (selected) {
     submitClass += " bg-steel-blue text-warm-white hover:bg-unmute-navy";
@@ -52,30 +30,34 @@ export const VotingView = ({ state, participantId, sendAction }: VotingViewProps
       <p className="text-center font-mono text-[10px] font-normal uppercase tracking-widest text-steel-blue">
         WHO WROTE IT?
       </p>
-      {showBluffBanner ? <BluffRulesBanner /> : null}
+      {state.youAreAuthor ? (
+        <div className="mt-6">
+          <BluffRulesBanner />
+        </div>
+      ) : null}
       <p className="mt-4 text-center font-display text-lg font-semibold text-charcoal">
         Who do you think said this?
       </p>
-      <p className="mt-2 text-center font-body text-sm text-slate">
-        Tap a card, then submit your guess.
-      </p>
+      {state.instruction ? (
+        <p className="mt-2 text-center font-body text-sm text-charcoal">{state.instruction}</p>
+      ) : null}
 
       <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {guessOptions.map((p) => {
-          const isSel = selected === p.id;
+        {state.participants.map((person) => {
+          const isSel = (state.myGuessId ?? selected) === person.id;
           return (
             <button
-              key={p.id}
+              key={person.id}
               type="button"
               disabled={confirmed}
-              onClick={() => !confirmed && setSelected(p.id)}
-              className={`rounded-md border px-4 py-4 text-left font-body text-base font-medium shadow-sm transition-colors active:scale-[0.99] ${
+              onClick={() => setSelected(person.id)}
+              className={`rounded-md border bg-warm-white px-4 py-4 text-left font-body text-base text-charcoal shadow-sm transition-colors ${
                 isSel
-                  ? "border-unmute-navy bg-cloud-grey/50 text-deep-navy"
-                  : "border-cloud-grey bg-warm-white text-charcoal hover:border-unmute-navy hover:shadow-md"
+                  ? "border-2 border-unmute-navy font-semibold"
+                  : "border-cloud-grey font-medium hover:border-unmute-navy"
               } ${confirmed ? "opacity-80" : ""}`}
             >
-              {p.display_name}
+              {person.displayName}
             </button>
           );
         })}
@@ -84,18 +66,20 @@ export const VotingView = ({ state, participantId, sendAction }: VotingViewProps
       <button
         type="button"
         disabled={!selected || confirmed}
-        onClick={() => void handleConfirm()}
+        onClick={() => {
+          if (!selected) return;
+          void send({ type: "submitVote", guessedAuthorId: selected });
+        }}
         className={submitClass}
       >
-        {confirmed ? "Guess sent" : "Submit Guess"}
+        {state.myGuessId ? "Submitted" : "Submit guess"}
       </button>
 
       <div className="mt-10 flex justify-center">
-        <TimerArc
-          durationSeconds={state.timer_duration_seconds || 15}
-          startedAt={state.timer_started_at}
-          onComplete={handleTimerComplete}
-          size={120}
+        <WaoPlayTimer
+          durationSeconds={state.timerDurationSeconds || 15}
+          startedAt={state.timerStartedAt}
+          onComplete={() => void send({ type: "timerExpired" })}
         />
       </div>
     </div>
