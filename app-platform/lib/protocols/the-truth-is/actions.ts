@@ -6,6 +6,7 @@ import {
   initializeGame,
   onDiscussionTimerExpired,
   leaderFewMore,
+  oneMoreRound,
   onSubmissionTimerExpired,
   processReveal,
   reduceTruthIsState,
@@ -160,6 +161,14 @@ export async function dispatchTruthIsAction(input: {
 
   if (action.type === "processReveal") {
     const next = processReveal(state);
+    await persist(admin, sessionId, state, next);
+    return { ok: true };
+  }
+
+  if (action.type === "oneMoreRound") {
+    if (!isLead) return fail(403, "Only the facilitator can do that.");
+    if (state.phase !== "WRAP_UP") return fail(400, "That choice is not open.");
+    const next = oneMoreRound(state);
     await persist(admin, sessionId, state, next);
     return { ok: true };
   }

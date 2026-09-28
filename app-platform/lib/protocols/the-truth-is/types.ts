@@ -193,5 +193,6 @@ export type TruthIsClientAction =
   | { type: "processReveal" }
   | { type: "dismissLeaderboard" }
   | { type: "leaderFewMore" }
+  | { type: "oneMoreRound" }
   | { type: "wrapUp" }
   | { type: "advanceRecap" };

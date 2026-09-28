@@ -18,6 +18,8 @@ export const REVEAL_SETTLE_SECONDS = 8;
 export const DISCUSSION_SECONDS = 180;
 /** Everyone guesses. Reveal starts early when every vote is in. */
 export const VOTING_SECONDS = 60;
+/** After this many completed rounds, the facilitator chooses whether to continue. */
+export const ROUND_CHOICE_AFTER = 3;
 
 export function timerDue(
   startedAt: string | null,
@@ -584,6 +586,10 @@ export function processReveal(state: TruthIsState): TruthIsState {
     };
   }
 
+  if (shouldOfferRoundChoice(base)) {
+    return offerRoundChoice(base);
+  }
+
   return advanceToNextRound({
     ...base,
     phase: "READING_ASSIGNMENT",
@@ -595,13 +601,51 @@ export function dismissLeaderboard(state: TruthIsState): TruthIsState {
   if (state.phase !== "LEADERBOARD") {
     return state;
   }
-  let next: TruthIsState = {
+  if (shouldOfferRoundChoice(state)) {
+    return offerRoundChoice(state);
+  }
+  const next: TruthIsState = {
     ...state,
     phase: "READING_ASSIGNMENT",
     timer_started_at: null,
     timer_duration_seconds: 0,
   };
   return advanceToNextRound(next);
+}
+
+function shouldOfferRoundChoice(state: TruthIsState): boolean {
+  return (
+    state.total_rounds_played >= ROUND_CHOICE_AFTER &&
+    state.entries.some((entry) => !entry.used)
+  );
+}
+
+function offerRoundChoice(state: TruthIsState): TruthIsState {
+  return {
+    ...state,
+    phase: "WRAP_UP",
+    current_entry_id: null,
+    current_reader_id: null,
+    current_author_id: null,
+    timer_started_at: null,
+    timer_duration_seconds: 0,
+  };
+}
+
+/** Facilitator plays exactly one more unread entry. */
+export function oneMoreRound(state: TruthIsState): TruthIsState {
+  if (state.phase !== "WRAP_UP") {
+    return state;
+  }
+  if (!state.entries.some((entry) => !entry.used)) {
+    return getResults(state);
+  }
+  return assignReader({
+    ...state,
+    phase: "READING_ASSIGNMENT",
+    timer_started_at: null,
+    timer_duration_seconds: 0,
+  });
 }
 
 /** Show leaderboard after round 2, then every 3 rounds (2, 5, 8, …). */

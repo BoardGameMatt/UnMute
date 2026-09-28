@@ -16,7 +16,7 @@ function parseAction(body: Record<string, unknown>): TruthIsClientAction | null 
   ) {
     return { type };
   }
-  if (type === "leaderFewMore" || type === "wrapUp" || type === "advanceRecap") {
+  if (type === "leaderFewMore" || type === "oneMoreRound" || type === "wrapUp" || type === "advanceRecap") {
     return { type };
   }
   if (type === "submitEntry" || type === "submitOnTimeout") {

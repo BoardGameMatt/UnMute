@@ -6,7 +6,9 @@ import {
   expireState,
   initializeGame,
   leaderFewMore,
+  oneMoreRound,
   onDiscussionTimerExpired,
+  processReveal,
   onSubmissionTimerExpired,
   submitEntry,
   timerDue,
@@ -108,6 +110,43 @@ describe("the truth is engine", () => {
     const voting = onDiscussionTimerExpired(next);
     assert.equal(voting.phase, "VOTING");
     assert.equal(voting.timer_duration_seconds, 60);
+  });
+
+  it("pauses after the third round until the facilitator continues", () => {
+    const base = initializeGame(players);
+    const state: TruthIsState = {
+      ...base,
+      phase: "REVEAL",
+      total_rounds_played: 2,
+      current_entry_id: "e1",
+      current_reader_id: "p2",
+      current_author_id: "p1",
+      entries: [
+        entry({ id: "e1", author_id: "p1", text: "Just read" }),
+        entry({ id: "e2", author_id: "p2", text: "Still waiting" }),
+        entry({ id: "e3", author_id: "p3", text: "Also waiting" }),
+      ],
+      play_order: ["e1", "e2", "e3"],
+      votes_this_round: { p2: "p1" },
+    };
+    const paused = processReveal(state);
+    assert.equal(paused.phase, "WRAP_UP");
+    assert.equal(paused.total_rounds_played, 3);
+    assert.equal(paused.entries.find((row) => row.id === "e1")?.used, true);
+    assert.equal(paused.entries.find((row) => row.id === "e2")?.used, false);
+
+    const again = oneMoreRound(paused);
+    assert.equal(again.phase, "DISCUSSION");
+    assert.equal(again.current_entry_id, "e2");
+
+    const pausedAgain = processReveal({
+      ...again,
+      phase: "REVEAL",
+      votes_this_round: { p1: "p2" },
+    });
+    assert.equal(pausedAgain.phase, "WRAP_UP");
+    assert.equal(pausedAgain.total_rounds_played, 4);
+    assert.equal(pausedAgain.entries.find((row) => row.id === "e3")?.used, false);
   });
 
   it("adds a few more rounds from the unused pool", () => {

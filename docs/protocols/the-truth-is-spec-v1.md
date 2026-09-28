@@ -126,8 +126,8 @@ Two rounds, everyone at once.
 
 - After round 2, then after rounds 5, 8, 11, … the room sees a leaderboard for 5 seconds. The Lead may continue early. No numerals.
 - The leader row uses a heavier navy border. Amber is not a rank fill.
-- After at least one round per player, if the queue cannot continue, the Lead sees wrap-up: entries still unused, **A few more**, and **Wrap up**. Members wait.
-- **A few more** reshuffles the unused entries and adds `min(4, max(3, unused))` to the progress denominator, then deals the next read. If nothing is left, the phase is results.
+- After the third completed round, and after every round after that, play pauses while unread entries remain. The Lead sees **One more round** and **Wrap up now**. Members wait. **One more round** deals the next unread entry only. The same choice appears again when that round ends.
+- If nothing is left to read, the Lead sees **Wrap up**, which opens results.
 - **Wrap up** opens results: standings, rounds played, and **Most surprising** — the played entry with the most wrong guesses, shown with its author name. Ties keep the first such entry. Rank ties share a place; there is no tiebreaker.
 - The Lead’s primary action on results is **Continue to debrief**, which completes the session and opens NPS. Members see waiting copy, then follow to NPS when the session completes.
 
@@ -217,13 +217,13 @@ Reflection prompts registered on the protocol:
 3. When it’s your turn to read, read it straight. Don’t say if it’s yours.
 4. Everyone else: guess on your phone, not in the chat.
 5. If you notice you’re reading your own, your phone will tell you how that round scores. Leave it there.
-6. After everyone’s had a turn, I’ll either run a few more or we’ll stop and talk.
+6. After the third round, I’ll either play one more or we’ll stop and talk. Same choice after each later round.
 
 **Lead-only metrics**
 
 | When | What |
 |---|---|
-| Wrap-up | Entries still unused. Actions: A few more, Wrap up. Label: FACILITATOR |
+| After round 3, and each later round | Unread entries remaining. Actions: One more round, Wrap up now. Label: FACILITATOR |
 | Leaderboard | Ranked names and points. Action: Continue |
 | Results | Rounds played, standings, most surprising. Action: Continue to debrief |
 
@@ -297,7 +297,7 @@ SUBMISSION_1 → SUBMISSION_2 → DISCUSSION → VOTING → REVEAL
 | Empty submission | Skip that prompt. The player still reads and guesses |
 | Points | +1 only. No negatives |
 | Leaderboard | After round 2, then every 3 rounds. 5 seconds |
-| A few more | Lead only, from wrap-up, unused entries only |
+| After round 3 | Lead chooses One more round or Wrap up now. Same choice after each later round while entries remain |
 | Secrets | Off `session_state`. Play DTO is filtered |
 | Reveal motion | Fade through guesses, author, points |
 | Session end | Scoreboard → NPS → reflection |
