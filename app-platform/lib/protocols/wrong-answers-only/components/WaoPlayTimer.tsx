@@ -64,7 +64,7 @@ export function WaoPlayTimer({
 
     const totalMs = durationSeconds * 1000;
     let frame = 0;
-    let retry: ReturnType<typeof setInterval> | null = null;
+    let retry: number | null = null;
     let stopped = false;
 
     const clearRetry = () => {
