@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { TruthIsClientAction, TruthIsPlayState, TruthIsRevealView } from "../types";
+import { msUntilServerDue, useServerClockOffset } from "../use-server-clock";
 
 type RevealViewProps = {
   state: TruthIsPlayState;
@@ -16,6 +17,7 @@ const EASE = [0.4, 0, 0.2, 1] as const;
 export const RevealView = ({ state, send }: RevealViewProps) => {
   const reveal = state.reveal;
   const reduce = useReducedMotion();
+  const clockOffsetMs = useServerClockOffset(state.serverNow);
   const [step, setStep] = useState<Step>(reduce ? "points" : "votes");
   const sentRef = useRef(false);
 
@@ -46,11 +48,22 @@ export const RevealView = ({ state, send }: RevealViewProps) => {
 
   useEffect(() => {
     if (!state.timerStartedAt || state.timerDurationSeconds <= 0) return;
-    const delay =
-      Date.parse(state.timerStartedAt) + state.timerDurationSeconds * 1000 - Date.now();
+    const delay = msUntilServerDue(
+      state.timerStartedAt,
+      state.timerDurationSeconds,
+      clockOffsetMs
+    );
+    if (delay === null) return;
     const t = window.setTimeout(() => void send({ type: "timerExpired" }), Math.max(0, delay + 200));
-    return () => window.clearTimeout(t);
-  }, [send, state.timerDurationSeconds, state.timerStartedAt]);
+    const retry = window.setTimeout(
+      () => void send({ type: "timerExpired" }),
+      Math.max(0, delay + 2_000)
+    );
+    return () => {
+      window.clearTimeout(t);
+      window.clearTimeout(retry);
+    };
+  }, [clockOffsetMs, send, state.timerDurationSeconds, state.timerStartedAt]);
 
   if (!reveal) {
     return <p className="px-5 py-12 text-center font-body text-slate">Revealing…</p>;

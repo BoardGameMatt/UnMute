@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
 import type { TruthIsClientAction, TruthIsPlayState } from "../types";
+import { useServerClockOffset } from "../use-server-clock";
 import { BluffRulesBanner } from "./BluffRulesBanner";
 
 type VotingViewProps = {
@@ -12,6 +13,7 @@ type VotingViewProps = {
 };
 
 export const VotingView = ({ state, pending, send }: VotingViewProps) => {
+  const clockOffsetMs = useServerClockOffset(state.serverNow);
   const [selected, setSelected] = useState<string | null>(state.myGuessId);
   const confirmed = Boolean(state.myGuessId) || pending;
 
@@ -79,6 +81,8 @@ export const VotingView = ({ state, pending, send }: VotingViewProps) => {
         <WaoPlayTimer
           durationSeconds={state.timerDurationSeconds || 60}
           startedAt={state.timerStartedAt}
+          clockOffsetMs={clockOffsetMs}
+          retryMs={2000}
           onComplete={() => void send({ type: "timerExpired" })}
         />
       </div>

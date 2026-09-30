@@ -150,6 +150,8 @@ export interface TruthIsPlayState {
   progress: number;
   timerStartedAt: string | null;
   timerDurationSeconds: number;
+  /** Server time when this payload was built. Phones measure the arc from here. */
+  serverNow: string;
   submissionRound: 1 | 2 | null;
   mySubmittedText: string | null;
   mySubmissionDone: boolean;

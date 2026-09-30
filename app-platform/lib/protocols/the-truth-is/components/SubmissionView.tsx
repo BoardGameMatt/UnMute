@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
 import type { TruthIsClientAction, TruthIsPlayState } from "../types";
+import { useServerClockOffset } from "../use-server-clock";
 
 const MAX_LEN = 300;
 
@@ -14,6 +15,7 @@ type SubmissionViewProps = {
 
 export const SubmissionView = ({ state, pending, send }: SubmissionViewProps) => {
   const round = state.submissionRound ?? 1;
+  const clockOffsetMs = useServerClockOffset(state.serverNow);
   const [text, setText] = useState(state.mySubmittedText ?? "");
   const textRef = useRef(text);
   textRef.current = text;
@@ -43,7 +45,6 @@ export const SubmissionView = ({ state, pending, send }: SubmissionViewProps) =>
       void send({ type: "timerExpired" });
       return;
     }
-    setSubmitted(true);
     void send({ type: "submitOnTimeout", text: textRef.current, round });
   }, [round, send, state.mySubmissionDone]);
 
@@ -96,8 +97,10 @@ export const SubmissionView = ({ state, pending, send }: SubmissionViewProps) =>
 
       <div className="mt-10 flex flex-col items-center gap-6">
         <WaoPlayTimer
-          durationSeconds={state.timerDurationSeconds || 42}
+          durationSeconds={state.timerDurationSeconds || 75}
           startedAt={state.timerStartedAt}
+          clockOffsetMs={clockOffsetMs}
+          retryMs={2000}
           onComplete={handleTimerComplete}
         />
         <button

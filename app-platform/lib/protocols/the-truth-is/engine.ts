@@ -12,6 +12,8 @@ import { TRUTH_IS_PROTOCOL_VERSION } from "./types";
 
 const MAX_ENTRY_LENGTH = 300;
 
+/** Each writing prompt. The round also ends early once every player has submitted. */
+export const SUBMISSION_SECONDS = 75;
 /** Reveal awards itself if no phone finishes the fade. */
 export const REVEAL_SETTLE_SECONDS = 8;
 /** Reader reads the line and runs the conversation. They may open voting early. */
@@ -88,7 +90,7 @@ export function initializeGame(participants: TruthIsParticipant[]): TruthIsState
     current_author_id: null,
     next_reader_from_previous_author_id: null,
     timer_started_at: nowIso(),
-    timer_duration_seconds: 42,
+    timer_duration_seconds: SUBMISSION_SECONDS,
     votes_this_round: {},
     lead_chose_continue: false,
     few_more_extra_entries: 0,
@@ -107,7 +109,7 @@ export function startSubmission1(state: TruthIsState): TruthIsState {
     ...state,
     phase: "SUBMISSION_1",
     timer_started_at: nowIso(),
-    timer_duration_seconds: 42,
+    timer_duration_seconds: SUBMISSION_SECONDS,
   };
 }
 
@@ -200,6 +202,35 @@ export function submitEntry(
   return next;
 }
 
+/**
+ * A phone says the writing clock ended and sends whatever is in the field.
+ * Until the server clock is due, this is a no-op: the draft is not saved and
+ * nobody else is skipped.
+ */
+export function applySubmissionTimeout(
+  state: TruthIsState,
+  participantId: string,
+  text: string,
+  round: 1 | 2,
+  nowMs: number
+): TruthIsState {
+  if ((round === 1 && state.phase !== "SUBMISSION_1") || (round === 2 && state.phase !== "SUBMISSION_2")) {
+    return state;
+  }
+  if (!timerDue(state.timer_started_at, state.timer_duration_seconds, nowMs)) {
+    return state;
+  }
+
+  const already = state.entries.some(
+    (entry) => entry.author_id === participantId && entry.round_submitted === round
+  );
+  let next = state;
+  if (!(already && text.trim().length === 0)) {
+    next = submitEntry(next, participantId, text, round);
+  }
+  return onSubmissionTimerExpired(next, round);
+}
+
 /** Timer fired: mark non-submitters as skipped and advance phase when everyone is accounted for. */
 export function onSubmissionTimerExpired(state: TruthIsState, round: 1 | 2): TruthIsState {
   if ((round === 1 && state.phase !== "SUBMISSION_1") || (round === 2 && state.phase !== "SUBMISSION_2")) {
@@ -241,7 +272,7 @@ export function startSubmission2(state: TruthIsState): TruthIsState {
     ...state,
     phase: "SUBMISSION_2",
     timer_started_at: nowIso(),
-    timer_duration_seconds: 42,
+    timer_duration_seconds: SUBMISSION_SECONDS,
   };
 }
 

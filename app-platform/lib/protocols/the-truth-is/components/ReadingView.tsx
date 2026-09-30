@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
 import { READER_CONVERSATION_PROMPTS } from "../conversation-prompts";
 import type { TruthIsClientAction, TruthIsPlayState } from "../types";
+import { useServerClockOffset } from "../use-server-clock";
 import { BluffRulesBanner } from "./BluffRulesBanner";
 
 type ReadingViewProps = {
@@ -13,6 +14,7 @@ type ReadingViewProps = {
 };
 
 export const ReadingView = ({ state, pending, send }: ReadingViewProps) => {
+  const clockOffsetMs = useServerClockOffset(state.serverNow);
   const [promptIndex, setPromptIndex] = useState(0);
 
   useEffect(() => {
@@ -68,6 +70,8 @@ export const ReadingView = ({ state, pending, send }: ReadingViewProps) => {
         <WaoPlayTimer
           durationSeconds={state.timerDurationSeconds || 180}
           startedAt={state.timerStartedAt}
+          clockOffsetMs={clockOffsetMs}
+          retryMs={2000}
           onComplete={() => void send({ type: "timerExpired" })}
         />
         {state.youAreReader ? (

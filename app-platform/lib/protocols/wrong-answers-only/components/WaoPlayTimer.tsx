@@ -7,6 +7,10 @@ type WaoPlayTimerProps = {
   durationSeconds: number;
   startedAt: string | null;
   onComplete: () => void;
+  /** Added to Date.now() so the arc follows the server clock. */
+  clockOffsetMs?: number;
+  /** After the arc finishes, call onComplete again until this view unmounts. */
+  retryMs?: number;
   /** Amber stroke + pulse inside the final N seconds (spec §8.2). */
   urgentBelowSeconds?: number;
   /** Integer countdown appears only in the final N seconds. */
@@ -29,6 +33,8 @@ export function WaoPlayTimer({
   durationSeconds,
   startedAt,
   onComplete,
+  clockOffsetMs = 0,
+  retryMs = 0,
   urgentBelowSeconds = 15,
   numericBelowSeconds = 3,
   size = 120,
@@ -36,6 +42,10 @@ export function WaoPlayTimer({
 }: WaoPlayTimerProps) {
   const doneRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
+  const clockOffsetRef = useRef(clockOffsetMs);
+  const retryMsRef = useRef(retryMs);
+  clockOffsetRef.current = clockOffsetMs;
+  retryMsRef.current = retryMs;
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -54,23 +64,51 @@ export function WaoPlayTimer({
 
     const totalMs = durationSeconds * 1000;
     let frame = 0;
+    let retry: ReturnType<typeof setInterval> | null = null;
+    let stopped = false;
+
+    const clearRetry = () => {
+      if (retry !== null) {
+        window.clearInterval(retry);
+        retry = null;
+      }
+    };
+
+    const elapsedMs = () => Date.now() + clockOffsetRef.current - startMs;
 
     const loop = () => {
-      const elapsed = Date.now() - startMs;
-      const ratio = Math.min(1, Math.max(0, elapsed / totalMs));
+      if (stopped) return;
+      const elapsed = elapsedMs();
       setTick((t) => (t + 1) % 10000);
-      if (ratio >= 1) {
+      if (elapsed >= totalMs) {
         if (!doneRef.current) {
           doneRef.current = true;
           onCompleteRef.current();
+          const every = retryMsRef.current;
+          if (every > 0 && retry === null) {
+            retry = window.setInterval(() => {
+              if (elapsedMs() < totalMs) {
+                doneRef.current = false;
+                clearRetry();
+                frame = requestAnimationFrame(loop);
+                return;
+              }
+              onCompleteRef.current();
+            }, every);
+          }
         }
         return;
       }
+      doneRef.current = false;
       frame = requestAnimationFrame(loop);
     };
 
     frame = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(frame);
+      clearRetry();
+    };
   }, [startedAt, durationSeconds]);
 
   if (!startedAt || durationSeconds <= 0) {
@@ -90,7 +128,7 @@ export function WaoPlayTimer({
 
   const elapsedRatio = Math.min(
     1,
-    Math.max(0, (Date.now() - startMs) / (durationSeconds * 1000))
+    Math.max(0, (Date.now() + clockOffsetMs - startMs) / (durationSeconds * 1000))
   );
   const remainingRatio = 1 - elapsedRatio;
   const remainingSeconds = durationSeconds * remainingRatio;

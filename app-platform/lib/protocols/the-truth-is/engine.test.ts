@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  applySubmissionTimeout,
   assignReader,
   computeRoundScores,
   expireState,
   initializeGame,
+  SUBMISSION_SECONDS,
   leaderFewMore,
   oneMoreRound,
   onDiscussionTimerExpired,
@@ -45,16 +47,25 @@ describe("the truth is engine", () => {
     assert.equal(state.entries.length, 1);
     assert.equal(state.skipped_rounds.p1?.r1, true);
     assert.equal(state.skipped_rounds.p3?.r1, true);
-    assert.equal(state.timer_duration_seconds, 42);
+    assert.equal(state.timer_duration_seconds, SUBMISSION_SECONDS);
   });
 
   it("opens the second prompt when everyone has finished the first", () => {
     let state = initializeGame(players);
     state = submitEntry(state, "p1", "One", 1);
     state = submitEntry(state, "p2", "Two", 1);
+    assert.equal(state.phase, "SUBMISSION_1");
     state = submitEntry(state, "p3", "Three", 1);
     assert.equal(state.phase, "SUBMISSION_2");
     assert.equal(state.entries.length, 3);
+    assert.equal(state.timer_duration_seconds, SUBMISSION_SECONDS);
+
+    state = submitEntry(state, "p1", "Four", 2);
+    state = submitEntry(state, "p2", "Five", 2);
+    assert.equal(state.phase, "SUBMISSION_2");
+    state = submitEntry(state, "p3", "Six", 2);
+    assert.equal(state.phase, "DISCUSSION");
+    assert.ok(state.current_entry_id);
   });
 
   it("scores an ordinary round and a bluff round", () => {
@@ -173,8 +184,30 @@ describe("the truth is engine", () => {
     assert.equal(timerDue(state.timer_started_at, state.timer_duration_seconds, start + 1_000), false);
     assert.equal(expireState(state, start + 1_000), state);
 
-    const expired = expireState(state, start + 42_000);
+    const expired = expireState(state, start + SUBMISSION_SECONDS * 1000);
     assert.equal(expired.phase, "SUBMISSION_2");
     assert.notEqual(expired, state);
+  });
+
+  it("ignores a phone that ends the writing clock early", () => {
+    const state = initializeGame(players);
+    const start = Date.parse(state.timer_started_at ?? "");
+    const early = applySubmissionTimeout(state, "p1", "I was still typing", 1, start + 1_000);
+    assert.equal(early, state);
+    assert.equal(early.entries.length, 0);
+    assert.equal(early.phase, "SUBMISSION_1");
+
+    const due = applySubmissionTimeout(state, "p1", "I was still typing", 1, start + SUBMISSION_SECONDS * 1000);
+    assert.equal(due.phase, "SUBMISSION_2");
+    assert.equal(due.entries.length, 1);
+    assert.equal(due.entries[0]?.text, "I was still typing");
+    assert.equal(due.skipped_rounds.p2?.r1, true);
+    assert.equal(due.skipped_rounds.p3?.r1, true);
+    assert.equal(due.skipped_rounds.p1, undefined);
+
+    const round2Start = Date.parse(due.timer_started_at ?? "");
+    const round2Early = applySubmissionTimeout(due, "p2", "not yet", 2, round2Start + 1_000);
+    assert.equal(round2Early, due);
+    assert.equal(round2Early.phase, "SUBMISSION_2");
   });
 });

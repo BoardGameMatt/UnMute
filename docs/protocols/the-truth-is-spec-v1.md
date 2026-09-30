@@ -87,8 +87,8 @@ Two rounds, everyone at once.
 
 | Round | Placeholder | Clock |
 |---|---|---|
-| 1 | ...here's something about me that might surprise some people. | 42s |
-| 2 | ...something even MORE surprising. | 42s |
+| 1 | ...here's something about me that might surprise some people. | 75s |
+| 2 | ...something even MORE surprising. | 75s |
 
 - 300 characters. Trimmed. Empty text is a skip, not an entry.
 - Submit: grey (empty) → navy (text) → amber (submitted). Copy after submit: “Got it.”
@@ -135,11 +135,11 @@ Two rounds, everyone at once.
 
 ## 5. Timers
 
-Server stores `timer_started_at` and `timer_duration_seconds`. Clients render `WaoPlayTimer`. Phase changes when the server clock is due (`expireIfNeeded` on every play read and on `timerExpired`). A client action does not advance a clock that is still running.
+Server stores `timer_started_at` and `timer_duration_seconds`. Clients render `WaoPlayTimer` from the server clock included in the play payload, so a phone whose own clock is ahead still shows the full round. Phase changes when the server clock is due (`expireIfNeeded` on every play read and on `timerExpired`). A client action does not advance a clock that is still running. A phone that reports the writing clock has ended does not save that draft and does not skip anyone else until 75 seconds have passed on the server. Each writing prompt also ends as soon as every player has submitted, without waiting out the clock.
 
 | Phase | Duration | Urgent | Numerals | On expiry |
 |---|---|---|---|---|
-| Submission 1 and 2 | 42s | last 15s amber | last 3s | Skip anyone without an entry or a skip, then advance |
+| Submission 1 and 2 | 75s | last 15s amber | last 3s | Skip anyone without an entry or a skip, then advance. Also advances immediately when every player has submitted |
 | Discussion | 3 min | last 15s | last 3s | Voting, 60s. The reader may open voting early |
 | Voting | 60s | last 15s | last 3s | Reveal |
 | Reveal | 8s settle, no arc | — | — | Award points and deal the next beat. The phone may call this early when the fade finishes |
@@ -292,7 +292,7 @@ SUBMISSION_1 → SUBMISSION_2 → DISCUSSION → VOTING → REVEAL
 |---|---|
 | Reader may read their own entry | Yes. Bluff scoring in §4.5. Only that phone sees the banner |
 | Author sits out | No. Everyone may vote |
-| Submission clock | 42 seconds, twice |
+| Submission clock | 75 seconds, twice |
 | Discussion / vote | 3 minutes, then 60s to guess. The reader may open voting early |
 | Empty submission | Skip that prompt. The player still reads and guesses |
 | Points | +1 only. No negatives |

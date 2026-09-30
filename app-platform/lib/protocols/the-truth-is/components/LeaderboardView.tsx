@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import type { TruthIsClientAction, TruthIsPlayState } from "../types";
+import { msUntilServerDue, useServerClockOffset } from "../use-server-clock";
 
 type LeaderboardViewProps = {
   state: TruthIsPlayState;
@@ -10,13 +11,24 @@ type LeaderboardViewProps = {
 };
 
 export const LeaderboardView = ({ state, pending, send }: LeaderboardViewProps) => {
+  const clockOffsetMs = useServerClockOffset(state.serverNow);
   useEffect(() => {
-    if (!state.timerStartedAt || state.timerDurationSeconds <= 0) return;
-    const delay =
-      Date.parse(state.timerStartedAt) + state.timerDurationSeconds * 1000 - Date.now();
+    const delay = msUntilServerDue(
+      state.timerStartedAt,
+      state.timerDurationSeconds,
+      clockOffsetMs
+    );
+    if (delay === null) return;
     const t = window.setTimeout(() => void send({ type: "timerExpired" }), Math.max(0, delay));
-    return () => window.clearTimeout(t);
-  }, [send, state.timerDurationSeconds, state.timerStartedAt]);
+    const retry = window.setTimeout(
+      () => void send({ type: "timerExpired" }),
+      Math.max(0, delay + 2_000)
+    );
+    return () => {
+      window.clearTimeout(t);
+      window.clearTimeout(retry);
+    };
+  }, [clockOffsetMs, send, state.timerDurationSeconds, state.timerStartedAt]);
 
   return (
     <div className="min-h-[50vh] px-5 py-10">

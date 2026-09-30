@@ -124,6 +124,7 @@ export function toPlayState(
     progress: progressOf(state),
     timerStartedAt: state.timer_started_at,
     timerDurationSeconds: state.timer_duration_seconds,
+    serverNow: new Date().toISOString(),
     submissionRound,
     mySubmittedText,
     mySubmissionDone,

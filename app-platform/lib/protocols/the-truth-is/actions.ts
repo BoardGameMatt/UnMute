@@ -4,10 +4,10 @@ import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import {
   expireState,
   initializeGame,
+  applySubmissionTimeout,
   onDiscussionTimerExpired,
   leaderFewMore,
   oneMoreRound,
-  onSubmissionTimerExpired,
   processReveal,
   reduceTruthIsState,
   submitEntry,
@@ -120,15 +120,24 @@ export async function dispatchTruthIsAction(input: {
       return fail(403, "The shared screen does not write a truth.");
     }
 
+    if (action.type === "submitOnTimeout") {
+      const next = applySubmissionTimeout(
+        state,
+        participantId,
+        action.text,
+        round,
+        Date.now()
+      );
+      await persist(admin, sessionId, state, next);
+      return { ok: true };
+    }
+
     const already = state.entries.some(
       (entry) => entry.author_id === participantId && entry.round_submitted === round
     );
     let next = state;
     if (!(already && action.text.trim().length === 0)) {
       next = submitEntry(state, participantId, action.text, round);
-    }
-    if (action.type === "submitOnTimeout") {
-      next = onSubmissionTimerExpired(next, round);
     }
     await persist(admin, sessionId, state, next);
     return { ok: true };
