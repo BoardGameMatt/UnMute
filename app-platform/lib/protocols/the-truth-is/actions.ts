@@ -15,10 +15,12 @@ import {
 } from "./engine";
 import {
   loadRoster,
+  loadTruthIsRecord,
   loadTruthIsState,
   markSessionCompleted,
   saveTruthIsState,
   syncPublicPulse,
+  TruthIsWriteConflict,
 } from "./store";
 import type { TruthIsClientAction, TruthIsState } from "./types";
 
@@ -30,21 +32,59 @@ function fail(status: number, error: string): ActionErr {
   return { ok: false, status, error };
 }
 
+const WRITE_ATTEMPTS = 5;
+
+type Decision =
+  | { kind: "result"; result: TruthIsActionResult }
+  | { kind: "write"; next: TruthIsState };
+
+async function commitAction(
+  admin: SupabaseClient,
+  sessionId: string,
+  decide: (state: TruthIsState) => Decision
+): Promise<TruthIsActionResult> {
+  for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
+    const loaded = await loadTruthIsRecord(admin, sessionId);
+    if (!loaded) return fail(400, "The Truth Is has not started.");
+    const decision = decide(loaded.state);
+    if (decision.kind === "result") return decision.result;
+    if (decision.next === loaded.state) return { ok: true };
+    try {
+      await saveTruthIsState(admin, sessionId, decision.next, loaded.writeVersion);
+      return { ok: true };
+    } catch (err) {
+      if (err instanceof TruthIsWriteConflict) continue;
+      throw err;
+    }
+  }
+  return fail(409, "The room updated at the same time. Try again.");
+}
+
 async function persist(
   admin: SupabaseClient,
   sessionId: string,
   before: TruthIsState,
-  after: TruthIsState
+  after: TruthIsState,
+  writeVersion: number
 ): Promise<void> {
   if (after === before) return;
-  await saveTruthIsState(admin, sessionId, after);
+  await saveTruthIsState(admin, sessionId, after, writeVersion);
 }
 
 export async function expireIfNeeded(admin: SupabaseClient, sessionId: string): Promise<void> {
-  const state = await loadTruthIsState(admin, sessionId);
-  if (!state) return;
-  const next = expireState(state, Date.now());
-  await persist(admin, sessionId, state, next);
+  for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
+    const loaded = await loadTruthIsRecord(admin, sessionId);
+    if (!loaded) return;
+    const next = expireState(loaded.state, Date.now());
+    if (next === loaded.state) return;
+    try {
+      await persist(admin, sessionId, loaded.state, next, loaded.writeVersion);
+      return;
+    } catch (err) {
+      if (err instanceof TruthIsWriteConflict) continue;
+      throw err;
+    }
+  }
 }
 
 export async function resetTruthIsToLobby(admin: SupabaseClient, sessionId: string): Promise<void> {
@@ -76,7 +116,12 @@ export async function startTruthIs(
     return fail(400, err instanceof Error ? err.message : "Could not start The Truth Is.");
   }
 
-  await saveTruthIsState(admin, sessionId, state);
+  try {
+    await saveTruthIsState(admin, sessionId, state, 0);
+  } catch (err) {
+    if (err instanceof TruthIsWriteConflict) return { ok: true };
+    throw err;
+  }
   return { ok: true };
 }
 
@@ -107,87 +152,73 @@ export async function dispatchTruthIsAction(input: {
     return { ok: true };
   }
 
-  const state = await loadTruthIsState(admin, sessionId);
-  if (!state) return fail(400, "The Truth Is has not started.");
+  return commitAction(admin, sessionId, (state) => {
+    if (action.type === "submitEntry" || action.type === "submitOnTimeout") {
+      const round = action.round;
+      const phaseOk =
+        (round === 1 && state.phase === "SUBMISSION_1") ||
+        (round === 2 && state.phase === "SUBMISSION_2");
+      if (!phaseOk) return { kind: "result", result: { ok: true } };
+      if (!state.participants.some((person) => person.id === participantId)) {
+        return { kind: "result", result: fail(403, "The shared screen does not write a truth.") };
+      }
 
-  if (action.type === "submitEntry" || action.type === "submitOnTimeout") {
-    const round = action.round;
-    const phaseOk =
-      (round === 1 && state.phase === "SUBMISSION_1") ||
-      (round === 2 && state.phase === "SUBMISSION_2");
-    if (!phaseOk) return { ok: true };
-    if (!state.participants.some((person) => person.id === participantId)) {
-      return fail(403, "The shared screen does not write a truth.");
-    }
+      if (action.type === "submitOnTimeout") {
+        return {
+          kind: "write",
+          next: applySubmissionTimeout(state, participantId, action.text, round, Date.now()),
+        };
+      }
 
-    if (action.type === "submitOnTimeout") {
-      const next = applySubmissionTimeout(
-        state,
-        participantId,
-        action.text,
-        round,
-        Date.now()
+      const already = state.entries.some(
+        (entry) => entry.author_id === participantId && entry.round_submitted === round
       );
-      await persist(admin, sessionId, state, next);
-      return { ok: true };
+      let next = state;
+      if (!(already && action.text.trim().length === 0)) {
+        next = submitEntry(state, participantId, action.text, round);
+      }
+      return { kind: "write", next };
     }
 
-    const already = state.entries.some(
-      (entry) => entry.author_id === participantId && entry.round_submitted === round
-    );
-    let next = state;
-    if (!(already && action.text.trim().length === 0)) {
-      next = submitEntry(state, participantId, action.text, round);
+    if (action.type === "readyToVote") {
+      if (state.phase !== "DISCUSSION") return { kind: "result", result: { ok: true } };
+      if (state.current_reader_id !== participantId) {
+        return { kind: "result", result: fail(403, "Only the reader can open voting.") };
+      }
+      return { kind: "write", next: onDiscussionTimerExpired(state) };
     }
-    await persist(admin, sessionId, state, next);
-    return { ok: true };
-  }
 
-  if (action.type === "readyToVote") {
-    if (state.phase !== "DISCUSSION") return { ok: true };
-    if (state.current_reader_id !== participantId) {
-      return fail(403, "Only the reader can open voting.");
+    if (action.type === "submitVote") {
+      if (!state.participants.some((person) => person.id === participantId)) {
+        return { kind: "result", result: fail(403, "The shared screen does not guess.") };
+      }
+      const known = state.participants.some((p) => p.id === action.guessedAuthorId);
+      if (!known) return { kind: "result", result: fail(400, "That person is not in this session.") };
+      return {
+        kind: "write",
+        next: reduceTruthIsState(state, {
+          type: "submitVote",
+          voterId: participantId,
+          guessedAuthorId: action.guessedAuthorId,
+        }),
+      };
     }
-    const next = onDiscussionTimerExpired(state);
-    await persist(admin, sessionId, state, next);
-    return { ok: true };
-  }
 
-  if (action.type === "submitVote") {
-    if (!state.participants.some((person) => person.id === participantId)) {
-      return fail(403, "The shared screen does not guess.");
+    if (action.type === "processReveal") {
+      return { kind: "write", next: processReveal(state) };
     }
-    const known = state.participants.some((p) => p.id === action.guessedAuthorId);
-    if (!known) return fail(400, "That person is not in this session.");
-    const next = reduceTruthIsState(state, {
-      type: "submitVote",
-      voterId: participantId,
-      guessedAuthorId: action.guessedAuthorId,
-    });
-    await persist(admin, sessionId, state, next);
-    return { ok: true };
-  }
 
-  if (action.type === "processReveal") {
-    const next = processReveal(state);
-    await persist(admin, sessionId, state, next);
-    return { ok: true };
-  }
+    if (action.type === "oneMoreRound") {
+      if (!isLead) return { kind: "result", result: fail(403, "Only the facilitator can do that.") };
+      if (state.phase !== "WRAP_UP") return { kind: "result", result: fail(400, "That choice is not open.") };
+      return { kind: "write", next: oneMoreRound(state) };
+    }
 
-  if (action.type === "oneMoreRound") {
-    if (!isLead) return fail(403, "Only the facilitator can do that.");
-    if (state.phase !== "WRAP_UP") return fail(400, "That choice is not open.");
-    const next = oneMoreRound(state);
-    await persist(admin, sessionId, state, next);
-    return { ok: true };
-  }
+    if (action.type === "dismissLeaderboard" || action.type === "leaderFewMore" || action.type === "wrapUp") {
+      if (!isLead) return { kind: "result", result: fail(403, "Only the facilitator can do that.") };
+      return { kind: "write", next: reduceTruthIsState(state, { type: action.type }) };
+    }
 
-  if (action.type === "dismissLeaderboard" || action.type === "leaderFewMore" || action.type === "wrapUp") {
-    if (!isLead) return fail(403, "Only the facilitator can do that.");
-    const next = reduceTruthIsState(state, { type: action.type });
-    await persist(admin, sessionId, state, next);
-    return { ok: true };
-  }
-
-  return fail(400, "Unknown action.");
+    return { kind: "result", result: fail(400, "Unknown action.") };
+  });
 }

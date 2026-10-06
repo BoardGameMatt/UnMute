@@ -135,7 +135,7 @@ Two rounds, everyone at once.
 
 ## 5. Timers
 
-Server stores `timer_started_at` and `timer_duration_seconds`. Clients render `WaoPlayTimer` from the server clock included in the play payload, so a phone whose own clock is ahead still shows the full round. Phase changes when the server clock is due (`expireIfNeeded` on every play read and on `timerExpired`). A client action does not advance a clock that is still running. A phone that reports the writing clock has ended does not save that draft and does not skip anyone else until 75 seconds have passed on the server. Each writing prompt also ends as soon as every player has submitted, without waiting out the clock.
+Server stores `timer_started_at` and `timer_duration_seconds`. Clients render `WaoPlayTimer` from the server clock included in the play payload, so a phone whose own clock is ahead still shows the full round. Phase changes when the server clock is due (`expireIfNeeded` on every play read and on `timerExpired`). A client action does not advance a clock that is still running. A phone that reports the writing clock has ended does not save that draft and does not skip anyone else until 75 seconds have passed on the server. Each writing prompt also ends as soon as every player has submitted, without waiting out the clock. Saving the truths is one database transaction. A phone that collides with another save reloads the room and applies its action again, so one guess cannot erase the set.
 
 | Phase | Duration | Urgent | Numerals | On expiry |
 |---|---|---|---|---|

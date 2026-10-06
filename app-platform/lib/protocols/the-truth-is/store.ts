@@ -61,17 +61,43 @@ export async function loadSessionStatus(
   return data?.status ?? null;
 }
 
-export async function loadTruthIsState(
+export class TruthIsWriteConflict extends Error {
+  constructor() {
+    super("Truth Is write conflict");
+    this.name = "TruthIsWriteConflict";
+  }
+}
+
+export type TruthIsRecord = {
+  state: TruthIsState;
+  writeVersion: number;
+};
+
+export async function loadTruthIsRecord(
   admin: SupabaseClient,
   sessionId: string
-): Promise<TruthIsState | null> {
+): Promise<TruthIsRecord | null> {
   const { data: session, error } = await admin
     .from("truth_is_sessions")
-    .select("state_json")
+    .select("state_json, write_version")
     .eq("session_id", sessionId)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!session) return null;
+
+  const state = await stateFromRow(session.state_json, sessionId, admin);
+  const writeVersion = session.write_version;
+  return {
+    state,
+    writeVersion: typeof writeVersion === "number" ? writeVersion : 0,
+  };
+}
+
+async function stateFromRow(
+  stateJson: Json,
+  sessionId: string,
+  admin: SupabaseClient
+): Promise<TruthIsState> {
 
   const { data: rows, error: entryErr } = await admin
     .from("truth_is_entries")
@@ -95,7 +121,7 @@ export async function loadTruthIsState(
   });
 
   const candidate = {
-    ...(session.state_json as object),
+    ...(stateJson as object),
     entries,
   };
   if (!isTruthIsState(candidate)) {
@@ -104,40 +130,40 @@ export async function loadTruthIsState(
   return candidate;
 }
 
+export async function loadTruthIsState(
+  admin: SupabaseClient,
+  sessionId: string
+): Promise<TruthIsState | null> {
+  const record = await loadTruthIsRecord(admin, sessionId);
+  return record?.state ?? null;
+}
+
 export async function saveTruthIsState(
   admin: SupabaseClient,
   sessionId: string,
-  state: TruthIsState
+  state: TruthIsState,
+  writeVersion: number
 ): Promise<void> {
   const stored = truthIsStateToJson({ ...state, entries: [] });
-  const { error: sessionErr } = await admin.from("truth_is_sessions").upsert({
-    session_id: sessionId,
-    phase: state.phase,
-    state_json: stored,
+  const entries = state.entries.map((entry) => ({
+    id: entry.id,
+    author_id: entry.author_id,
+    text: entry.text,
+    round_submitted: entry.round_submitted,
+    used: entry.used,
+    guesses: entry.guesses,
+    correct_count: entry.correct_count,
+  }));
+
+  const { data, error } = await admin.rpc("save_truth_is_snapshot", {
+    p_session_id: sessionId,
+    p_expected_version: writeVersion,
+    p_phase: state.phase,
+    p_state_json: stored,
+    p_entries: entries,
   });
-  if (sessionErr) throw new Error(sessionErr.message);
-
-  const { error: deleteErr } = await admin
-    .from("truth_is_entries")
-    .delete()
-    .eq("session_id", sessionId);
-  if (deleteErr) throw new Error(deleteErr.message);
-
-  if (state.entries.length > 0) {
-    const { error: insertErr } = await admin.from("truth_is_entries").insert(
-      state.entries.map((entry) => ({
-        id: entry.id,
-        session_id: sessionId,
-        author_id: entry.author_id,
-        text: entry.text,
-        round_submitted: entry.round_submitted,
-        used: entry.used,
-        guesses: entry.guesses,
-        correct_count: entry.correct_count,
-      }))
-    );
-    if (insertErr) throw new Error(insertErr.message);
-  }
+  if (error) throw new Error(error.message);
+  if (typeof data !== "number") throw new TruthIsWriteConflict();
 
   await syncPublicPulse(admin, sessionId, state);
 }
