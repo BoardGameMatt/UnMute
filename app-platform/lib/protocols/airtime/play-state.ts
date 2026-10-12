@@ -59,9 +59,8 @@ export async function loadAirtimePlayState(input: {
 }
 
 function progressFor(phase: AirtimePhase, dive: number): number {
-  if (phase === "final") return progressRatio(4);
-  if (phase === "dive_active" || phase === "dive_results") return progressRatio(dive >= 2 ? 3 : 2);
-  if (phase === "rules") return progressRatio(1);
+  if (phase === "final") return progressRatio(3);
+  if (phase === "dive_active" || phase === "dive_results") return progressRatio(dive >= 2 ? 2 : 1);
   return 0;
 }
 
@@ -275,10 +274,6 @@ export async function buildAirtimePlayState(input: {
 
   const players = playersOf(roster);
   const me = isDisplay ? null : { participantId, displayName: names.get(participantId) ?? "Player" };
-  const rulesStartedAt = row.rules_ends_at
-    ? new Date(new Date(row.rules_ends_at).getTime() - AIRTIME_CONFIG.rulesSeconds * 1000).toISOString()
-    : null;
-
   return {
     sessionId,
     phase: row.phase,
@@ -293,8 +288,6 @@ export async function buildAirtimePlayState(input: {
     maxTurns: AIRTIME_CONFIG.maxTurnsPerDive,
     windowOpensAt: row.phase === "dive_active" ? row.window_opens_at : null,
     turnSeconds: AIRTIME_CONFIG.turnSeconds,
-    rulesStartedAt: row.phase === "rules" ? rulesStartedAt : null,
-    rulesSeconds: AIRTIME_CONFIG.rulesSeconds,
     endBannerUntil: row.end_banner_until,
     endAfterTurn: row.end_after_turn,
     revealed: row.revealed,

@@ -1,5 +1,6 @@
 import AirtimeProtocol from "./AirtimeProtocol";
 import { AirtimeLobbyExplainer } from "./components/AirtimeLobbyExplainer";
+import { AirtimeLobbyFooter } from "./components/AirtimeLobbyFooter";
 import { AirtimeRoomDisplayPin } from "./components/AirtimeRoomDisplayPin";
 import { AIRTIME_CONFIG } from "./config";
 import { registerProtocol } from "../registry";
@@ -15,6 +16,7 @@ registerProtocol({
   component: AirtimeProtocol,
   lobbyExplainer: AirtimeLobbyExplainer,
   lobbyLeadControls: AirtimeRoomDisplayPin,
+  lobbyFooter: AirtimeLobbyFooter,
   reflectionPrompts: {
     prompt1: "Nobody said scoring was individual. Who assumed it was, and how did that change your dive?",
     prompt2: "Have there been times in our work as a team where it's been challenging to voice a difficult truth?",

@@ -10,7 +10,7 @@
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { BOAT_ICON, ITEM_ICONS, SAMPLE_ICONS, TANK_ICON, type IconSource } from "../lib/protocols/airtime/icon-credits";
+import { BOAT_ICON, BOAT_ICONS, ITEM_ICONS, SAMPLE_ICONS, TANK_ICON, type IconSource } from "../lib/protocols/airtime/icon-credits";
 
 const source = process.argv[2];
 if (!source) {
@@ -20,6 +20,7 @@ if (!source) {
 
 const outDir = join(__dirname, "..", "public", "protocols", "airtime");
 mkdirSync(join(outDir, "items"), { recursive: true });
+mkdirSync(join(outDir, "boats"), { recursive: true });
 
 function convert(src: IconSource): string {
   const raw = readFileSync(join(source, src.author, `${src.icon}.svg`), "utf8");
@@ -35,9 +36,12 @@ function convert(src: IconSource): string {
 for (const [id, src] of Object.entries({ ...ITEM_ICONS, ...SAMPLE_ICONS })) {
   writeFileSync(join(outDir, "items", `${id}.svg`), convert(src));
 }
+for (const [id, src] of Object.entries(BOAT_ICONS)) {
+  writeFileSync(join(outDir, "boats", `${id}.svg`), convert(src));
+}
 writeFileSync(join(outDir, "boat.svg"), convert(BOAT_ICON));
 writeFileSync(join(outDir, "tank.svg"), convert(TANK_ICON));
 
 console.log(
-  `Wrote ${Object.keys(ITEM_ICONS).length} item icons, ${Object.keys(SAMPLE_ICONS).length} samples, boat.svg, tank.svg to ${outDir}`
+  `Wrote ${Object.keys(ITEM_ICONS).length} item icons, ${Object.keys(SAMPLE_ICONS).length} samples, ${Object.keys(BOAT_ICONS).length} boats, boat.svg, tank.svg to ${outDir}`
 );

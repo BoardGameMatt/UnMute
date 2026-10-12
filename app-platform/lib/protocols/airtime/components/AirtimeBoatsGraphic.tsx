@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import type { PublicBoat } from "../types";
+import { AirtimeBoatIcon } from "./AirtimeBoatIcon";
 import { EASE } from "./AirtimeChrome";
 
 type Props = {
@@ -12,25 +13,10 @@ type Props = {
   onSwap?: (a: string, b: string) => void;
 };
 
-const BOAT_MASK = "url(/protocols/airtime/boat.svg)";
-
-function BoatGlyph() {
+function BoatGlyph({ name }: { name: string }) {
   return (
     <div className="flex flex-col items-center">
-      <span
-        className="block h-14 w-14 bg-unmute-navy"
-        style={{
-          maskImage: BOAT_MASK,
-          WebkitMaskImage: BOAT_MASK,
-          maskSize: "contain",
-          WebkitMaskSize: "contain",
-          maskRepeat: "no-repeat",
-          WebkitMaskRepeat: "no-repeat",
-          maskPosition: "center",
-          WebkitMaskPosition: "center",
-        }}
-        aria-hidden="true"
-      />
+      <AirtimeBoatIcon name={name} />
       <span className="mt-1 block h-px w-full bg-steel-blue" aria-hidden="true" />
     </div>
   );
@@ -70,7 +56,7 @@ export function AirtimeBoatsGraphic({ boats, swapMode, pending, onSwap }: Props)
       <div className={`mx-auto grid w-full gap-4 ${COLS[boats.length] ?? "grid-cols-4"}`}>
         {boats.map((boat) => (
           <section key={boat.id} className="rounded-lg border border-cloud-grey bg-warm-white p-6">
-            <BoatGlyph />
+            <BoatGlyph name={boat.name} />
             <h3 className="mt-4 text-center font-display text-2xl font-medium text-unmute-navy">{boat.name}</h3>
             <ul className="mt-4 space-y-2">
               <AnimatePresence initial={false}>

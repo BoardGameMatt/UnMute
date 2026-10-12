@@ -62,6 +62,7 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
   const protocolDef = getProtocol(protocolSlug);
   const LobbyExplainer = protocolDef?.lobbyExplainer;
   const LobbyLeadControls = protocolDef?.lobbyLeadControls;
+  const LobbyFooter = protocolDef?.lobbyFooter;
 
   const { data: spRows, error: spErr } = await supabase
     .from("session_participants")
@@ -136,6 +137,7 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
         LobbyExplainer={LobbyExplainer}
         LobbyLeadControls={LobbyLeadControls}
       />
+      {LobbyFooter ? <LobbyFooter /> : null}
     </main>
   );
 }

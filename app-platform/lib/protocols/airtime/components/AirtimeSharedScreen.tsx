@@ -2,10 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
 import type { AirtimeAction, AirtimePlayState } from "../types";
 import { AirtimeBoatsGraphic } from "./AirtimeBoatsGraphic";
-import { BANNER, Banner, END_BANNER, ProtocolLabel, RulesCard, isBefore } from "./AirtimeChrome";
+import { BANNER, Banner, END_BANNER, ProtocolLabel, isBefore } from "./AirtimeChrome";
 import { AirtimeFinal } from "./AirtimeFinal";
 import { AirtimeResults } from "./AirtimeResults";
 import { AirtimeTurnTimer } from "./AirtimeTurnTimer";
@@ -39,46 +38,12 @@ export function AirtimeSharedScreen({ state, now, clockOffsetMs, pending, send }
   const swap = (a: string, b: string) => void send({ type: "swap", a, b });
   const expire = () => void send({ type: "timerExpired" });
 
-  if (state.phase === "boats") {
+  if (state.phase === "boats" || state.phase === "rules") {
     return (
       <div className="space-y-8">
         <ProtocolLabel />
         <h2 className="font-display text-3xl font-semibold text-unmute-navy">Your boats</h2>
-        <AirtimeBoatsGraphic boats={state.boats} swapMode pending={pending} onSwap={swap} />
-        <Controls>
-          <button type="button" className={AMBER} disabled={pending} onClick={() => void send({ type: "showRules" })}>
-            Show rules
-          </button>
-        </Controls>
-      </div>
-    );
-  }
-
-  if (state.phase === "rules") {
-    return (
-      <div className="space-y-8">
-        <ProtocolLabel />
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-3xl font-semibold text-unmute-navy">The rules</h2>
-              {state.rulesStartedAt ? (
-                <WaoPlayTimer
-                  durationSeconds={state.rulesSeconds}
-                  startedAt={state.rulesStartedAt}
-                  onComplete={expire}
-                  clockOffsetMs={clockOffsetMs}
-                  retryMs={2000}
-                  urgentBelowSeconds={0}
-                  numericBelowSeconds={0}
-                  size={72}
-                />
-              ) : null}
-            </div>
-            <RulesCard />
-          </div>
-          <AirtimeBoatsGraphic boats={state.boats} />
-        </div>
+        <AirtimeBoatsGraphic boats={state.boats} swapMode={state.phase === "boats"} pending={pending} onSwap={swap} />
         <Controls>
           <button type="button" className={AMBER} disabled={pending} onClick={() => void send({ type: "startDive" })}>
             Start dive 1

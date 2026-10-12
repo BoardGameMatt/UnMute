@@ -71,7 +71,6 @@ export const AIRTIME_CONFIG = {
   resultBeatSeconds: 2,
   /** Server waits this long past the visible deadline for taps still in flight. */
   lateChoiceGraceSeconds: 4,
-  rulesSeconds: 60,
   maxTurnsPerDive: 14,
   maxDives: 5,
   maxBoatSize: 4,
@@ -86,8 +85,8 @@ export const AIRTIME_CONFIG = {
   rivalScoreMin: 10,
   rivalScoreMax: 13,
   endBannerSeconds: 5,
-  /** Units on the progress bar: rules, dive 1, dive 2, final. */
-  progressUnits: 4,
+  /** Units on the progress bar: dive 1, dive 2, final. */
+  progressUnits: 3,
 };
 
 export type AirtimeConfig = typeof AIRTIME_CONFIG;

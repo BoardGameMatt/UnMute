@@ -10,7 +10,6 @@ const ACTION_TYPES = new Set<AirtimeAction["type"]>([
   "choose",
   "timerExpired",
   "swap",
-  "showRules",
   "startDive",
   "endAfterTurn",
   "nextDive",

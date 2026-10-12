@@ -105,7 +105,6 @@ export type AirtimeAction =
   | { type: "choose"; choice: Choice; turn: number }
   | { type: "timerExpired" }
   | { type: "swap"; a: string; b: string }
-  | { type: "showRules" }
   | { type: "startDive" }
   | { type: "endAfterTurn" }
   | { type: "nextDive" }
@@ -199,8 +198,6 @@ export type AirtimePlayState = {
   maxTurns: number;
   windowOpensAt: string | null;
   turnSeconds: number;
-  rulesStartedAt: string | null;
-  rulesSeconds: number;
   endBannerUntil: string | null;
   endAfterTurn: boolean;
   revealed: boolean;

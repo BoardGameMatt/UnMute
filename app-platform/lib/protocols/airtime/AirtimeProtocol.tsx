@@ -3,7 +3,7 @@
 import { SessionProgressBar } from "@/components/ui/SessionProgressBar";
 import type { SessionProtocolProps } from "@/lib/protocols/registry";
 import type { AirtimePlayState, Choice } from "./types";
-import { AirtimeBoatsAndRules } from "./components/AirtimeBoatsAndRules";
+import { AirtimeBoatsView } from "./components/AirtimeBoatsView";
 import { END_BANNER, Banner, ProtocolLabel, isBefore, useServerNow } from "./components/AirtimeChrome";
 import { AirtimeCrewView } from "./components/AirtimeCrewView";
 import { AirtimeDiverView } from "./components/AirtimeDiverView";
@@ -97,7 +97,7 @@ const AirtimeProtocol = ({ sessionId }: SessionProtocolProps) => {
       <SessionProgressBar progress={state.progress} className="fixed left-0 right-0 top-0 z-40" />
       <div className="mx-auto w-full max-w-md px-5 py-6">
         {state.phase === "boats" || state.phase === "rules" ? (
-          <AirtimeBoatsAndRules state={state} clockOffsetMs={clockOffsetMs} onRulesExpire={expire} />
+          <AirtimeBoatsView state={state} />
         ) : state.phase === "dive_active" ? (
           <PhoneDive
             state={state}

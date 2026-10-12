@@ -291,7 +291,7 @@ async function resolveOpenTurn(
   });
 }
 
-/** Server clocks: the rules card auto-starts dive 1; an expired window resolves. */
+/** Server clocks: a legacy rules-phase session auto-starts dive 1; an expired window resolves. */
 export async function expireIfNeeded(admin: SupabaseClient, sessionId: string): Promise<void> {
   const row = await loadAirtimeSession(admin, sessionId);
   if (!row) return;
@@ -319,7 +319,6 @@ async function maybeResolveEarly(admin: SupabaseClient, sessionId: string): Prom
 
 const LEAD_ACTIONS = new Set<AirtimeAction["type"]>([
   "swap",
-  "showRules",
   "startDive",
   "endAfterTurn",
   "nextDive",
@@ -407,16 +406,8 @@ export async function dispatchAirtimeAction(input: {
       return { ok: true };
     }
 
-    case "showRules": {
-      if (row.phase !== "boats") return fail(400, "Rules are already up.");
-      const rulesEnds = isoIn(AIRTIME_CONFIG.rulesSeconds * 1000);
-      const won = await casSession(admin, sessionId, row.version, { phase: "rules", rules_ends_at: rulesEnds });
-      if (won) await poke(admin, sessionId, "rules", publicExtra(row));
-      return { ok: true };
-    }
-
     case "startDive":
-      if (row.phase !== "rules") return fail(400, "Show the rules first.");
+      if (row.phase !== "boats" && row.phase !== "rules") return fail(400, "Dive 1 has already started.");
       return startDive(admin, sessionId, row, 1);
 
     case "nextDive":

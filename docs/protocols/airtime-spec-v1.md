@@ -4,7 +4,7 @@
 **Slug:** `airtime`  
 **Type:** Real-time (simultaneous turns inside a dive; one server-authoritative 22s turn clock shared by every boat; facilitator-paced between dives)  
 **Players:** 2–16 (optimal 6–12). Facilitator plays on their phone. The host laptop is **Shared screen**, not a player.  
-**Envelope:** ~15 minutes: rules, two dives, final score, five-minute debrief  
+**Envelope:** ~15 minutes: two dives, final score, five-minute debrief  
 **Owner:** Matt Hendricks  
 **Pack mode:** `none`. The treasure deck is part of the tuned mechanic (§6), not a swappable library.
 
@@ -82,39 +82,38 @@ Registers as `lobbyExplainer` on `registerProtocol()`. Renders below the join QR
 |---|---|---|
 | 1 | Play on your phone. Keep the call on your laptop with cameras on. No talking while you're diving, but you can use hand signals. | Phone + laptop with a video grid. |
 | 2 | You'll be on a boat with up to three others from your team, sharing one oxygen tank for the dive. Everyone underwater uses air every turn, and deeper levels use more. | Scuba-tank glyph labeled `SHARED OXYGEN TANK` with a meter; four diver chips. |
-| 3 | The deeper you dive, the more valuable the treasure you'll find. Once you're back at the surface, you're done for that dive. | Three item cards with icons, no values: *Rubber duck* (L1), *Toy anchor* (L3), *Plastic castle* (L5), with "Deeper, more valuable." |
+| 3 | The deeper you dive, the more valuable the treasure you'll find. Once you're back at the surface, you're done for that dive. | Three item cards with icons, no values: *Rubber duck* (L1, sample), *Pocket watch* (L3), *Handful of gold doubloons* (L5), with "Deeper, more valuable." |
 | 4 | Every turn, choose Dive Deeper or Swim back up. Once you're back in the boat, you'll have full access to the instruments and can talk to the other members of your team. | Diver's air gauge ("Low," four segments) and the two buttons. |
-| 5 | If your boat's air runs out while you're underwater, you lose your treasure from that dive. Highest score wins. | *Plastic castle* card greyed with the `LOST` stamp, no value. |
+| 5 | If your boat's air runs out while you're underwater, you lose your treasure from that dive. Your treasure's value is revealed when you make it back to the boat. Highest score wins. | *Handful of gold doubloons* card greyed with the `LOST` stamp, no value. |
 
-**Sample data (obviously fake, not in the deck):** *Rubber duck*, *Toy anchor*, *Plastic castle*, with game-icons glyphs stored as `items/sample-*.svg`.
+**Explainer items:** *Rubber duck* is an obviously fake sample (`items/sample-rubber-duck.svg`), not in the deck. The L3 and L5 cards are real deck items, shown without values.
 
 **Reuse:** `AirtimeItemCard`, `AirtimeAirGauge`, and the choice buttons from play UI, with the §12 states.
 
-**Attribution:** small caption under the explainer: "Item icons from game-icons.net, CC BY 3.0," followed by the authors of the icons actually used (§6.3).
+**Attribution:** small caption at the very bottom of the lobby page (the `lobbyFooter` registry slot), on phones and the Shared screen; not inside the explainer and not on any other screen. "Icons from game-icons.net, CC BY 3.0," followed by the authors of the icons actually used (§6.3).
 
 ---
 
 ## 4. Session flow
 
 ```
-LOBBY → BOATS → RULES → DIVE_ACTIVE → DIVE_RESULTS ─┬─ Next dive → DIVE_ACTIVE
+LOBBY → BOATS → DIVE_ACTIVE → DIVE_RESULTS ─┬─ Next dive → DIVE_ACTIVE
                                                     └─ Final score → FINAL → NPS → REFLECTION
 ```
 
 1. **Lobby.** Phones join; the Shared screen shows QR, explainer, roster. Shared screen **Start** (≥2 phones).
-2. **Boats.** Boats are drawn. The Shared screen shows the boats graphic; every phone shows its boat name and boatmates. The facilitator may swap players on the Shared screen, then taps **Show rules**.
-3. **Rules card.** The five rules (§7.1) for up to 60 seconds or until **Start dive 1**. The Shared screen keeps the boats graphic beside the rules.
-4. **Dive.** The turn loop (§5) runs until the dive ends.
-5. **Dive results.** Personal hauls. Boat totals stay hidden.
-6. **Facilitator choice** on the Shared screen: Next dive (repeatable, up to dive 5) or Final score. After dive 5, only Final score. Final score ends the game; no more dives.
-7. **Final results.** The reveal line, boat standings summed over every dive, winner, dive-by-dive trend, personal totals beside boat totals.
-8. **NPS → Reflection.** The reflection screen carries the two Airtime debrief questions (§15). The facilitator runs the five-minute debrief there.
+2. **Boats.** Boats are drawn. The Shared screen shows the boats graphic; every phone shows its boat name and boatmates. The facilitator may swap players on the Shared screen, then taps **Start dive 1**. There is no separate rules screen; the lobby explainer (§3) teaches the rules.
+3. **Dive.** The turn loop (§5) runs until the dive ends.
+4. **Dive results.** Personal hauls. Boat totals stay hidden.
+5. **Facilitator choice** on the Shared screen: Next dive (repeatable, up to dive 5) or Final score. After dive 5, only Final score. Final score ends the game; no more dives.
+6. **Final results.** The reveal line, boat standings summed over every dive, winner, dive-by-dive trend, personal totals beside boat totals.
+7. **NPS → Reflection.** The reflection screen carries the two Airtime debrief questions (§15). The facilitator runs the five-minute debrief there.
 
 ### 4.1 Time budget (15 minutes)
 
 | Segment | Time |
 |---|---|
-| Join, explainer, boats, rules | ~2:00 |
+| Join, explainer, boats | ~1:30 |
 | Dive 1 | ≤5:36 (14 turns × 22s window + 2s beat; a level-6 round trip is 11 turns, ≤4:24). Windows close early once every underwater diver has chosen, so real dives run shorter |
 | Results + final score | ~1:00 |
 | Boats plan out loud | 0:30 |
@@ -245,17 +244,15 @@ That uses all 23 air and averages **29**. Everyone diving to the same depth aver
 
 ## 7. Copy that must be on screen
 
-### 7.1 Rules card
+### 7.1 Rules (deprecated screen)
 
-Exact text, numbered:
+The rules screen was removed; the lobby explainer (§3) covers this content. The list is kept for reference only and does not render:
 
 1. Bring up as much treasure as you can.
 2. Your boat shares one oxygen tank. Divers underwater use air every turn, and the deeper you are, the more you use.
 3. Each turn, dive deeper or swim back up. Deeper treasure is worth much more.
 4. If your boat's air runs out while you're underwater, you lose your treasure from that dive.
 5. Underwater, no talking (hand signals are fine), and you only see a rough air gauge. Once you surface, you can talk.
-
-Phones add: your boat name and boatmates. The Shared screen adds the boats graphic.
 
 ### 7.2 Persistent play instruction
 
@@ -318,8 +315,7 @@ All advances are Shared screen (session Lead) actions unless noted.
 | Phase | Who acts | Timer | Advance |
 |---|---|---|---|
 | `LOBBY` | Phones join; Shared screen auto-claims | none | **Start** at ≥2 phones (assigns boats) |
-| `BOATS` | Everyone sees their boat; facilitator may swap players | none | **Show rules** |
-| `RULES` | Everyone reads | 60s | **Start dive 1**, or timer |
+| `BOATS` | Everyone sees their boat; facilitator may swap players | none | **Start dive 1** |
 | `DIVE_ACTIVE` | Underwater divers choose each turn on their phones | 22s per turn | Dive end check (§5.2 step 8) |
 | `DIVE_RESULTS` | Facilitator | none | **Next dive** (if dives < 5) · **Final score** (confirm; ends the game) |
 | `FINAL` | Facilitator | none | **Continue** → NPS for everyone |
@@ -330,7 +326,7 @@ All advances are Shared screen (session Lead) actions unless noted.
 - **End dive after this turn** (`DIVE_ACTIVE`, confirm required): every phone and the Shared screen show a 5-second banner, "The dive ends after this turn." At the end of the current turn, anyone underwater forfeits.
 - Tank size is set from the boat's roster size at the start of each dive.
 
-**Progress bar:** units = rules, dive 1, dive 2, final. Extra dives do not grow the denominator; the bar sits full through them.
+**Progress bar:** units = dive 1, dive 2, final. Extra dives do not grow the denominator; the bar sits full through them.
 
 ---
 
@@ -365,8 +361,7 @@ The Shared screen is the session Lead. Controls sit under a `FACILITATOR` mono l
 | Phase | Shared screen shows | Controls |
 |---|---|---|
 | `LOBBY` | QR, join code, explainer, player roster (Shared screen hidden), "Join on your phone now" | **Start** (amber, ≥2 phones) |
-| `BOATS` | Boats graphic | Swap two players (tap a name, tap another); **Show rules** (amber) |
-| `RULES` | Rules card + boats graphic + 60s arc | **Start dive 1** (amber) |
+| `BOATS` | Boats graphic | Swap two players (tap a name, tap another); **Start dive 1** (amber) |
 | `DIVE_ACTIVE` | Boats graphic, `DIVE n` label, turn timer, dive banner (§7.2) | **End dive after this turn** (ghost, confirm) |
 | `DIVE_RESULTS` | §8.1 | **Next dive** (navy; hidden after dive 5) · **Final score** (amber, confirm) |
 | `FINAL` | §8.3 standings | **Continue** (amber) |
@@ -383,7 +378,7 @@ Protocol label: `font-mono uppercase tracking-widest text-[10px]` — `AIRTIME`.
 
 | Screen | Who | Contents |
 |---|---|---|
-| Boats / rules card | Phones | Boat name, boatmates, rules (§7.1) |
+| Boats | Phones | Boat icon, boat name, boatmates, "The facilitator will start the first dive." |
 | Diver view | Underwater players | Depth gauge (1–6, current level filled), item card (value `?`), air gauge (band + four segments), boatmate chips (underwater / surfaced), **Dive Deeper** and **Swim back up** buttons, turn timer, diver banner |
 | Crew view | Surfaced players | Exact tank (labeled `OXYGEN TANK`), one row per boatmate (name, depth, air per turn, air to surface), boat air needed and margin, own banked haul, crew banner |
 | Waiting view | Boat finished | "Your boat is back," plus your haul |
@@ -396,7 +391,7 @@ Protocol label: `font-mono uppercase tracking-widest text-[10px]` — `AIRTIME`.
 The Shared screen's main visual from `BOATS` through every dive.
 
 - One card per player boat, side by side (2–4 across, equal width). Order: Calypso, Nautilus, RV Belafonte, Jenny.
-- Each card: a flat boat illustration (single-color glyph, same style rules as §6.3), the boat name in `font-display` H3, and the members' display names stacked beneath in `font-body`. Full display names, not initials.
+- Each card: the boat's own glyph (single-color, same style rules as §6.3; Calypso = schooner, Nautilus = submarine, RV Belafonte = research vessel, Jenny = sailboat; `public/protocols/airtime/boats/`, unknown names fall back to `boat.svg`), the boat name in `font-display` H3, and the members' display names stacked beneath in `font-body`. Full display names, not initials.
 - `warm-white` card, `cloud-grey` border, `rounded-lg`, `p-6`. A thin `steel-blue` waterline under the boat glyph. No amber.
 - The facilitator appears on their boat like anyone else. No crown or Lead marker.
 - The Orca is never shown here.
@@ -432,7 +427,6 @@ Follow moment-conventions §3 (`WaoPlayTimer`), adjusted for a 22s window. Same 
 |---|---|---|
 | Decision window | 22s | Arc, no numerals; amber with subtle pulse in the final **5s**; numeric 3-2-1 in the final 3s |
 | Result beat | 2s | No timer |
-| Rules card | 60s | Arc, no numerals |
 
 **Server-authoritative.** The server stores the window's end time; resolution is idempotent and runs when the last underwater diver commits or on the first request after the deadline. Client arcs are display only.
 
@@ -509,7 +503,6 @@ The event log is the only input to the debrief metrics. Compute them from it; do
 | `turnSeconds` | 22 | Raised from 15 after playtest feedback |
 | `resultBeatSeconds` | 2 | |
 | `lateChoiceGraceSeconds` | 4 | Server waits this long past zero for in-flight taps before resolving a timed-out turn |
-| `rulesSeconds` | 60 | |
 | `maxTurnsPerDive` | 14 | |
 | `maxDives` | 5 | |
 | `maxBoatSize` | 4 | |
@@ -656,7 +649,7 @@ Every route using the service-role client must first:
 3. Build the play payload from the caller's **current diver state**, applying the table above. The facilitator's phone gets no special treatment; being the session's creator grants nothing on a phone.
 4. Shared screen reads: authorized as the Shared screen Lead participant plus the display flag (Rank and File pattern). Payload is public-only.
 5. Choice writes: caller is a phone participant underwater on a boat, phase is `DIVE_ACTIVE`, turn matches, no choice yet this turn. The Shared screen can never write a choice.
-6. Lead actions (start, swap, show rules, start dive, end after turn, next dive, final score, continue): Shared screen Lead only.
+6. Lead actions (start, swap, start dive, end after turn, next dive, final score, continue): Shared screen Lead only.
 
 The session-wide Realtime channel carries only `phase`, `current_turn`, `turn_ends_at`, and a "state changed" ping. Clients refetch their role-filtered payload.
 
@@ -752,7 +745,7 @@ One step at a time. Each independently testable.
 3. Schema + migrations (§13).
 4. Role-filtered play payload (§19), including the public-only Shared screen payload. Load-bearing security step; do not defer.
 5. Shared screen auto-claim + auto-pin (Rank and File pattern); lobby explainer; Start gate at 2 phones; cap at 16; icon attribution.
-6. Boats graphic + `BOATS` swap mode + `RULES` card.
+6. Boats graphic + `BOATS` swap mode + Start dive 1.
 7. Dive loop: 22s server clock, choice writes, resolution, diver view.
 8. Crew view + waiting view.
 9. Shared screen dive view + End dive after this turn.
@@ -760,7 +753,7 @@ One step at a time. Each independently testable.
 11. Final standings + The Orca + trend.
 12. Event log → metrics (highlight card deprecated in v1).
 13. NPS → reflection with Airtime prompts.
-14. Icons: verify coverage, SVG set, depth-colored cards, boat glyph.
+14. Icons: verify coverage, SVG set, depth-colored cards, per-boat glyphs.
 15. Disconnect paths (§18).
 
 ---

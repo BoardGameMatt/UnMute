@@ -48,11 +48,22 @@ export const ITEM_ICONS: Record<string, IconSource> = {
 /** Lobby explainer sample items (not in the deck) share the items/ folder. */
 export const SAMPLE_ICONS: Record<string, IconSource> = {
   "sample-rubber-duck": { author: "delapouite", icon: "plastic-duck" },
-  "sample-toy-anchor": { author: "lorc", icon: "anchor" },
-  "sample-plastic-castle": { author: "lorc", icon: "castle" },
 };
 
 export const BOAT_ICON: IconSource = { author: "delapouite", icon: "sailboat" };
+
+/** One glyph per player boat, keyed by `boatIconId(name)`. Unlisted names use BOAT_ICON. */
+export const BOAT_ICONS: Record<string, IconSource> = {
+  calypso: { author: "pierre-leducq", icon: "shooner-sailboat" },
+  nautilus: { author: "delapouite", icon: "submarine" },
+  "rv-belafonte": { author: "delapouite", icon: "fishing-boat" },
+  jenny: { author: "delapouite", icon: "sailboat" },
+};
+
+export function boatIconId(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export const TANK_ICON: IconSource = { author: "delapouite", icon: "scuba-tanks" };
 
 const AUTHOR_NAMES: Record<string, string> = {
@@ -61,12 +72,14 @@ const AUTHOR_NAMES: Record<string, string> = {
   skoll: "Skoll",
   "caro-asercion": "Caro Asercion",
   willdabeast: "Willdabeast",
+  "pierre-leducq": "Pierre Leducq",
 };
 
 export function iconAuthors(): string[] {
   const keys = new Set<string>([
     BOAT_ICON.author,
     TANK_ICON.author,
+    ...Object.values(BOAT_ICONS).map((s) => s.author),
     ...Object.values(ITEM_ICONS).map((s) => s.author),
     ...Object.values(SAMPLE_ICONS).map((s) => s.author),
   ]);
@@ -76,5 +89,5 @@ export function iconAuthors(): string[] {
 }
 
 export function iconCreditLine(): string {
-  return `Item icons from game-icons.net, CC BY 3.0, by ${iconAuthors().join(", ")}.`;
+  return `Icons from game-icons.net, CC BY 3.0, by ${iconAuthors().join(", ")}.`;
 }

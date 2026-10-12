@@ -3,7 +3,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { LobbyExplainerDots } from "@/components/ui/LobbyExplainerDots";
-import { iconCreditLine } from "../icon-credits";
 import { AirtimeAirGauge } from "./AirtimeAirGauge";
 import { BoatmateChip, EASE } from "./AirtimeChrome";
 import { AirtimeItemCard } from "./AirtimeItemCard";
@@ -77,8 +76,8 @@ function TreasureBeat() {
   return (
     <div className="mx-auto w-full max-w-[16rem] space-y-2">
       <AirtimeItemCard itemId="sample-rubber-duck" name="Rubber duck" level={1} value={null} state="underwater" compact hideValue />
-      <AirtimeItemCard itemId="sample-toy-anchor" name="Toy anchor" level={3} value={null} state="underwater" compact hideValue />
-      <AirtimeItemCard itemId="sample-plastic-castle" name="Plastic castle" level={5} value={null} state="underwater" compact hideValue />
+      <AirtimeItemCard itemId="l3-pocket-watch" name="Pocket watch" level={3} value={null} state="underwater" compact hideValue />
+      <AirtimeItemCard itemId="l5-handful-of-gold-doubloons" name="Handful of gold doubloons" level={5} value={null} state="underwater" compact hideValue />
       <p className="text-center font-mono text-[10px] uppercase tracking-widest text-steel-blue">
         ↓ Deeper, more valuable
       </p>
@@ -105,7 +104,7 @@ function ChoiceBeat() {
 function LostBeat() {
   return (
     <div className="mx-auto w-full max-w-[16rem]">
-      <AirtimeItemCard itemId="sample-plastic-castle" name="Plastic castle" level={5} value={0} state="lost" hideValue />
+      <AirtimeItemCard itemId="l5-handful-of-gold-doubloons" name="Handful of gold doubloons" level={5} value={0} state="lost" hideValue />
     </div>
   );
 }
@@ -133,7 +132,7 @@ const PANES = [
   },
   {
     caption:
-      "If your boat's air runs out while you're underwater, you lose your treasure from that dive. Highest score wins.",
+      "If your boat's air runs out while you're underwater, you lose your treasure from that dive. Your treasure's value is revealed when you make it back to the boat. Highest score wins.",
     body: <LostBeat />,
   },
 ] as const;
@@ -158,7 +157,6 @@ function Shell({ children }: { children: React.ReactNode }) {
         How it works
       </p>
       {children}
-      <p className="mt-5 text-center font-body text-[11px] text-slate">{iconCreditLine()}</p>
     </section>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { DiverStatus } from "../types";
+import { AirtimeBoatIcon } from "./AirtimeBoatIcon";
 
 export const EASE = [0.4, 0, 0.2, 1] as const;
 
@@ -15,14 +16,6 @@ export const BANNER = {
 
 export const REVEAL_LINE = "Boats win. Your score is everything your boat brought up.";
 export const END_BANNER = "The dive ends after this turn.";
-
-export const RULES = [
-  "Bring up as much treasure as you can.",
-  "Your boat shares one oxygen tank. Divers underwater use air every turn, and the deeper you are, the more you use.",
-  "Each turn, dive deeper or swim back up. Deeper treasure is worth much more.",
-  "If your boat's air runs out while you're underwater, you lose your treasure from that dive.",
-  "Underwater, no talking (hand signals are fine), and you only see a rough air gauge. Once you surface, you can talk.",
-] as const;
 
 /** Server-aligned clock, ticking a few times a second. */
 export function useServerNow(clockOffsetMs: number, intervalMs = 250): number {
@@ -125,8 +118,13 @@ export function BoatCard({
 }) {
   return (
     <div className="rounded-lg border border-cloud-grey bg-warm-white p-6">
-      <p className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">Your boat</p>
-      <p className="mt-1 font-display text-2xl font-semibold text-unmute-navy">{name}</p>
+      <div className="flex items-center gap-4">
+        <AirtimeBoatIcon name={name} className="h-12 w-12" />
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">Your boat</p>
+          <p className="mt-1 font-display text-2xl font-semibold text-unmute-navy">{name}</p>
+        </div>
+      </div>
       <ul className="mt-3 space-y-1">
         {members.map((m) => (
           <li key={m.participantId} className="font-body text-base text-charcoal">
@@ -136,18 +134,5 @@ export function BoatCard({
         ))}
       </ul>
     </div>
-  );
-}
-
-export function RulesCard() {
-  return (
-    <ol className="space-y-3 rounded-lg border border-cloud-grey bg-warm-white p-6">
-      {RULES.map((rule, i) => (
-        <li key={rule} className="flex gap-3 font-body text-base text-charcoal">
-          <span className="font-mono text-sm text-steel-blue">{i + 1}</span>
-          <span>{rule}</span>
-        </li>
-      ))}
-    </ol>
   );
 }
