@@ -6,6 +6,8 @@ const DEFAULT_PROMPT_2 = "Where does that same assumption show up in how we work
 type SessionReflectionViewProps = {
   prompt1?: string;
   prompt2?: string;
+  /** Optional; shown after prompt2 when set. */
+  prompt3?: string;
 };
 
 /**
@@ -15,6 +17,7 @@ type SessionReflectionViewProps = {
 export function SessionReflectionView({
   prompt1 = DEFAULT_PROMPT_1,
   prompt2 = DEFAULT_PROMPT_2,
+  prompt3,
 }: SessionReflectionViewProps) {
   return (
     <main className="min-h-screen bg-warm-white px-5 py-12">
@@ -31,9 +34,17 @@ export function SessionReflectionView({
           </h2>
         </section>
 
+        {prompt3 ? (
+          <section>
+            <h2 className="font-display text-2xl font-semibold leading-snug text-unmute-navy">
+              {prompt2}
+            </h2>
+          </section>
+        ) : null}
+
         <section className="space-y-8">
           <h2 className="font-display text-2xl font-semibold leading-snug text-unmute-navy">
-            {prompt2}
+            {prompt3 ?? prompt2}
           </h2>
           <p className="text-center font-body text-base text-slate">
             See you next week.

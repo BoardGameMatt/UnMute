@@ -550,7 +550,8 @@ FINAL → Shared screen Continue → NPS (/session/[id]/feedback) → Reflection
 Reflection is the final screen and is where the debrief runs. Airtime registers `reflectionPrompts`:
 
 1. **Are there instances when the success of the team is dependent on the efforts/actions of an individual?**
-2. **Have there been times where it's been challenging to voice a difficult truth or share a new idea which might benefit the team?**
+2. **When have we chosen the slow, safe, equal option when the team needed someone to go deep?**
+3. **Have there been times where it's been challenging to voice a difficult truth or share a new idea which might benefit the team?**
 
 **Facilitator prompts if the room is quiet** (from the brief's follow-ups):
 
@@ -709,7 +710,7 @@ What is lost: speed (30s turns, one dive), automatic margin math, the highlight 
 | End early | Forfeit. No `bank` mode |
 | The Orca (rival) | Random 10–13 per dive (mean 11.5); shown only on the final screen |
 | Reveal | No separate button. **Final score** ends the game and the final screen opens with the reveal line |
-| Debrief questions | The two in §15, on the reflection screen via `reflectionPrompts` |
+| Debrief questions | The three in §15, on the reflection screen via `reflectionPrompts` |
 | End path | Final → NPS → reflection |
 | Icons | game-icons.net, CC BY 3.0, credited in the lobby |
 | Pack | None |

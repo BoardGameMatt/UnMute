@@ -37,6 +37,7 @@ export interface ProtocolDefinition {
   reflectionPrompts?: {
     prompt1: string;
     prompt2: string;
+    prompt3?: string;
   };
   /** Optional JSON-schema-shaped or app-specific config metadata */
   configSchema?: Json;

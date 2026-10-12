@@ -19,6 +19,7 @@ registerProtocol({
   lobbyFooter: AirtimeLobbyFooter,
   reflectionPrompts: {
     prompt1: "Are there instances when the success of the team is dependent on the efforts/actions of an individual?",
-    prompt2: "Have there been times where it's been challenging to voice a difficult truth or share a new idea which might benefit the team?",
+    prompt2: "When have we chosen the slow, safe, equal option when the team needed someone to go deep?",
+    prompt3: "Have there been times where it's been challenging to voice a difficult truth or share a new idea which might benefit the team?",
   },
 });

@@ -64,6 +64,10 @@ export default async function SessionReflectionPage({ params }: PageProps) {
   const prompts = getProtocol(protocolRow?.slug ?? "")?.reflectionPrompts;
 
   return (
-    <SessionReflectionView prompt1={prompts?.prompt1} prompt2={prompts?.prompt2} />
+    <SessionReflectionView
+      prompt1={prompts?.prompt1}
+      prompt2={prompts?.prompt2}
+      prompt3={prompts?.prompt3}
+    />
   );
 }
