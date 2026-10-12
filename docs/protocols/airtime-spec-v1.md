@@ -106,7 +106,7 @@ LOBBY → BOATS → DIVE_ACTIVE → DIVE_RESULTS ─┬─ Next dive → DIVE_AC
 3. **Dive.** The turn loop (§5) runs until the dive ends.
 4. **Dive results.** Personal hauls. Boat totals stay hidden.
 5. **Facilitator choice** on the Shared screen: Next dive (repeatable, up to dive 5) or Final score. After dive 5, only Final score. Final score ends the game; no more dives.
-6. **Final results.** The reveal line, boat standings summed over every dive, winner, dive-by-dive trend, personal totals beside boat totals.
+6. **Final results.** The reveal line, boat standings summed over every dive, winner, dive-by-dive trend, boat members (no individual totals).
 7. **NPS → Reflection.** The reflection screen carries the two Airtime debrief questions (§15). The facilitator runs the five-minute debrief there.
 
 ### 4.1 Time budget (15 minutes)
@@ -295,7 +295,7 @@ There is no intermediate per-dive boat-totals screen, and no dive can follow.
 
 - **Boat score:** sum of all members' banked hauls across all dives played.
 - **Winner:** highest boat score. Ties are shared ("Calypso and Nautilus tie").
-- **Display:** the reveal line, then boat ranking with a `WINNING BOAT` mono label, each boat's dive-by-dive totals as a small trend, and each player's personal total beside their boat's total.
+- **Display:** the reveal line, then boat ranking with a `WINNING BOAT` mono label, each boat's dive-by-dive totals as a small trend, and each boat's members by name. No individual totals.
 
 ### 8.4 The Orca, rival boat (2–3 player sessions)
 
@@ -346,7 +346,7 @@ The information gap between divers and crew is the game. The facilitator gets no
 | Hauls | Own only | Own only | On results screens only |
 | Boat totals | Final screen only | Final screen only | Final screen only |
 
-**Gauge bands** (percent of the boat's starting tank): Plenty > 60%, Half 35–60%, Low 15–35%, Critical < 15%. Divers see the band label and a four-segment meter that drops one segment only when the band changes, never a continuous bar.
+**Gauge bands** (percent of the boat's starting tank): Plenty > 60%, Good 35–60%, Low 15–35%, Critical < 15%. Divers see the band label and a four-segment meter that drops one segment only when the band changes, never a continuous bar.
 
 **No live all-boats view.** The source spec gave the facilitator a live view of every boat's tank, depths, and margin. With the facilitator playing on equal terms and the Shared screen public, there is nowhere private to show it. The planned after-the-fact view is the highlight card (§14), deprecated in v1.
 
@@ -549,8 +549,8 @@ FINAL → Shared screen Continue → NPS (/session/[id]/feedback) → Reflection
 
 Reflection is the final screen and is where the debrief runs. Airtime registers `reflectionPrompts`:
 
-1. **Nobody said scoring was individual. Who assumed it was, and how did that change your dive?**
-2. **Have there been times in our work as a team where it's been challenging to voice a difficult truth?**
+1. **Are there instances when the success of the team is dependent on the efforts/actions of an individual?**
+2. **Have there been times where it's been challenging to voice a difficult truth or share a new idea which might benefit the team?**
 
 **Facilitator prompts if the room is quiet** (from the brief's follow-ups):
 
@@ -664,7 +664,7 @@ Write into facilitator notes before the first live run.
 1. Facilitator is dive master and does not play. Boats are Teams breakout groups (or named groups in the main call).
 2. Facilitator keeps a sheet per boat: tank, each diver's depth. The 36-card list (§6.1) is numbered by level; draw with a dice app.
 3. Each turn (30s), divers privately chat the facilitator **D** (dive deeper) or **U** (swim back up). Missing = U.
-4. Facilitator applies moves, tells each diver their new item name privately, drains air, and posts each boat's gauge band (Plenty / Half / Low / Critical) in the boat chat.
+4. Facilitator applies moves, tells each diver their new item name privately, drains air, and posts each boat's gauge band (Plenty / Good / Low / Critical) in the boat chat.
 5. Surfaced divers get the exact tank and depths from the facilitator and may unmute.
 6. Run one dive. Reveal "boats win." Debrief with the two questions.
 

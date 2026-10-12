@@ -73,14 +73,9 @@ export function AirtimeFinal({ final, meId, large }: Props) {
             ) : (
               <ul className="mt-3 space-y-1 border-t border-cloud-grey pt-3">
                 {s.members.map((m) => (
-                  <li key={m.participantId} className="flex justify-between font-body text-base text-charcoal">
-                    <span>
-                      {m.displayName}
-                      {m.participantId === meId ? <span className="ml-1 text-slate">(you)</span> : null}
-                    </span>
-                    <span className="font-mono text-sm text-steel-blue">
-                      {m.personalTotal} of {s.total}
-                    </span>
+                  <li key={m.participantId} className="font-body text-base text-charcoal">
+                    {m.displayName}
+                    {m.participantId === meId ? <span className="ml-1 text-slate">(you)</span> : null}
                   </li>
                 ))}
               </ul>

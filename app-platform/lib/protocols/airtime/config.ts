@@ -78,7 +78,7 @@ export const AIRTIME_CONFIG = {
   maxPlayers: 16,
   boatNames: ["Calypso", "Nautilus", "RV Belafonte", "Jenny"] as readonly string[],
   rivalName: "The Orca",
-  /** Percent of starting tank: above plenty → Plenty, ≥ half → Half, ≥ low → Low, else Critical. */
+  /** Percent of starting tank: above plenty → Plenty, ≥ half → Good, ≥ low → Low, else Critical. */
   gaugeBands: { plenty: 60, half: 35, low: 15 },
   timeoutChoice: "up" as const,
   /** The rival boat scores a uniform whole number in this range each dive (mean 11.5). */

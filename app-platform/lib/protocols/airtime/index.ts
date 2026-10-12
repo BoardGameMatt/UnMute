@@ -18,7 +18,7 @@ registerProtocol({
   lobbyLeadControls: AirtimeRoomDisplayPin,
   lobbyFooter: AirtimeLobbyFooter,
   reflectionPrompts: {
-    prompt1: "Nobody said scoring was individual. Who assumed it was, and how did that change your dive?",
-    prompt2: "Have there been times in our work as a team where it's been challenging to voice a difficult truth?",
+    prompt1: "Are there instances when the success of the team is dependent on the efforts/actions of an individual?",
+    prompt2: "Have there been times where it's been challenging to voice a difficult truth or share a new idea which might benefit the team?",
   },
 });

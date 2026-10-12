@@ -138,7 +138,7 @@ export function gaugeSegments(band: GaugeBand): number {
 
 export const GAUGE_LABEL: Record<GaugeBand, string> = {
   plenty: "Plenty",
-  half: "Half",
+  half: "Good",
   low: "Low",
   critical: "Critical",
 };
