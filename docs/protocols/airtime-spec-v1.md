@@ -74,7 +74,7 @@ Boats are assigned at random at Start, balanced by size. The facilitator may swa
 
 Registers as `lobbyExplainer` on `registerProtocol()`. Renders below the join QR, above the roster, on phones and on the Shared screen.
 
-**Approach:** coded animated teaching loop (~18s), same convention as Wrong Answers Only and Zoning Rights. One fixed panel size for every beat (CSS grid overlap). Five beats, five `LobbyExplainerDots`. `useReducedMotion()` → static stacked panels, no dots.
+**Approach:** coded animated teaching loop (~50s, 10s per beat), same convention as Wrong Answers Only and Zoning Rights. One fixed panel size for every beat (CSS grid overlap). Five beats, five `LobbyExplainerDots`. `useReducedMotion()` → static stacked panels, no dots.
 
 **The explainer must not say or imply how scoring works.** No "your score," no "team score," no "boats win." It teaches the shared tank, not the scoring. "Highest score wins" (beat 5) is allowed because it doesn't say whose score. The explainer never shows the crew's exact tank number.
 

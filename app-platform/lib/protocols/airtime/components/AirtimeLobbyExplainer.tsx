@@ -8,7 +8,7 @@ import { AirtimeAirGauge } from "./AirtimeAirGauge";
 import { BoatmateChip, EASE } from "./AirtimeChrome";
 import { AirtimeItemCard } from "./AirtimeItemCard";
 
-const PANE_MS = 3600;
+const PANE_MS = 10000;
 
 function DeviceBeat() {
   return (
