@@ -19,6 +19,12 @@ import { createClient } from "@/lib/supabase/client";
 import type { LobbyParticipant } from "@/lib/types/lobby";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 
+const SHARED_SCREEN_SLUGS = new Set(["rank-and-file", "the-truth-is", "airtime"]);
+
+function usesSharedScreen(slug: string | undefined): boolean {
+  return slug !== undefined && SHARED_SCREEN_SLUGS.has(slug);
+}
+
 type SessionLobbyViewProps = {
   sessionId: string;
   protocolName: string;
@@ -61,12 +67,12 @@ export function SessionLobbyView({
   const participantCount =
     protocolSlug === "cover-story"
       ? participants.filter((p) => p.roleInSession !== "lead").length
-      : protocolSlug === "rank-and-file" || protocolSlug === "the-truth-is"
+      : usesSharedScreen(protocolSlug)
         ? participants.filter((p) => !isSharedScreenName(p.displayName)).length
         : participants.length;
   const hasEnoughToStart = participantCount >= minPlayers;
   const rosterParticipants =
-    protocolSlug === "rank-and-file" || protocolSlug === "the-truth-is"
+    usesSharedScreen(protocolSlug)
       ? participants.filter((p) => !isSharedScreenName(p.displayName))
       : participants;
   const canStart =
@@ -230,9 +236,7 @@ export function SessionLobbyView({
                   <span className="rounded-full bg-signal-amber/15 px-3 py-1 font-mono text-[10px] font-medium uppercase tracking-widest text-unmute-navy">
                     Lead
                   </span>
-                ) : currentRole === "lead" &&
-                  protocolSlug !== "rank-and-file" &&
-                  protocolSlug !== "the-truth-is" ? (
+                ) : currentRole === "lead" && !usesSharedScreen(protocolSlug) ? (
                   <button
                     type="button"
                     disabled={isPending || transferringId === p.participantId}
@@ -283,6 +287,8 @@ export function SessionLobbyView({
                   protocolSlug === "rank-and-file" ||
                   protocolSlug === "the-truth-is"
                 ? "Need 3 to start."
+              : protocolSlug === "airtime"
+                ? "Need 2 to start."
               : protocolSlug === "code-switch"
                 ? "Need 4 to start."
               : `Start unlocks when at least ${minPlayers} ${
@@ -303,7 +309,7 @@ export function SessionLobbyView({
       ) : currentRole === "member" ? (
         <p className="text-center font-body text-base text-slate">
           Waiting for{" "}
-          {protocolSlug === "rank-and-file"
+          {protocolSlug === "rank-and-file" || protocolSlug === "airtime"
             ? "the facilitator"
             : leadName ?? "the lead"}{" "}
           to start.

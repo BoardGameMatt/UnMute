@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
 import { writeSessionEvent } from "@/lib/console/session-events";
 import { resetCoverStorySessionToLobby } from "@/lib/cover-story/session";
+import { resetAirtimeToLobby, startAirtime } from "@/lib/protocols/airtime/actions";
+import { AIRTIME_CONFIG } from "@/lib/protocols/airtime/config";
 import { resetRankAndFileToLobby, startRankAndFile } from "@/lib/protocols/rank-and-file/actions";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import { resetCodeSwitchToLobby, startCodeSwitch } from "@/lib/protocols/code-switch/actions";
@@ -224,6 +226,27 @@ export async function startSessionAction(
     }
   }
 
+  if (protocolSlug === "airtime") {
+    const { data: rows, error: countErr } = await supabase
+      .from("session_participants")
+      .select("participants ( display_name )")
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { error: "Could not count the room." };
+    }
+    const players = (rows ?? []).filter((row) => {
+      const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+      const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+      return !isSharedScreenName(name ?? "Player");
+    });
+    if (players.length < AIRTIME_CONFIG.minPlayers) {
+      return { error: "Need 2 to start." };
+    }
+    if (players.length > AIRTIME_CONFIG.maxPlayers) {
+      return { error: "Airtime holds 16 players at most." };
+    }
+  }
+
   // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
@@ -312,6 +335,20 @@ export async function startSessionAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not start The Truth Is.",
+      };
+    }
+  }
+
+  if (protocolSlug === "airtime") {
+    try {
+      const admin = createServiceClient();
+      const started = await startAirtime(admin, sessionId);
+      if (!started.ok) {
+        return { error: started.error };
+      }
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not start Airtime.",
       };
     }
   }
@@ -469,6 +506,17 @@ export async function returnToLobbyAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not reset The Truth Is.",
+      };
+    }
+  }
+
+  if (protocolSlug === "airtime") {
+    try {
+      const admin = createServiceClient();
+      await resetAirtimeToLobby(admin, sessionId);
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not reset Airtime.",
       };
     }
   }

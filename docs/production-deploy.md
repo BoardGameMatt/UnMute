@@ -96,6 +96,7 @@ Open `app-platform/supabase/verify-schema.sql`, run the full script. Any row in 
 | Unmute Console | `/console` | Staff sign-in → `clients`, `staff_profiles` (needs `020`) |
 | Zoning Rights | `zoning-rights` | Start session → `zoning_rights_*` tables (needs `021`) |
 | I Know What You Meme | `i-know-what-you-meme` | Start session → `ikwym_*` tables (needs `023`). Giphy: `NEXT_PUBLIC_GIPHY_API_KEY` on unmute-app + redeploy. |
+| Airtime | `airtime` | Start session → `airtime_sessions` / `airtime_boats` (needs `030`) |
 
 ### Content seeds (after schema, when needed)
 
@@ -144,6 +145,8 @@ All files live in `app-platform/supabase/migrations/`. Production must have **ev
 | 026 | `026_switchcode_name.sql` | SwitchCode display name |
 | 027 | `027_rank_and_file.sql` | Rank and File |
 | 028 | `028_the_truth_is.sql` | The Truth Is private session and entries |
+| 029 | `029_truth_is_atomic_save.sql` | The Truth Is atomic save function |
+| 030 | `030_airtime.sql` | Airtime protocol row + `airtime_*` tables |
 
 When adding migration `021+`, update this table, `verify-schema.sql`, and `scripts/verify-prod-schema.ts`.
 

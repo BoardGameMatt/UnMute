@@ -80,6 +80,14 @@ const CHECKS: SchemaCheck[] = [
   { migration: "028", moment: "The Truth Is", table: "truth_is_sessions" },
   { migration: "028", moment: "The Truth Is", table: "truth_is_entries" },
   { migration: "029", moment: "The Truth Is", table: "truth_is_sessions", column: "write_version" },
+  { migration: "030", moment: "Airtime", table: "airtime_sessions" },
+  { migration: "030", moment: "Airtime", table: "airtime_boats" },
+  { migration: "030", moment: "Airtime", table: "airtime_boat_members" },
+  { migration: "030", moment: "Airtime", table: "airtime_dives" },
+  { migration: "030", moment: "Airtime", table: "airtime_boat_dives" },
+  { migration: "030", moment: "Airtime", table: "airtime_diver_dives" },
+  { migration: "030", moment: "Airtime", table: "airtime_choices" },
+  { migration: "030", moment: "Airtime", table: "airtime_events" },
 ];
 
 async function checkObject(

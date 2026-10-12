@@ -63,6 +63,15 @@ WITH expected AS (
   -- The Truth Is (028)
   UNION ALL SELECT '028_the_truth_is.sql', 'table', 'truth_is_sessions', NULL
   UNION ALL SELECT '028_the_truth_is.sql', 'table', 'truth_is_entries', NULL
+  -- Airtime (030)
+  UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_sessions', NULL
+  UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_boats', NULL
+  UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_boat_members', NULL
+  UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_dives', NULL
+  UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_boat_dives', NULL
+  UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_diver_dives', NULL
+  UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_choices', NULL
+  UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_events', NULL
 ),
 present AS (
   SELECT

@@ -13,6 +13,7 @@ import "./zoning-rights";
 import "./i-know-what-you-meme";
 import "./code-switch";
 import "./rank-and-file";
+import "./airtime";
 
 export {
   displayProtocolName,
