@@ -222,54 +222,56 @@ export async function buildAirtimePlayState(input: {
   let results: AirtimePlayState["results"] = null;
   let final: AirtimePlayState["final"] = null;
 
-  if (row.phase === "dive_results" || row.phase === "final") {
+  if (row.phase === "dive_results") {
+    // dive_state_json lands in the same write that flips the phase; the
+    // airtime_diver_dives rows are written after it.
+    const hauls = dive
+      ? dive.divers.map((d) => haulFromDiver(d, names)).sort(byName)
+      : (await loadDiverDives(admin, sessionId))
+          .filter((r) => r.dive_number === row.current_dive)
+          .map((r) => haulFromRow(r, names))
+          .sort(byName);
+    if (!isDisplay) myResult = hauls.find((h) => h.participantId === participantId) ?? null;
+    results = { dive: row.current_dive, hauls };
+  }
+
+  if (row.phase === "final") {
     const [diverDives, boatDives] = await Promise.all([
       loadDiverDives(admin, sessionId),
       loadBoatDives(admin, sessionId),
     ]);
-    if (row.phase === "dive_results") {
-      const hauls = diverDives
-        .filter((r) => r.dive_number === row.current_dive)
-        .map((r) => haulFromRow(r, names))
-        .sort(byName);
-      if (!isDisplay) myResult = hauls.find((h) => h.participantId === participantId) ?? null;
-      results = { dive: row.current_dive, hauls };
-    }
+    const diveNumbers = Array.from(new Set(boatDives.map((b) => b.dive_number))).sort((a, b) => a - b);
+    const standingsInput = boats.map((b) => {
+      const diveTotals = diveNumbers.map(
+        (n) => boatDives.find((x) => x.boat_id === b.id && x.dive_number === n)?.result ?? 0
+      );
+      return { boatId: b.id, diveTotals, total: diveTotals.reduce((s, v) => s + v, 0) };
+    });
+    const { ranked, winnerIds } = rankBoats(standingsInput);
+    const personal = new Map<string, number>();
+    for (const r of diverDives) personal.set(r.participant_id, (personal.get(r.participant_id) ?? 0) + r.haul);
 
-    if (row.phase === "final") {
-      const diveNumbers = Array.from(new Set(boatDives.map((b) => b.dive_number))).sort((a, b) => a - b);
-      const standingsInput = boats.map((b) => {
-        const diveTotals = diveNumbers.map(
-          (n) => boatDives.find((x) => x.boat_id === b.id && x.dive_number === n)?.result ?? 0
-        );
-        return { boatId: b.id, diveTotals, total: diveTotals.reduce((s, v) => s + v, 0) };
-      });
-      const { ranked, winnerIds } = rankBoats(standingsInput);
-      const personal = new Map<string, number>();
-      for (const r of diverDives) personal.set(r.participant_id, (personal.get(r.participant_id) ?? 0) + r.haul);
+    const standings: StandingRow[] = ranked.map((s) => {
+      const boat = boats.find((b) => b.id === s.boatId);
+      return {
+        boatId: s.boatId,
+        name: boat?.name ?? "Boat",
+        isRival: Boolean(boat?.is_rival),
+        diveTotals: s.diveTotals,
+        total: s.total,
+        isWinner: winnerIds.includes(s.boatId),
+        members: members
+          .filter((m) => m.boat_id === s.boatId)
+          .map((m) => ({
+            participantId: m.participant_id,
+            displayName: names.get(m.participant_id) ?? "Player",
+            personalTotal: personal.get(m.participant_id) ?? 0,
+          }))
+          .sort(byName),
+      };
+    });
 
-      const standings: StandingRow[] = ranked.map((s) => {
-        const boat = boats.find((b) => b.id === s.boatId);
-        return {
-          boatId: s.boatId,
-          name: boat?.name ?? "Boat",
-          isRival: Boolean(boat?.is_rival),
-          diveTotals: s.diveTotals,
-          total: s.total,
-          isWinner: winnerIds.includes(s.boatId),
-          members: members
-            .filter((m) => m.boat_id === s.boatId)
-            .map((m) => ({
-              participantId: m.participant_id,
-              displayName: names.get(m.participant_id) ?? "Player",
-              personalTotal: personal.get(m.participant_id) ?? 0,
-            }))
-            .sort(byName),
-        };
-      });
-
-      final = { standings, winnerIds };
-    }
+    final = { standings, winnerIds };
   }
 
   const players = playersOf(roster);

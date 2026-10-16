@@ -1,6 +1,21 @@
+import { AIRTIME_CONFIG } from "../config";
 import type { CrewView, HaulRow } from "../types";
 import { BANNER, Banner } from "./AirtimeChrome";
 import { AirtimeItemCard } from "./AirtimeItemCard";
+import { AirtimeO2Cost } from "./AirtimeO2Icon";
+
+/** Consecutive depths with the same drain, e.g. "Levels 1–3". */
+const AIR_TIERS: { label: string; amount: number }[] = AIRTIME_CONFIG.airByDepth.reduce<
+  { from: number; to: number; amount: number }[]
+>((tiers, amount, i) => {
+  const last = tiers[tiers.length - 1];
+  if (last && last.amount === amount) last.to = i + 1;
+  else tiers.push({ from: i + 1, to: i + 1, amount });
+  return tiers;
+}, []).map((t) => ({
+  label: t.from === t.to ? `Level ${t.from}` : `Levels ${t.from}–${t.to}`,
+  amount: t.amount,
+}));
 
 type Props = {
   crew: CrewView;
@@ -56,7 +71,9 @@ export function AirtimeCrewView({ crew, myResult, meId }: Props) {
                 {r.status === "underwater" ? (
                   <>
                     <td className="px-2 py-3 text-right font-mono">{r.depth}</td>
-                    <td className="px-2 py-3 text-right font-mono">{r.airPerTurn}</td>
+                    <td className="px-2 py-3 text-right text-unmute-navy">
+                      <AirtimeO2Cost amount={r.airPerTurn} className="justify-end" />
+                    </td>
                     <td className="px-4 py-3 text-right font-mono">{r.airToSurface}</td>
                   </>
                 ) : (
@@ -68,6 +85,17 @@ export function AirtimeCrewView({ crew, myResult, meId }: Props) {
             ))}
           </tbody>
         </table>
+        <div className="border-t border-cloud-grey bg-cloud-grey/30 px-4 py-3">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-steel-blue">Air per diver, each turn</p>
+          <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-body text-sm text-charcoal">
+            {AIR_TIERS.map((t) => (
+              <li key={t.label} className="inline-flex items-center gap-2">
+                <span>{t.label}</span>
+                <AirtimeO2Cost amount={t.amount} className="text-unmute-navy" />
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       {myResult ? (
