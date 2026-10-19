@@ -8,6 +8,8 @@ type SessionReflectionViewProps = {
   prompt2?: string;
   /** Optional; shown after prompt2 when set. */
   prompt3?: string;
+  /** Optional line the facilitator reads before the two questions. */
+  preface?: string;
 };
 
 /**
@@ -18,6 +20,7 @@ export function SessionReflectionView({
   prompt1 = DEFAULT_PROMPT_1,
   prompt2 = DEFAULT_PROMPT_2,
   prompt3,
+  preface,
 }: SessionReflectionViewProps) {
   return (
     <main className="min-h-screen bg-warm-white px-5 py-12">
@@ -26,6 +29,9 @@ export function SessionReflectionView({
           <h1 className="font-display text-3xl font-bold text-unmute-navy">
             Further reflection
           </h1>
+          {preface ? (
+            <p className="mt-6 text-left font-body text-lg text-charcoal">{preface}</p>
+          ) : null}
         </header>
 
         <section>

@@ -68,6 +68,7 @@ export default async function SessionReflectionPage({ params }: PageProps) {
       prompt1={prompts?.prompt1}
       prompt2={prompts?.prompt2}
       prompt3={prompts?.prompt3}
+      preface={prompts?.preface}
     />
   );
 }

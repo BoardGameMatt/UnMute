@@ -4,6 +4,7 @@ import Link from "next/link";
 import { HostClaimForm } from "@/components/join/host-claim-form";
 import { displayProtocolName } from "@/lib/protocols";
 import { AirtimeHostEntry } from "@/lib/protocols/airtime/components/AirtimeHostEntry";
+import { OtspHostEntry } from "@/lib/protocols/on-the-same-page/components/OtspHostEntry";
 import { RankAndFileHostEntry } from "@/lib/protocols/rank-and-file/components/RankAndFileHostEntry";
 import { TruthIsHostEntry } from "@/lib/protocols/the-truth-is/components/TruthIsHostEntry";
 import { createClient } from "@/lib/supabase/server";
@@ -91,6 +92,16 @@ export default async function HostTokenPage({ params }: HostTokenPageProps) {
   if (protocol.slug === "airtime") {
     return (
       <AirtimeHostEntry
+        hostToken={token}
+        sessionId={session.id}
+        joinCode={String(session.join_code ?? "")}
+      />
+    );
+  }
+
+  if (protocol.slug === "on-the-same-page") {
+    return (
+      <OtspHostEntry
         hostToken={token}
         sessionId={session.id}
         joinCode={String(session.join_code ?? "")}

@@ -72,6 +72,11 @@ WITH expected AS (
   UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_diver_dives', NULL
   UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_choices', NULL
   UNION ALL SELECT '030_airtime.sql', 'table', 'airtime_events', NULL
+  UNION ALL SELECT '031_on_the_same_page.sql', 'table', 'otsp_pictures', NULL
+  UNION ALL SELECT '031_on_the_same_page.sql', 'table', 'otsp_sessions', NULL
+  UNION ALL SELECT '031_on_the_same_page.sql', 'table', 'otsp_rounds', NULL
+  UNION ALL SELECT '031_on_the_same_page.sql', 'table', 'otsp_events', NULL
+  UNION ALL SELECT '031_on_the_same_page.sql', 'table', 'otsp_rotation_debt', NULL
 ),
 present AS (
   SELECT

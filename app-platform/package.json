@@ -19,10 +19,12 @@
     "mint:code-switch": "npx tsx scripts/mint-code-switch-session.ts",
     "mint:rank-and-file": "npx tsx scripts/mint-rank-and-file-session.ts",
     "mint:airtime": "npx tsx scripts/mint-airtime-session.ts",
+    "mint:on-the-same-page": "npx tsx scripts/mint-on-the-same-page-session.ts",
     "bots:airtime": "npx tsx scripts/airtime-bots.ts",
+    "bots:on-the-same-page": "npx tsx scripts/on-the-same-page-bots.ts",
     "sim:airtime": "npx tsx scripts/airtime-sim.ts",
     "seed:trane-quiz": "npx tsx scripts/seed-trane-quiz.ts",
-    "test": "tsx --test lib/protocols/draw-it-by-ear/*.test.ts lib/wao/*.test.ts lib/trane-quiz/*.test.ts lib/cover-story/*.test.ts lib/protocols/talk-track/*.test.ts lib/protocols/zoning-rights/*.test.ts lib/protocols/i-know-what-you-meme/*.test.ts lib/protocols/code-switch/*.test.ts lib/protocols/rank-and-file/*.test.ts lib/protocols/the-truth-is/*.test.ts lib/protocols/airtime/*.test.ts lib/content-packs/*.test.ts",
+    "test": "tsx --test lib/protocols/draw-it-by-ear/*.test.ts lib/wao/*.test.ts lib/trane-quiz/*.test.ts lib/cover-story/*.test.ts lib/protocols/talk-track/*.test.ts lib/protocols/zoning-rights/*.test.ts lib/protocols/i-know-what-you-meme/*.test.ts lib/protocols/code-switch/*.test.ts lib/protocols/rank-and-file/*.test.ts lib/protocols/the-truth-is/*.test.ts lib/protocols/airtime/*.test.ts lib/protocols/on-the-same-page/*.test.ts lib/content-packs/*.test.ts",
     "verify:schema": "npx tsx scripts/verify-prod-schema.ts"
   },
   "dependencies": {

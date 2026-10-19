@@ -7,6 +7,8 @@ import { writeSessionEvent } from "@/lib/console/session-events";
 import { resetCoverStorySessionToLobby } from "@/lib/cover-story/session";
 import { resetAirtimeToLobby, startAirtime } from "@/lib/protocols/airtime/actions";
 import { AIRTIME_CONFIG } from "@/lib/protocols/airtime/config";
+import { OTSP } from "@/lib/protocols/on-the-same-page/config";
+import { resetOnTheSamePageToLobby, startOnTheSamePage } from "@/lib/protocols/on-the-same-page/actions";
 import { resetRankAndFileToLobby, startRankAndFile } from "@/lib/protocols/rank-and-file/actions";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import { resetCodeSwitchToLobby, startCodeSwitch } from "@/lib/protocols/code-switch/actions";
@@ -247,6 +249,27 @@ export async function startSessionAction(
     }
   }
 
+  if (protocolSlug === "on-the-same-page") {
+    const { data: rows, error: countErr } = await supabase
+      .from("session_participants")
+      .select("participants ( display_name )")
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { error: "Could not count the room." };
+    }
+    const players = (rows ?? []).filter((row) => {
+      const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+      const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+      return !isSharedScreenName(name ?? "Player");
+    });
+    if (players.length < OTSP.minPlayers) {
+      return { error: "Need 8 to start." };
+    }
+    if (players.length > OTSP.maxPlayers) {
+      return { error: "On the Same Page holds 16 players at most." };
+    }
+  }
+
   // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
@@ -349,6 +372,20 @@ export async function startSessionAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not start Airtime.",
+      };
+    }
+  }
+
+  if (protocolSlug === "on-the-same-page") {
+    try {
+      const admin = createServiceClient();
+      const started = await startOnTheSamePage(admin, sessionId);
+      if (!started.ok) {
+        return { error: started.error };
+      }
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not start On the Same Page.",
       };
     }
   }
@@ -517,6 +554,17 @@ export async function returnToLobbyAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not reset Airtime.",
+      };
+    }
+  }
+
+  if (protocolSlug === "on-the-same-page") {
+    try {
+      const admin = createServiceClient();
+      await resetOnTheSamePageToLobby(admin, sessionId);
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not reset On the Same Page.",
       };
     }
   }

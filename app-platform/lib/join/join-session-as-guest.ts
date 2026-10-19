@@ -1,6 +1,7 @@
 import { normalizeDisplayName } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { AIRTIME_CONFIG } from "@/lib/protocols/airtime/config";
+import { OTSP } from "@/lib/protocols/on-the-same-page/config";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 
 export type GuestJoinCoreResult =
@@ -96,6 +97,33 @@ export async function joinSessionAsGuestCore(input: {
       return !isSharedScreenName(name ?? "Player");
     });
     if (players.length >= AIRTIME_CONFIG.maxPlayers) {
+      return { ok: false, error: "This moment is full." };
+    }
+  }
+
+  if (protocolSlug === "on-the-same-page") {
+    if (session.status === "active") {
+      return {
+        ok: false,
+        error: "This On the Same Page session already started. Tap your name to rejoin.",
+      };
+    }
+    if (isSharedScreenName(displayName)) {
+      return { ok: false, error: "That name is reserved. Pick another." };
+    }
+    const { data: rows, error: countErr } = await supabase
+      .from("session_participants")
+      .select("participants ( display_name )")
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { ok: false, error: "Could not count the room. Try again." };
+    }
+    const players = (rows ?? []).filter((row) => {
+      const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+      const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+      return !isSharedScreenName(name ?? "Player");
+    });
+    if (players.length >= OTSP.maxPlayers) {
       return { ok: false, error: "This moment is full." };
     }
   }

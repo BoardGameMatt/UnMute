@@ -19,7 +19,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { LobbyParticipant } from "@/lib/types/lobby";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 
-const SHARED_SCREEN_SLUGS = new Set(["rank-and-file", "the-truth-is", "airtime"]);
+const SHARED_SCREEN_SLUGS = new Set(["rank-and-file", "the-truth-is", "airtime", "on-the-same-page"]);
 
 function usesSharedScreen(slug: string | undefined): boolean {
   return slug !== undefined && SHARED_SCREEN_SLUGS.has(slug);
@@ -289,6 +289,8 @@ export function SessionLobbyView({
                 ? "Need 3 to start."
               : protocolSlug === "airtime"
                 ? "Need 2 to start."
+              : protocolSlug === "on-the-same-page"
+                ? "Need 8 to start."
               : protocolSlug === "code-switch"
                 ? "Need 4 to start."
               : `Start unlocks when at least ${minPlayers} ${
@@ -309,7 +311,7 @@ export function SessionLobbyView({
       ) : currentRole === "member" ? (
         <p className="text-center font-body text-base text-slate">
           Waiting for{" "}
-          {protocolSlug === "rank-and-file" || protocolSlug === "airtime"
+          {protocolSlug === "rank-and-file" || protocolSlug === "airtime" || protocolSlug === "on-the-same-page"
             ? "the facilitator"
             : leadName ?? "the lead"}{" "}
           to start.
