@@ -228,7 +228,7 @@ REVEAL → SCOREBOARD → NPS → REFLECTION
 
 | Phase | Timer | Advances when |
 |---|---|---|
-| Build | 15s round 1, 10s later, plus 2s Place grace. The arc and the active name are always on screen. | Place, or grace expiry. The next turn starts at once. |
+| Build | 15s round 1, 10s later, plus 2s Place grace. The arc and the active name are always on screen. | Place, or grace expiry. The next turn starts at once. An open screen asks the server every couple of seconds, so a paused arc still closes the turn. |
 | Reveal beats | 6, 5, 5, 6s, arc visible, then hold | Server clock, then the facilitator |
 | Scoreboard | none | Facilitator: Continue |
 
@@ -238,7 +238,7 @@ REVEAL → SCOREBOARD → NPS → REFLECTION
 
 **Protocol label:** `ON THE SAME PAGE`, mono, uppercase, tracking widest.
 
-**Timer.** During the build, every moment is someone's turn. The arc is on screen, and the active name reads "Your turn" or "[Name]'s turn", marked Turn. There is no gap where time passes without a turn and without an arc. Reveal beats keep the arc so those seconds are visible too. Arc: `cloud-grey` track, `unmute-navy` fill. Last 5 seconds of a turn go `signal-amber` with a slow pulse. Last 3 seconds show 3-2-1. Turn clocks are only 10 or 15 seconds, so the amber band is the last 5 seconds. That shorter band is the opt-out from the platform 15-second band.
+**Timer.** During the build, every moment is someone's turn. The arc is on screen, and the active name reads "Your turn" or "[Name]'s turn", marked Turn. There is no gap where time passes without a turn and without an arc. The server closes a due turn when any open screen checks in. That check is on a short interval, not only when the arc animation finishes. A paused animation cannot hold the round open, and it cannot hide Reflection questions, which appear only on the outcome. Reveal beats keep the arc so those seconds are visible too. Arc: `cloud-grey` track, `unmute-navy` fill. Last 5 seconds of a turn go `signal-amber` with a slow pulse. Last 3 seconds show 3-2-1. Turn clocks are only 10 or 15 seconds, so the amber band is the last 5 seconds. That shorter band is the opt-out from the platform 15-second band.
 
 **Progress.** `SessionProgressBar`. Completed rounds ÷ 3. No numeric label.
 
@@ -285,7 +285,7 @@ A Builder's phone may show the picture during the reveal before the picture beat
 
 ## 9. Edge cases
 
-- Disconnect: at the end of the grace the server places one tile for that turn. No removal. Rejoin with the same name gets the filtered state.
+- Disconnect: at the end of the grace the server places one tile for that turn, once any open screen checks in. No removal. Rejoin with the same name gets the filtered state. Reflection questions stay on the outcome, so this check is what lets the facilitator reach them.
 - Place and timeout race: the write version accepts one of them. A Place that lands inside the 2-second grace counts.
 - Below 8 or above 16: cannot start, and the cap refuses the join.
 - 0 Inspectors cannot occur at the start floor. Builder bonus and early end use the integer test, which is false at 0.

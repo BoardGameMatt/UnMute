@@ -76,27 +76,33 @@ export function WaoPlayTimer({
 
     const elapsedMs = () => Date.now() + clockOffsetRef.current - startMs;
 
+    const armRetry = () => {
+      const every = retryMsRef.current;
+      if (every <= 0 || retry !== null) return;
+      retry = window.setInterval(() => {
+        if (elapsedMs() < totalMs) {
+          doneRef.current = false;
+          clearRetry();
+          frame = requestAnimationFrame(loop);
+          return;
+        }
+        onCompleteRef.current();
+      }, every);
+    };
+
+    const finish = () => {
+      if (stopped || doneRef.current || elapsedMs() < totalMs) return;
+      doneRef.current = true;
+      onCompleteRef.current();
+      armRetry();
+    };
+
     const loop = () => {
       if (stopped) return;
       const elapsed = elapsedMs();
       setTick((t) => (t + 1) % 10000);
       if (elapsed >= totalMs) {
-        if (!doneRef.current) {
-          doneRef.current = true;
-          onCompleteRef.current();
-          const every = retryMsRef.current;
-          if (every > 0 && retry === null) {
-            retry = window.setInterval(() => {
-              if (elapsedMs() < totalMs) {
-                doneRef.current = false;
-                clearRetry();
-                frame = requestAnimationFrame(loop);
-                return;
-              }
-              onCompleteRef.current();
-            }, every);
-          }
-        }
+        finish();
         return;
       }
       doneRef.current = false;
@@ -104,9 +110,16 @@ export function WaoPlayTimer({
     };
 
     frame = requestAnimationFrame(loop);
+    const deadline = window.setTimeout(finish, Math.max(0, totalMs - elapsedMs()));
+    const onVisible = () => {
+      if (document.visibilityState === "visible") finish();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       stopped = true;
       cancelAnimationFrame(frame);
+      window.clearTimeout(deadline);
+      document.removeEventListener("visibilitychange", onVisible);
       clearRetry();
     };
   }, [startedAt, durationSeconds]);

@@ -65,6 +65,21 @@ export function useOtspPlay(sessionId: string) {
     void reload();
   }, [reload, phase, stateJson]);
 
+  const clocking =
+    state != null &&
+    state.phase !== "scoreboard" &&
+    !(state.phase === "reveal" && state.revealStep === "outcome");
+
+  // The arc animation is not the clock. An open screen keeps asking, so a
+  // paused timer still closes a due turn and the reveal can reach the outcome.
+  useEffect(() => {
+    if (!clocking) return;
+    const id = window.setInterval(() => {
+      void reload();
+    }, 2000);
+    return () => window.clearInterval(id);
+  }, [clocking, reload]);
+
   const send = useCallback(
     async (action: OtspSendAction): Promise<boolean> => {
       if (action.type === "expire" && inflight.current > 0) return false;
