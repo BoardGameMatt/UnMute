@@ -96,7 +96,7 @@ Server-driven. Timers display on the client. The server advances them.
 |---|---|---|
 | Deal | 20s | Role cards on phones. Everyone sees the 10-item list. Only Builders see which item is the picture. The shared screen shows the five names and no roles. |
 | Build, laps 1–2 | 15s per turn in round 1, 10s after | Active player places one tile. The turn passes the moment Place is tapped. |
-| Check-in | 60s | Spoken. Any Builder or Inspector may ask any placer one question. One sentence. The answer cannot name the picture. The app shows the timer and does not capture the words. |
+| Check-in | 60s | Spoken. Any Builder or Inspector may ask any placer one question. One sentence. The answer cannot name the picture. The server ends it at 60 seconds. The arc is not shown, because nobody is placing. The app does not capture the words. |
 | Build, laps 3–5 | same turn clock | Up to 15 more turns. |
 | Final lock | 15s | Last chance to pin, and to lock a guess if you have not. |
 | Reveal | beats below | Then the facilitator chooses another round or the scoreboard. |
@@ -153,7 +153,7 @@ Reactions are anonymous on every screen. The event log stores reactor, role, tar
 
 The client sends the latest tile id with the reaction. The log keeps it. The float does not name a person, and it does not point at the tile on screen.
 
-**Pin.** Starts empty. Any player may pin one of the five placers, never themselves, move it, or clear it, until Final lock ends. Every move is logged. The Improviser's pin is on screen for parity and is not worth pin points.
+**Pin.** Starts empty. Builders and Inspectors may pin one of the five placers, never themselves, move it, or clear it, until Final lock ends. Every move is logged. The Improviser does not pin. They already know who is improvising.
 
 **Guess.** Inspectors and the Improviser each lock one item, once. Builders do not guess. The count of Inspectors who have locked is public. Their choices are not. The Improviser's lock is hidden and uncounted until the reveal.
 
@@ -249,7 +249,7 @@ REVEAL → SCOREBOARD → NPS → REFLECTION
 
 **Protocol label:** `ON THE SAME PAGE`, mono, uppercase, tracking widest.
 
-**Timer.** Arc, `cloud-grey` track, `unmute-navy` fill. Last 5 seconds of a turn go `signal-amber` with a slow pulse. Last 3 seconds show 3-2-1. Check-in uses the platform 15-second amber band, because that clock is 60 seconds. Turn clocks are only 10 or 15 seconds, so a 15-second amber band would paint the whole turn. That shorter band is the opt-out.
+**Timer.** The arc shows only while someone is placing. The active name is on the screen as "Your turn" or "[Name]'s turn", and that name is marked Turn. Deal, Check-in, Final lock, and the reveal still end on the server clock, without an arc, because nobody is placing. Arc: `cloud-grey` track, `unmute-navy` fill. Last 5 seconds of a turn go `signal-amber` with a slow pulse. Last 3 seconds show 3-2-1. Turn clocks are only 10 or 15 seconds, so the amber band is the last 5 seconds. That shorter band is the opt-out from the platform 15-second band.
 
 **Progress.** `SessionProgressBar`. Completed rounds ÷ 3. No numeric label.
 
@@ -263,11 +263,11 @@ REVEAL → SCOREBOARD → NPS → REFLECTION
 | Sand | `#DDCC77` |
 | Rose | `#CC6677` |
 
-Shared-screen tiles are all indigo. Phones use the player's color. Every shape has a 1px `#4D4D4D` stroke. Tapping a name in the turn strip outlines that player's tiles with weight, not color alone. The active name has a 2px navy border. Running scores are not on the shared screen during a round. They appear on the outcome and the scoreboard.
+Shared-screen tiles are all indigo. Phones use the player's color. Every shape has a 1px `#4D4D4D` stroke. The five names sit in two rows, three then two, with no horizontal scroll. Tapping a name outlines that player's tiles with weight, not color alone. The active name has a 2px navy border and the word Turn. Running scores are not on the shared screen during a round. They appear on the outcome and the scoreboard.
 
 **Your turn.** Board, then the tray in two rows of five, then Place. Place is disabled at opacity 40 until a tile and a cell are chosen, then `signal-amber`.
 
-**Watching.** Board, then reactions, pin, and (Inspectors and the Improviser) the guess list.
+**Watching.** Board, then reactions. Builders and Inspectors get the pin. Inspectors and the Improviser get the guess list.
 
 **Buttons.** Another round is the amber primary on the outcome. Reflection questions is navy. Continue on the scoreboard is amber.
 
@@ -285,7 +285,7 @@ The picture, the role map, guesses, pins, reaction authors, and the active previ
 |---|---|---|
 | Shared screen | Board in one color, five names, timer, lap, Inspector lock count, anonymous reactions, reveal beats. Scores only on the outcome and the scoreboard | Picture, roles, guesses, who pinned whom, who reacted, any preview |
 | Builder phone | Picture name, persistent Builder line, own pin, board in player colors | Other guesses, other pins, other previews, who reacted |
-| Improviser phone | Improviser line, guess list, own guess, own pin | The picture, other guesses, other pins, own role on the shared screen |
+| Improviser phone | Improviser line, guess list, own guess | The picture, the pin choices, other guesses, other pins, own role on the shared screen |
 | Inspector phone | Inspector line, guess list, own guess, own pin | The picture, other guesses, other pins |
 | Anyone, from the Improviser beat on | Who the Improviser was | — |
 | Anyone, from the picture beat on | The picture and Read the picture | — |
@@ -387,10 +387,11 @@ Reflection is the final screen.
 
 ## 15. Reflection close
 
-The two Season prompts, unchanged:
+Three questions, in this order:
 
-1. What did you assume that turned out to be wrong?
-2. Where does that same assumption show up in how we work?
+1. Where do we assume we’re on the same page about what is “good” even without ever saying it out loud?
+2. When a teammate's work doesn't seem to fit the picture, do you tend to stay quiet or speak up? What enables you (or might enable you) to voice your concerns?
+3. Suspicion often landed on someone doing their part. How do we check our read of a situation (or another team member) before we act on it?
 
 The bridge line in §11.7 is on the reflection screen above those questions, and on the scoreboard so the facilitator can read it.
 
@@ -405,14 +406,14 @@ The bridge line in §11.7 is on the reflection screen above those questions, and
 | 3 | Check-in guesses score as lap 2. Deal guesses score as lap 1. Final-lock guesses score 1. |
 | 4 | Carry list is for the next On the Same Page session on this team. |
 | 5 | Improviser-first order rotates by one seat. |
-| 6 | Timeout places a tile only when the preview has both a tile and a cell. |
+| 6 | Timeout places the preview when it has a tile and a cell. Otherwise the server places one tile. There is no pass. |
 | 7 | Read the person includes people who never pinned. Denominator is everyone except the Improviser. |
 | 8 | Piece hex values are the palette opt-out. Interface chrome uses tokens. |
-| 9 | Turn-timer amber band is the last 5 seconds. Check-in keeps the 15-second band. |
+| 9 | The arc shows only on a placing turn, with the active name. Amber is the last 5 seconds. |
 | 10 | Reactions rise and fade. They do not travel on a wave. `see_it` ships. |
 | 11 | Check-in words are not captured. |
 | 12 | Device beat is the first explainer pane. |
-| 13 | Standard reflection wording. The bridge line is a preface, not a replacement question. |
+| 13 | Three discussion questions, in §15. The bridge line is a preface, not a fourth question. |
 
 ---
 

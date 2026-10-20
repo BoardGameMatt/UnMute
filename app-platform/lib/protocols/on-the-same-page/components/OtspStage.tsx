@@ -32,18 +32,19 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
   const [cell, setCell] = useState<{ row: number; col: number } | null>(null);
   const [highlight, setHighlight] = useState<string | null>(null);
   const finished = state.phase === "scoreboard" ? state.roundNumber : Math.max(0, state.roundNumber - 1);
-  const showTimer = state.phaseDurationMs > 0 && !(state.phase === "reveal" && state.revealStep === "outcome");
+  const clockRunning = state.phaseDurationMs > 0 && !(state.phase === "reveal" && state.revealStep === "outcome");
   const placements = state.placements;
   const latest = state.placements.at(-1);
 
-  const activePlacerId = state.placers.find((placer) => placer.active)?.id;
+  const activePlacer = state.placers.find((placer) => placer.active);
+  const showTurnClock = state.phase === "build" && Boolean(activePlacer);
 
   useEffect(() => {
     if (!state.isMyTurn) {
       setTile(null);
       setCell(null);
     }
-  }, [state.isMyTurn, state.roundNumber, state.lap, activePlacerId]);
+  }, [state.isMyTurn, state.roundNumber, state.lap, activePlacer?.id]);
 
   useEffect(() => {
     if (!state.isMyTurn || !tile || !cell) return;
@@ -71,43 +72,55 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
       </header>
 
       <div className="mt-4 flex items-center justify-between gap-3">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-slate">
-          Round {state.roundNumber}
-          {state.phase === "build" ? ` · Lap ${state.lap}` : state.phase === "checkin" ? " · Check-in" : ""}
-        </p>
-        {showTimer ? (
-          <WaoPlayTimer
-            key={`${state.phase}-${state.revealStep}-${state.phaseEndsAt}`}
-            durationSeconds={Math.max(1, Math.round(state.phaseDurationMs / 1000))}
-            startedAt={new Date(state.phaseEndsAt - state.phaseDurationMs).toISOString()}
-            clockOffsetMs={clockOffsetMs}
-            onComplete={() => void onAction({ type: "expire" })}
-            retryMs={1000}
-            urgentBelowSeconds={state.phase === "checkin" ? OTSP.checkinAmberSeconds : OTSP.turnAmberSeconds}
-            numericBelowSeconds={OTSP.numericSeconds}
-            size={64}
-          />
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate">
+            Round {state.roundNumber}
+            {state.phase === "build" ? ` · Lap ${state.lap}` : state.phase === "checkin" ? " · Check-in" : ""}
+          </p>
+          {showTurnClock && activePlacer ? (
+            <p className="mt-1 font-display text-lg font-semibold text-unmute-navy">
+              {state.isMyTurn ? "Your turn" : `${activePlacer.name}'s turn`}
+            </p>
+          ) : null}
+        </div>
+        {clockRunning ? (
+          <div className={showTurnClock ? undefined : "hidden"}>
+            <WaoPlayTimer
+              key={`${state.phase}-${state.revealStep}-${state.phaseEndsAt}`}
+              durationSeconds={Math.max(1, Math.round(state.phaseDurationMs / 1000))}
+              startedAt={new Date(state.phaseEndsAt - state.phaseDurationMs).toISOString()}
+              clockOffsetMs={clockOffsetMs}
+              onComplete={() => void onAction({ type: "expire" })}
+              retryMs={1000}
+              urgentBelowSeconds={state.phase === "checkin" ? OTSP.checkinAmberSeconds : OTSP.turnAmberSeconds}
+              numericBelowSeconds={OTSP.numericSeconds}
+              size={64}
+            />
+          </div>
         ) : (
           <span />
         )}
       </div>
 
-      <ol className="mt-3 flex gap-2 overflow-x-auto">
+      <ol className="mt-3 grid grid-cols-3 gap-2">
         {state.placers.map((placer) => (
-          <li key={placer.id}>
+          <li key={placer.id} className="min-w-0">
             <button
               type="button"
               onClick={() => setHighlight((current) => (current === placer.id ? null : placer.id))}
-              className={`min-w-[5.5rem] rounded-md bg-warm-white px-2 py-2 text-left ${
+              className={`w-full rounded-md bg-warm-white px-2 py-2 text-left ${
                 placer.active ? "border-2 border-unmute-navy" : "border border-cloud-grey"
               }`}
             >
               <span className="flex items-center gap-2">
                 {placer.color ? (
-                  <span className="h-3 w-3 rounded-full border border-charcoal/30" style={{ backgroundColor: PIECE_FILL[placer.color] }} />
+                  <span className="h-3 w-3 shrink-0 rounded-full border border-charcoal/30" style={{ backgroundColor: PIECE_FILL[placer.color] }} />
                 ) : null}
-                <span className="truncate font-body text-sm text-charcoal">{placer.name}</span>
+                <span className="min-w-0 break-words font-body text-sm text-charcoal">{placer.name}</span>
               </span>
+              {placer.active ? (
+                <span className="mt-1 block font-mono text-[10px] uppercase tracking-widest text-unmute-navy">Turn</span>
+              ) : null}
             </button>
           </li>
         ))}
@@ -231,23 +244,25 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
               </button>
             ))}
           </div>
-          <div>
-            <h2 className="font-display text-lg font-semibold text-unmute-navy">Who is the Improviser?</h2>
-            <p className="mt-1 font-body text-sm text-slate">Tap a name. Tap another to change it, or tap it again to clear it.</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {state.placers
-                .filter((placer) => placer.id !== state.selfId)
-                .map((placer) => (
-                  <PinButton
-                    key={placer.id}
-                    name={placer.name}
-                    selected={state.myPinId === placer.id}
-                    disabled={pending}
-                    onClick={() => void onAction({ type: "pin", targetId: state.myPinId === placer.id ? null : placer.id })}
-                  />
-                ))}
+          {state.canPin ? (
+            <div>
+              <h2 className="font-display text-lg font-semibold text-unmute-navy">Who is the Improviser?</h2>
+              <p className="mt-1 font-body text-sm text-slate">Tap a name. Tap another to change it, or tap it again to clear it.</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {state.placers
+                  .filter((placer) => placer.id !== state.selfId)
+                  .map((placer) => (
+                    <PinButton
+                      key={placer.id}
+                      name={placer.name}
+                      selected={state.myPinId === placer.id}
+                      disabled={pending}
+                      onClick={() => void onAction({ type: "pin", targetId: state.myPinId === placer.id ? null : placer.id })}
+                    />
+                  ))}
+              </div>
             </div>
-          </div>
+          ) : null}
           {state.guessList.length > 0 ? (
             <div>
               <h2 className="font-display text-lg font-semibold text-unmute-navy">What are they building?</h2>

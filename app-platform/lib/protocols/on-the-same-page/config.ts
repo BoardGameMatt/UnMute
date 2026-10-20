@@ -71,5 +71,9 @@ export function isReactionKind(value: unknown): value is ReactionKind {
 export const BRIDGE_LINE =
   "In the game, the Builders couldn't say what the picture was. At work, you can. Where are we acting like we can't?";
 
-export const REFLECTION_PROMPT_1 = "What did you assume that turned out to be wrong?";
-export const REFLECTION_PROMPT_2 = "Where does that same assumption show up in how we work?";
+export const REFLECTION_PROMPT_1 =
+  "Where do we assume we’re on the same page about what is “good” even without ever saying it out loud?";
+export const REFLECTION_PROMPT_2 =
+  "When a teammate's work doesn't seem to fit the picture, do you tend to stay quiet or speak up? What enables you (or might enable you) to voice your concerns?";
+export const REFLECTION_PROMPT_3 =
+  "Suspicion often landed on someone doing their part. How do we check our read of a situation (or another team member) before we act on it?";

@@ -625,6 +625,8 @@ function pinFor(game: OtspGame, actorId: string, targetId: string | null): Reduc
   if (targetId !== null && !next.round.placers.includes(targetId)) {
     return { ok: false, error: "Pin one of the five people placing tiles." };
   }
+  const role = next.round.roles[actorId];
+  if (role !== "inspector" && role !== "builder") return { ok: false, error: "The Improviser already knows." };
   if (targetId === actorId) return { ok: false, error: "Pin someone else." };
   next.round.pins[actorId] = targetId;
   return ok(next, [event(next, "pin_move", actorId, { target: targetId })]);
@@ -736,7 +738,8 @@ export function projectPlayState(
       !viewer.isDisplay &&
       (myRole === "inspector" || myRole === "improviser") &&
       OPEN_PHASES.has(game.phase),
-    canPin: !viewer.isDisplay && OPEN_PHASES.has(game.phase),
+    canPin:
+      !viewer.isDisplay && (myRole === "inspector" || myRole === "builder") && OPEN_PHASES.has(game.phase),
     canReact: !viewer.isDisplay && OPEN_PHASES.has(game.phase),
     isMyTurn: !viewer.isDisplay && game.phase === "build" && viewer.participantId === active,
     reactions: round.reactions,

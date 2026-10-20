@@ -276,6 +276,15 @@ describe("visibility", () => {
     assert.equal(building.guessList.length, 0);
     assert.equal(watching.improviserId, null);
     assert.equal(screen.guessList.some((item) => item.id === game.round.pictureId), false);
+    assert.equal(watching.canPin, true);
+    assert.equal(building.canPin, true);
+    const improviser = game.round.improviserId;
+    const improvising = projectPlayState(game, { participantId: improviser, isDisplay: false, canControl: false }, names, PACK_A);
+    assert.equal(improvising.canPin, false);
+    const other = game.round.placers.find((id) => id !== improviser) as string;
+    const denied = reduceFor(game, { type: "pin", actorId: improviser, targetId: other }, game.round.phaseEndsAt, PACK_A);
+    assert.equal(denied.ok, false);
+    assert.equal(screen.placers.some((placer) => placer.active), true);
   });
 });
 
