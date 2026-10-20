@@ -94,22 +94,14 @@ Server-driven. Timers display on the client. The server advances them.
 
 | Phase | Duration | What happens |
 |---|---|---|
-| Deal | 20s | Role cards on phones. Everyone sees the 10-item list. Only Builders see which item is the picture. The shared screen shows the five names and no roles. |
-| Build, laps 1–2 | 15s per turn in round 1, 10s after | Active player places one tile. The turn passes the moment Place is tapped. |
-| Check-in | 60s | Spoken. Any Builder or Inspector may ask any placer one question. One sentence. The answer cannot name the picture. The server ends it at 60 seconds. The arc is not shown, because nobody is placing. The app does not capture the words. |
-| Build, laps 3–5 | same turn clock | Up to 15 more turns. |
-| Final lock | 15s | Last chance to pin, and to lock a guess if you have not. |
-| Reveal | beats below | Then the facilitator chooses another round or the scoreboard. |
+| Build, laps 1–5 | 15s per turn in round 1, 10s after | The five placers rotate, one tile at a time. The turn passes the moment Place is tapped. A name and the arc are on screen for every turn. There is no pause between laps. |
+| Reveal | beats below | The arc stays visible on each beat. Then the facilitator chooses another round or the scoreboard. |
 
-A guess locked during Deal scores as lap 1. A guess locked during Check-in scores as lap 2. A guess locked in lap 5 or during Final lock scores 1.
+Roles, the picture, and the guess list are on the phones from the first turn. There is no Deal wait, no Check-in pause, and no Final lock. A guess scores by the lap it is made in. Lap 5 scores 1.
 
-**Early end.** More than half the Inspectors have locked the correct item, as an integer test: `correct × 2 > inspectorCount`. At 12 people that is 4 of 7.
+**Early end.** More than half the Inspectors have locked the correct item, as an integer test: `correct × 2 > inspectorCount`. At 12 people that is 4 of 7. The current turn finishes, then the reveal starts. The remaining laps do not run.
 
-- If that happens in Deal, lap 1, lap 2, or Check-in, the build still finishes laps 1 and 2, Check-in still runs, and the round then skips laps 3–5.
-- From lap 3 on, the round ends after the current turn.
-- Final lock always runs after the build stops. Reveal always runs after Final lock.
-
-Lap 5 ends the build even if fewer than 25 tiles were placed. Every turn places one tile.
+Five laps end the build. Every turn places one tile. The next turn starts immediately.
 
 **Timeout.** The server keeps accepting Place for 2 seconds after the arc hits zero. Then a complete preview (tile and cell) is placed. If the preview is incomplete, the server places one tile on an empty square. There is no pass. Place stays disabled until both are chosen.
 
@@ -153,13 +145,13 @@ Reactions are anonymous on every screen. The event log stores reactor, role, tar
 
 The client sends the latest tile id with the reaction. The log keeps it. The float does not name a person, and it does not point at the tile on screen.
 
-**Pin.** Starts empty. Builders and Inspectors may pin one of the five placers, never themselves, move it, or clear it, until Final lock ends. Every move is logged. The Improviser does not pin. They already know who is improvising.
+**Pin.** Starts empty. Builders and Inspectors may pin one of the five placers, never themselves, move it, or clear it, until the build ends. Every move is logged. The Improviser does not pin. They already know who is improvising.
 
 **Guess.** Inspectors and the Improviser each lock one item, once. Builders do not guess. The count of Inspectors who have locked is public. Their choices are not. The Improviser's lock is hidden and uncounted until the reveal.
 
 ### 4.6 Persistent play copy
 
-Same two-line block on every phone, for the whole round after Deal.
+Same two-line block on every phone for the whole round, starting with the first turn.
 
 | Role | Line |
 |---|---|
@@ -187,11 +179,11 @@ Points accumulate across the rounds of one session and reset next session. Shown
 
 | Who | For | Points |
 |---|---|---|
-| Inspector or Improviser | Correct guess locked in lap 1, including during Deal | 5 |
-| Inspector or Improviser | Correct, lap 2, including during Check-in | 4 |
+| Inspector or Improviser | Correct guess locked in lap 1 | 5 |
+| Inspector or Improviser | Correct, lap 2 | 4 |
 | Inspector or Improviser | Correct, lap 3 | 3 |
 | Inspector or Improviser | Correct, lap 4 | 2 |
-| Inspector or Improviser | Correct, lap 5 or Final lock | 1 |
+| Inspector or Improviser | Correct, lap 5 | 1 |
 | Inspector or Improviser | Wrong, or none | 0 |
 | Builder or Inspector | Final pin on the Improviser | 2 |
 | Each Builder | More than half the Inspectors right, and the Improviser wrong or blank, judged when the round ends | 3 |
@@ -227,20 +219,17 @@ Read the picture is 4/7. Read the person is 4/11.
 ## 6. State machine
 
 ```
-LOBBY → DEAL → BUILD (laps 1–2) → CHECK-IN → BUILD (laps 3–5) → FINAL LOCK → REVEAL
-                  ↘ early: still finish laps 1–2 and Check-in, then FINAL LOCK
-                  ↘ early from lap 3: FINAL LOCK after the current turn
-REVEAL → another round → DEAL
+LOBBY → BUILD (laps 1–5, no pause between turns)
+             ↘ majority of Inspectors correct: finish the current turn, then REVEAL
+             ↘ lap 5 ends: REVEAL
+REVEAL → another round → BUILD
 REVEAL → SCOREBOARD → NPS → REFLECTION
 ```
 
 | Phase | Timer | Advances when |
 |---|---|---|
-| Deal | 20s | Server clock |
-| Build | 15s round 1, 10s later, plus 2s Place grace | Place, or grace expiry |
-| Check-in | 60s | Server clock |
-| Final lock | 15s | Server clock |
-| Reveal beats | 6, 5, 5, 6s, then hold | Server clock, then the facilitator |
+| Build | 15s round 1, 10s later, plus 2s Place grace. The arc and the active name are always on screen. | Place, or grace expiry. The next turn starts at once. |
+| Reveal beats | 6, 5, 5, 6s, arc visible, then hold | Server clock, then the facilitator |
 | Scoreboard | none | Facilitator: Continue |
 
 ---
@@ -249,7 +238,7 @@ REVEAL → SCOREBOARD → NPS → REFLECTION
 
 **Protocol label:** `ON THE SAME PAGE`, mono, uppercase, tracking widest.
 
-**Timer.** The arc shows only while someone is placing. The active name is on the screen as "Your turn" or "[Name]'s turn", and that name is marked Turn. Deal, Check-in, Final lock, and the reveal still end on the server clock, without an arc, because nobody is placing. Arc: `cloud-grey` track, `unmute-navy` fill. Last 5 seconds of a turn go `signal-amber` with a slow pulse. Last 3 seconds show 3-2-1. Turn clocks are only 10 or 15 seconds, so the amber band is the last 5 seconds. That shorter band is the opt-out from the platform 15-second band.
+**Timer.** During the build, every moment is someone's turn. The arc is on screen, and the active name reads "Your turn" or "[Name]'s turn", marked Turn. There is no gap where time passes without a turn and without an arc. Reveal beats keep the arc so those seconds are visible too. Arc: `cloud-grey` track, `unmute-navy` fill. Last 5 seconds of a turn go `signal-amber` with a slow pulse. Last 3 seconds show 3-2-1. Turn clocks are only 10 or 15 seconds, so the amber band is the last 5 seconds. That shorter band is the opt-out from the platform 15-second band.
 
 **Progress.** `SessionProgressBar`. Completed rounds ÷ 3. No numeric label.
 
@@ -304,7 +293,7 @@ A Builder's phone may show the picture during the reveal before the picture beat
 - Library exhausted: §4.2 relaxation order.
 - Late name after Start: refused.
 - Shared-screen name on a phone: refused.
-- Check-in speech: not recorded. Whether a question was direct or hedged stays with the facilitator.
+- No spoken pause. Questions can happen while the turns continue. The app does not record them.
 - Reactions stop at the reveal.
 
 ---
@@ -329,12 +318,10 @@ Every play and action route, before the service client is used for the write:
 Lead-only panel on the shared screen, label `FACILITATOR`. One line for the phase. Metrics there: round, lap, Inspectors locked, and at the outcome the two team metrics plus running scores.
 
 1. Lobby. "Phones out. Cameras stay on the laptop. Five of you will build. One of those five doesn't know the picture."
-2. Deal. "Read your phone. If you know the picture, don't say it."
+2. First turn. "Read your phone. If you know the picture, don't say it. Turns keep going."
 3. Build. "Your turn is three taps: tile, square, Place."
-4. Check-in. "One question to someone who placed. One sentence back. Don't name the picture."
-5. Final lock. "Last chance to lock a guess and a pin."
-6. Outcome. Read the two metrics in one line. Then another round, or the reflection.
-7. Reflection open. "In the game, the Builders couldn't say what the picture was. At work, you can. Where are we acting like we can't?"
+4. Outcome. Read the two metrics in one line. Then another round, or the reflection.
+5. Reflection open. "In the game, the Builders couldn't say what the picture was. At work, you can. Where are we acting like we can't?"
 
 ---
 
@@ -402,16 +389,16 @@ The bridge line in §11.7 is on the reflection screen above those questions, and
 | # | Decision |
 |---|---|
 | 1 | 8–16 phones. Shared screen is not a player. |
-| 2 | Early end finishes laps 1–2 and Check-in when the majority lands that early. From lap 3 it ends after the current turn. Final lock always runs. |
-| 3 | Check-in guesses score as lap 2. Deal guesses score as lap 1. Final-lock guesses score 1. |
+| 2 | The build is one continuous rotation. Majority of Inspectors correct ends the round after the current turn. Otherwise it runs five laps, then the reveal. |
+| 3 | A guess scores by the lap it is made in. Lap 1 is 5 points. Lap 5 is 1. |
 | 4 | Carry list is for the next On the Same Page session on this team. |
 | 5 | Improviser-first order rotates by one seat. |
 | 6 | Timeout places the preview when it has a tile and a cell. Otherwise the server places one tile. There is no pass. |
 | 7 | Read the person includes people who never pinned. Denominator is everyone except the Improviser. |
 | 8 | Piece hex values are the palette opt-out. Interface chrome uses tokens. |
-| 9 | The arc shows only on a placing turn, with the active name. Amber is the last 5 seconds. |
+| 9 | During the build the arc and the active name are always on screen. Amber is the last 5 seconds. Reveal beats show the arc too. |
 | 10 | Reactions rise and fade. They do not travel on a wave. `see_it` ships. |
-| 11 | Check-in words are not captured. |
+| 11 | There is no Check-in, Deal wait, or Final lock. Speech during turns is not captured. |
 | 12 | Device beat is the first explainer pane. |
 | 13 | Three discussion questions, in §15. The bridge line is a preface, not a fourth question. |
 
@@ -446,7 +433,7 @@ The bridge line in §11.7 is on the reflection screen above those questions, and
 | Drag on desktop | Sets the preview. Place still commits. |
 | Cross-moment queue | Stored on the team. Only this Moment reads it in v1. |
 | Amber on a 10–15s turn | Last 5 seconds, not the whole turn |
-| Speech in Check-in | Not a feature |
+| A pause with no turn | Not in the build. Deal, Check-in, and Final lock are not phases. |
 
 ---
 

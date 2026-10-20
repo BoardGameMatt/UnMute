@@ -316,14 +316,14 @@ function dealNext(
     placers,
     improviserId,
     colors,
-    phaseEndsAt: now + OTSP.dealMs,
-    phaseDurationMs: OTSP.dealMs,
+    phaseEndsAt: now + turnMs(number),
+    phaseDurationMs: turnMs(number),
   };
 
   const next: OtspGame = {
     ...game,
     roundNumber: number,
-    phase: "deal",
+    phase: "build",
     round,
     drawnIds: Array.from(new Set([...game.drawnIds, ...placers])),
     improviserOrder: [...game.improviserOrder, improviserId],
@@ -384,20 +384,11 @@ function lapOf(cursor: number): number {
 
 function noteMajority(game: OtspGame): void {
   const round = game.round;
-  if (round.endAfterCheckin || round.endAfterTurn) return;
+  if (round.endAfterTurn) return;
   const inspectors = game.playerIds.filter((id) => round.roles[id] === "inspector");
   const correct = inspectors.filter((id) => round.guesses[id]?.itemId === round.pictureId).length;
   if (!majorityReached(correct, inspectors.length)) return;
-  if (game.phase === "build" && lapOf(round.cursor) >= 3) round.endAfterTurn = true;
-  else if (game.phase === "deal" || game.phase === "checkin" || game.phase === "build") round.endAfterCheckin = true;
-}
-
-function enterCheckin(game: OtspGame, now: number): EngineEvent[] {
-  game.phase = "checkin";
-  game.round.phaseEndsAt = now + OTSP.checkinMs;
-  game.round.phaseDurationMs = OTSP.checkinMs;
-  game.round.preview = null;
-  return [event(game, "checkin_start", null, { lap: 2 })];
+  round.endAfterTurn = true;
 }
 
 function enterFinalLock(game: OtspGame, reason: "early" | "lap5", now: number): EngineEvent[] {
@@ -466,9 +457,14 @@ function finishTurn(game: OtspGame, placement: Placement, now: number, prior: En
   game.round.preview = null;
   const nextCursor = game.round.cursor + 1;
   game.round.cursor = nextCursor;
-  if (game.round.endAfterTurn) return ok(game, [...prior, ...enterFinalLock(game, "early", now)]);
-  if (nextCursor === 10) return ok(game, [...prior, ...enterCheckin(game, now)]);
-  if (nextCursor >= 25) return ok(game, [...prior, ...enterFinalLock(game, "lap5", now)]);
+  if (game.round.endAfterTurn) {
+    game.round.endReason = "early";
+    return ok(game, [...prior, ...enterReveal(game, now)]);
+  }
+  if (nextCursor >= 25) {
+    game.round.endReason = "lap5";
+    return ok(game, [...prior, ...enterReveal(game, now)]);
+  }
   game.phase = "build";
   game.round.phaseDurationMs = turnMs(game.roundNumber);
   game.round.phaseEndsAt = now + game.round.phaseDurationMs;

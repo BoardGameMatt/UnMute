@@ -38,6 +38,8 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
 
   const activePlacer = state.placers.find((placer) => placer.active);
   const showTurnClock = state.phase === "build" && Boolean(activePlacer);
+  const showRevealClock = state.phase === "reveal" && state.revealStep !== "outcome" && state.phaseDurationMs > 0;
+  const showClock = showTurnClock || showRevealClock;
 
   useEffect(() => {
     if (!state.isMyTurn) {
@@ -84,7 +86,7 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
           ) : null}
         </div>
         {clockRunning ? (
-          <div className={showTurnClock ? undefined : "hidden"}>
+          <div className={showClock ? undefined : "hidden"}>
             <WaoPlayTimer
               key={`${state.phase}-${state.revealStep}-${state.phaseEndsAt}`}
               durationSeconds={Math.max(1, Math.round(state.phaseDurationMs / 1000))}

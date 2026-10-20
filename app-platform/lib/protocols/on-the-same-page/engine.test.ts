@@ -198,11 +198,11 @@ describe("round flow", () => {
     assert.equal(scoreRound(game).points[inspector], 5);
     game = must(reduceFor(game, { type: "guess", actorId: inspector, itemId: game.round.pictureId }, 5_000, PACK_A)).game;
     assert.equal(game.round.guesses[inspector]?.band, 1);
-    game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt, PACK_A)).game;
-    for (let turn = 0; turn < 10; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt + OTSP.graceMs, PACK_A)).game;
     }
-    assert.equal(game.phase, "checkin");
+    assert.equal(game.phase, "build");
+    assert.equal(displayLap(game), 2);
     game = must(reduceFor(game, { type: "guess", actorId: inspector, itemId: other }, 5_000, PACK_A)).game;
     assert.equal(scoreRound(game).points[inspector], 0);
     game = must(reduceFor(game, { type: "guess", actorId: inspector, itemId: game.round.pictureId }, 5_000, PACK_A)).game;
@@ -212,45 +212,31 @@ describe("round flow", () => {
     assert.equal(denied.ok, false);
   });
 
-  it("finishes laps 1 and 2 and the check-in when the majority lands early", () => {
+  it("ends after the current turn when a majority of Inspectors lock the picture", () => {
     let game = started(8, 11, 10_000);
+    assert.equal(game.phase, "build");
     const inspectors = game.playerIds.filter((id) => game.round.roles[id] === "inspector");
     for (const id of inspectors.slice(0, 2)) {
       game = must(reduceFor(game, { type: "guess", actorId: id, itemId: game.round.pictureId }, 10_000, PACK_A)).game;
     }
-    assert.equal(game.round.endAfterCheckin, true);
-    game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt, PACK_A)).game;
-    assert.equal(game.phase, "build");
-    for (let turn = 0; turn < 10; turn += 1) {
-      game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt + OTSP.graceMs, PACK_A)).game;
-    }
-    assert.equal(game.phase, "checkin");
-    assert.equal(displayLap(game), 2);
-    game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt, PACK_A)).game;
-    assert.equal(game.phase, "final_lock");
-    assert.equal(game.round.endReason, "early");
-  });
-
-  it("ends after the current turn once the majority lands in lap 3", () => {
-    let game = started(8, 13, 10_000);
-    game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt, PACK_A)).game;
-    for (let turn = 0; turn < 10; turn += 1) {
-      game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt + OTSP.graceMs, PACK_A)).game;
-    }
-    assert.equal(game.phase, "checkin");
-    game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt, PACK_A)).game;
-    assert.equal(game.phase, "build");
-    assert.equal(displayLap(game), 3);
-    const inspectors = game.playerIds.filter((id) => game.round.roles[id] === "inspector");
-    for (const id of inspectors.slice(0, 2)) {
-      game = must(reduceFor(game, { type: "guess", actorId: id, itemId: game.round.pictureId }, game.round.phaseEndsAt, PACK_A)).game;
-    }
     assert.equal(game.round.endAfterTurn, true);
     const cursor = game.round.cursor;
     game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt + OTSP.graceMs, PACK_A)).game;
-    assert.equal(game.phase, "final_lock");
+    assert.equal(game.phase, "reveal");
+    assert.equal(game.round.revealStep, "suspicion");
+    assert.equal(game.round.endReason, "early");
     assert.equal(game.round.cursor, cursor + 1);
     assert.ok(game.round.cursor < 25);
+  });
+
+  it("reaches the reveal after five laps when the picture stays unlocked", () => {
+    let game = started(8, 13, 10_000);
+    for (let turn = 0; turn < 25; turn += 1) {
+      game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt + OTSP.graceMs, PACK_A)).game;
+    }
+    assert.equal(game.phase, "reveal");
+    assert.equal(game.round.endReason, "lap5");
+    assert.equal(game.round.cursor, 25);
   });
 });
 

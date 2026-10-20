@@ -60,7 +60,7 @@ const PERSONAS: Record<PersonaKind, Persona> = {
   },
   hasty: {
     kind: "hasty",
-    blurb: "Places immediately and guesses during the deal.",
+    blurb: "Places immediately and guesses on the first lap.",
     guessLap: 1,
     placeDelay: () => rand(150, 500),
     react: 0.05,
@@ -75,7 +75,7 @@ const PERSONAS: Record<PersonaKind, Persona> = {
   distracted: {
     kind: "distracted",
     blurb: "Places a tile on every turn.",
-    guessLap: 0,
+    guessLap: 5,
     placeDelay: () => rand(400, 1200),
     react: 0.02,
   },
@@ -365,7 +365,7 @@ class Bot {
     }
 
     const lap = s.lap;
-    const wantsGuess = this.persona.guessLap === 0 ? s.phase === "final_lock" : lap >= this.persona.guessLap;
+    const wantsGuess = lap >= this.persona.guessLap;
     if (s.canGuess && !this.guessed && wantsGuess && s.guessList.length > 0 && chance(0.35)) {
       const item = pick(s.guessList);
       if (await this.post({ type: "guess", itemId: item.id })) {
