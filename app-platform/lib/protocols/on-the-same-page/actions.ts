@@ -46,9 +46,9 @@ async function persist(
 ): Promise<boolean> {
   const saved = await saveGame(admin, sessionId, version, game);
   if (!saved) return false;
+  await syncPublicState(admin, sessionId, game);
   await insertEvents(admin, sessionId, game.roundNumber, events);
   if (events.some((item) => item.type === "round_start")) await insertRound(admin, sessionId, game);
-  await syncPublicState(admin, sessionId, game);
   return true;
 }
 

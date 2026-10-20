@@ -23,7 +23,7 @@ function arg(name: string, fallback: string): string {
 }
 
 const CODE = arg("code", "").toUpperCase();
-const COUNT = Math.max(8, Math.min(16, Number(arg("count", "12"))));
+const COUNT = Math.max(1, Math.min(16, Number(arg("count", "12"))));
 const BASE = arg("base", "http://localhost:3000").replace(/\/$/, "");
 const POLL_MS = Math.max(400, Number(arg("poll-ms", "700")));
 const COOKIE = "unmute_participant_id";
@@ -46,7 +46,6 @@ type Persona = {
   blurb: string;
   /** Lap at which this person locks a guess. 0 means final lock only. */
   guessLap: number;
-  missTurn: number;
   placeDelay: () => number;
   react: number;
 };
@@ -56,7 +55,6 @@ const PERSONAS: Record<PersonaKind, Persona> = {
     kind: "steady",
     blurb: "Places next to the last tile and locks a guess around the check-in.",
     guessLap: 2,
-    missTurn: 0.02,
     placeDelay: () => rand(400, 1400),
     react: 0.15,
   },
@@ -64,31 +62,27 @@ const PERSONAS: Record<PersonaKind, Persona> = {
     kind: "hasty",
     blurb: "Places immediately and guesses during the deal.",
     guessLap: 1,
-    missTurn: 0,
     placeDelay: () => rand(150, 500),
     react: 0.05,
   },
   careful: {
     kind: "careful",
-    blurb: "Waits until later laps, then pins the person who has passed.",
+    blurb: "Waits until later laps, then pins someone.",
     guessLap: 4,
-    missTurn: 0.05,
     placeDelay: () => rand(800, 2200),
     react: 0.08,
   },
   distracted: {
     kind: "distracted",
-    blurb: "Often lets the timer pass the turn.",
+    blurb: "Places a tile on every turn.",
     guessLap: 0,
-    missTurn: 0.45,
-    placeDelay: () => rand(2000, 5000),
+    placeDelay: () => rand(400, 1200),
     react: 0.02,
   },
   chatty: {
     kind: "chatty",
     blurb: "Reacts often and pins early.",
     guessLap: 3,
-    missTurn: 0.05,
     placeDelay: () => rand(300, 900),
     react: 0.55,
   },
@@ -123,7 +117,7 @@ const latencies: number[] = [];
 let requestCount = 0;
 let errorCount = 0;
 
-const REVEAL_ORDER = ["suspicion", "improviser", "guess", "picture", "replay", "outcome"];
+const REVEAL_ORDER = ["suspicion", "improviser", "guess", "picture", "outcome"];
 const PHASE_ORDER: OtspPhase[] = ["deal", "build", "checkin", "final_lock", "reveal", "scoreboard"];
 
 class Bot {
@@ -203,6 +197,12 @@ class Bot {
     }
   }
 
+  adopt(sessionId: string, participantId: string): void {
+    this.sessionId = sessionId;
+    this.participantId = participantId;
+    console.log(`${clock()}    ${this.name.padEnd(8)} resumed (${this.persona.kind})`);
+  }
+
   async join(sessionId: string, teamId: string): Promise<boolean> {
     this.sessionId = sessionId;
     const form = new FormData();
@@ -275,7 +275,7 @@ class Bot {
     if (s.myRole !== "builder" && s.pictureLabel && open.includes(s.phase)) {
       this.flag("error", "picture-leaked", `Saw "${s.pictureLabel}" during ${s.phase}`, "I could see the picture before the reveal.");
     }
-    if (s.myRole === "improviser" && s.pictureLabel && s.phase === "reveal" && !["picture", "replay", "outcome"].includes(s.revealStep)) {
+    if (s.myRole === "improviser" && s.pictureLabel && s.phase === "reveal" && !["picture", "outcome"].includes(s.revealStep)) {
       this.flag("error", "picture-early", `Saw "${s.pictureLabel}" on ${s.revealStep}`, "The picture showed up before its beat.");
     }
     if (s.myRole !== "builder" && s.phase !== "reveal" && s.phase !== "scoreboard" && s.improviserId) {
@@ -355,7 +355,6 @@ class Bot {
       const key = `${s.roundNumber}:${s.lap}:${s.phaseEndsAt}`;
       if (this.actedKey !== key) {
         this.actedKey = key;
-        if (chance(this.persona.missTurn)) return;
         await sleep(this.persona.placeDelay());
         const cell = this.emptyCell(s);
         if (!cell) return;
@@ -377,8 +376,7 @@ class Bot {
 
     if (s.canPin && !this.pinned && lap >= 2 && chance(0.2)) {
       const others = s.placers.filter((p) => p.id !== s.selfId);
-      const passed = others.filter((p) => p.passed);
-      const target = this.persona.kind === "careful" && passed.length > 0 ? pick(passed) : pick(others);
+      const target = pick(others);
       if (target && (await this.post({ type: "pin", targetId: target.id }))) {
         this.pinned = true;
         console.log(`${clock()}    ${this.name.padEnd(8)} pinned ${target.name}`);
@@ -459,13 +457,33 @@ async function main() {
 
   const startedAt = new Date();
   const bots = NAMES.slice(0, COUNT).map((name, i) => new Bot(name, PERSONA_MIX[i] ?? "steady"));
-  console.log(`${clock()} joining ${bots.length} bots on ${CODE} at ${BASE}`);
-  for (const bot of bots) {
-    const ok = await bot.join(session.id, session.team_id);
-    if (!ok) throw new Error(`${bot.name} could not join`);
-    await sleep(120);
+  if (session.status === "active") {
+    const { data: rows, error: rowErr } = await admin
+      .from("session_participants")
+      .select("participant_id, participants(display_name)")
+      .eq("session_id", session.id);
+    if (rowErr) throw new Error(rowErr.message);
+    const byName = new Map<string, string>();
+    for (const row of rows ?? []) {
+      const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+      const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+      if (name && row.participant_id) byName.set(name, row.participant_id);
+    }
+    console.log(`${clock()} resuming ${bots.length} bots on ${CODE} at ${BASE}`);
+    for (const bot of bots) {
+      const participantId = byName.get(bot.name);
+      if (!participantId) throw new Error(`${bot.name} is not in this room`);
+      bot.adopt(session.id, participantId);
+    }
+  } else {
+    console.log(`${clock()} joining ${bots.length} bots on ${CODE} at ${BASE}`);
+    for (const bot of bots) {
+      const ok = await bot.join(session.id, session.team_id);
+      if (!ok) throw new Error(`${bot.name} could not join`);
+      await sleep(120);
+    }
+    console.log(`${clock()} lobby ready. Press Start on the Shared screen.`);
   }
-  console.log(`${clock()} lobby ready. Press Start on the Shared screen.`);
 
   const deadline = Date.now() + 25 * 60 * 1000;
   await Promise.race([

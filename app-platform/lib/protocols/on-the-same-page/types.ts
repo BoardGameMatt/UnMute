@@ -5,7 +5,7 @@ export type Role = "builder" | "improviser" | "inspector";
 
 export type OtspPhase = "deal" | "build" | "checkin" | "final_lock" | "reveal" | "scoreboard";
 
-export type RevealStep = "suspicion" | "improviser" | "guess" | "picture" | "replay" | "outcome";
+export type RevealStep = "suspicion" | "improviser" | "guess" | "picture" | "outcome";
 
 export type GuessBand = 1 | 2 | 3 | 4 | 5;
 

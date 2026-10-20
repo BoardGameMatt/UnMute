@@ -6,15 +6,15 @@ import { useRouter } from "next/navigation";
 import { SessionProgressBar } from "@/components/ui/SessionProgressBar";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
 import { OTSP, PIECE_FILL, TILE_IDS, type ReactionKind, type TileId } from "../config";
-import type { OtspClientState, PlacementView } from "../types";
+import type { OtspClientState } from "../types";
 import type { OtspSendAction } from "../use-otsp-play";
 import { OtspTile } from "./OtspTile";
 
-const REACTIONS: { kind: ReactionKind; label: string }[] = [
-  { kind: "with_you", label: "With you" },
-  { kind: "not_sure", label: "Not sure" },
-  { kind: "lost", label: "Lost me" },
-  { kind: "see_it", label: "I see it" },
+const REACTIONS: { kind: ReactionKind; emoji: string; label: string }[] = [
+  { kind: "with_you", emoji: "👍", label: "With you" },
+  { kind: "not_sure", emoji: "🤔", label: "Not sure" },
+  { kind: "lost", emoji: "🤷", label: "Lost me" },
+  { kind: "see_it", emoji: "👀", label: "I see it" },
 ];
 
 type Props = {
@@ -33,7 +33,7 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
   const [highlight, setHighlight] = useState<string | null>(null);
   const finished = state.phase === "scoreboard" ? state.roundNumber : Math.max(0, state.roundNumber - 1);
   const showTimer = state.phaseDurationMs > 0 && !(state.phase === "reveal" && state.revealStep === "outcome");
-  const placements = visiblePlacements(state, now);
+  const placements = state.placements;
   const latest = state.placements.at(-1);
 
   const activePlacerId = state.placers.find((placer) => placer.active)?.id;
@@ -108,7 +108,6 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
                 ) : null}
                 <span className="truncate font-body text-sm text-charcoal">{placer.name}</span>
               </span>
-              {placer.passed ? <span className="font-mono text-[10px] uppercase tracking-widest text-slate">Pass</span> : null}
             </button>
           </li>
         ))}
@@ -121,7 +120,7 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
             const col = index % 10;
             const placed = placements.find((item) => item.row === row && item.col === col);
             const previewHere = state.isMyTurn && cell?.row === row && cell.col === col && tile;
-            const outlined = placed && (highlight === placed.participantId || (state.revealStep === "replay" && placed.participantId === state.improviserId));
+            const outlined = placed && highlight === placed.participantId;
             return (
               <button
                 key={`${row}-${col}`}
@@ -162,9 +161,11 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: [0, 1, 0], y: -72 }}
                 transition={{ duration: 2.4, ease: [0.4, 0, 0.2, 1] }}
-                className="mx-1 rounded-full border border-cloud-grey bg-warm-white px-2 py-1 font-body text-xs text-charcoal shadow-sm"
+                className="mx-1 text-3xl leading-none"
+                role="img"
+                aria-label={REACTIONS.find((item) => item.kind === reaction.kind)?.label}
               >
-                {REACTIONS.find((item) => item.kind === reaction.kind)?.label}
+                {REACTIONS.find((item) => item.kind === reaction.kind)?.emoji}
               </motion.span>
             ))}
         </div>
@@ -175,16 +176,6 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
           {state.lockCount} of {state.inspectorCount} inspectors locked
         </p>
       ) : null}
-      {state.monochrome && state.showTotals && state.phase !== "reveal" && state.phase !== "scoreboard" ? (
-        <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1">
-          {state.totals.map((row) => (
-            <li key={row.id} className="font-body text-sm text-charcoal">
-              {row.name} <span className="font-display text-lg font-semibold text-unmute-navy">{row.total}</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
       {state.isMyTurn ? (
         <div className="mt-4 space-y-3">
           <div className="grid grid-cols-5 gap-2">
@@ -220,12 +211,13 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
 
       {state.canReact && !state.isMyTurn ? (
         <div className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {REACTIONS.map((reaction) => (
               <button
                 key={reaction.kind}
                 type="button"
                 disabled={pending}
+                aria-label={reaction.label}
                 onClick={() =>
                   void onAction({
                     type: "react",
@@ -233,46 +225,48 @@ export function OtspStage({ state, pending, error, clockOffsetMs, onAction }: Pr
                     tileKey: latest ? `${latest.row},${latest.col}` : null,
                   })
                 }
-                className="rounded-md border border-cloud-grey bg-warm-white px-3 py-3 text-left font-body text-sm text-charcoal"
+                className="rounded-md border border-cloud-grey bg-warm-white py-3 text-2xl leading-none hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {reaction.label}
+                {reaction.emoji}
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {state.placers
-              .filter((placer) => placer.id !== state.selfId)
-              .map((placer) => (
-                <PinButton
-                  key={placer.id}
-                  name={placer.name}
-                  selected={state.myPinId === placer.id}
-                  disabled={pending}
-                  onClick={() => void onAction({ type: "pin", targetId: state.myPinId === placer.id ? null : placer.id })}
-                />
-              ))}
+          <div>
+            <h2 className="font-display text-lg font-semibold text-unmute-navy">Who is the Improviser?</h2>
+            <p className="mt-1 font-body text-sm text-slate">Tap a name. Tap another to change it, or tap it again to clear it.</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {state.placers
+                .filter((placer) => placer.id !== state.selfId)
+                .map((placer) => (
+                  <PinButton
+                    key={placer.id}
+                    name={placer.name}
+                    selected={state.myPinId === placer.id}
+                    disabled={pending}
+                    onClick={() => void onAction({ type: "pin", targetId: state.myPinId === placer.id ? null : placer.id })}
+                  />
+                ))}
+            </div>
           </div>
-          {state.myPinId ? (
-            <button type="button" className="font-body text-sm text-slate underline" onClick={() => void onAction({ type: "pin", targetId: null })}>
-              Clear pin
-            </button>
-          ) : null}
           {state.guessList.length > 0 ? (
-            <div className="grid grid-cols-2 gap-2">
-              {state.guessList.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  disabled={!state.canGuess || pending}
-                  onClick={() => void onAction({ type: "guess", itemId: item.id })}
-                  className={`rounded-md bg-warm-white px-3 py-3 text-left font-body text-sm ${
-                    state.myGuessId === item.id ? "border-2 border-unmute-navy text-unmute-navy" : "border border-cloud-grey text-charcoal"
-                  }`}
-                >
-                  {state.myGuessId === item.id ? "✓ " : ""}
-                  {item.label}
-                </button>
-              ))}
+            <div>
+              <h2 className="font-display text-lg font-semibold text-unmute-navy">What are they building?</h2>
+              <p className="mt-1 font-body text-sm text-slate">Tap a picture. Tap another to change it. A correct guess scores more the earlier you make it.</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {state.guessList.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={!state.canGuess || pending}
+                    onClick={() => void onAction({ type: "guess", itemId: item.id })}
+                    className={`rounded-md bg-warm-white px-3 py-3 text-left font-body text-sm shadow-sm hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 ${
+                      state.myGuessId === item.id ? "border-2 border-unmute-navy text-unmute-navy" : "border border-cloud-grey text-charcoal"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : null}
         </div>
@@ -332,11 +326,10 @@ function PinButton({ name, selected, disabled, onClick }: { name: string; select
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`rounded-full bg-warm-white px-3 py-2 font-body text-sm ${
+      className={`rounded-md bg-warm-white px-3 py-3 text-left font-body text-sm shadow-sm hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 ${
         selected ? "border-2 border-unmute-navy text-unmute-navy" : "border border-cloud-grey text-charcoal"
       }`}
     >
-      {selected ? "Pinned · " : "Pin "}
       {name}
     </button>
   );
@@ -396,13 +389,6 @@ function Reveal({ state }: { state: OtspClientState }) {
       ) : null}
     </section>
   );
-}
-
-function visiblePlacements(state: OtspClientState, now: number): PlacementView[] {
-  if (state.phase !== "reveal" || state.revealStep !== "replay" || state.placements.length === 0) return state.placements;
-  const start = state.phaseEndsAt - state.phaseDurationMs;
-  const elapsed = Math.min(1, Math.max(0, (now - start) / state.phaseDurationMs));
-  return state.placements.slice(0, Math.max(1, Math.ceil(elapsed * state.placements.length)));
 }
 
 function isTile(value: string): value is TileId {

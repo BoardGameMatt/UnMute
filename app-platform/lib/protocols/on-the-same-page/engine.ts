@@ -2,6 +2,7 @@ import {
   BRIDGE_LINE,
   OTSP,
   PIECE_COLORS,
+  TILE_IDS,
   type PieceColor,
   type ReactionKind,
   type TileId,
@@ -26,7 +27,7 @@ import type {
 
 export type ReduceResult = { ok: true; game: OtspGame; events: EngineEvent[] } | { ok: false; error: string };
 
-const REVEAL_ORDER: RevealStep[] = ["suspicion", "improviser", "guess", "picture", "replay", "outcome"];
+const REVEAL_ORDER: RevealStep[] = ["suspicion", "improviser", "guess", "picture", "outcome"];
 
 const OPEN_PHASES = new Set<OtspPhase>(["deal", "build", "checkin", "final_lock"]);
 
@@ -478,8 +479,17 @@ function placedTile(participantId: string, tile: TileId, row: number, col: numbe
   return { passed: false, participantId, tile, row, col, lap: lapOf(cursor), turn: cursor };
 }
 
-function passedTurn(participantId: string, cursor: number): Placement {
-  return { passed: true, participantId, lap: lapOf(cursor), turn: cursor };
+function forcedTile(round: RoundState): { tile: TileId; row: number; col: number } {
+  const rng = mulberry32((round.seed ^ (round.cursor + 1)) >>> 0);
+  const free: { row: number; col: number }[] = [];
+  for (let row = 0; row < 10; row += 1) {
+    for (let col = 0; col < 10; col += 1) {
+      if (!cellTaken(round, row, col)) free.push({ row, col });
+    }
+  }
+  const cell = free[Math.floor(rng() * free.length)] ?? { row: 0, col: 0 };
+  const tile = TILE_IDS[Math.floor(rng() * TILE_IDS.length)] ?? "square";
+  return { tile, ...cell };
 }
 
 function expire(game: OtspGame, now: number): ReduceResult {
@@ -504,8 +514,9 @@ function expire(game: OtspGame, now: number): ReduceResult {
         [event(game, "place", actor, { tile: preview.tile, row: preview.row, col: preview.col, lap: lapOf(round.cursor), turn: round.cursor, timeout: true })]
       );
     }
-    return finishTurn(game, passedTurn(actor, round.cursor), now, [
-      event(game, "pass", actor, { lap: lapOf(round.cursor), turn: round.cursor }),
+    const forced = forcedTile(round);
+    return finishTurn(game, placedTile(actor, forced.tile, forced.row, forced.col, round.cursor), now, [
+      event(game, "place", actor, { tile: forced.tile, row: forced.row, col: forced.col, lap: lapOf(round.cursor), turn: round.cursor, timeout: true }),
     ]);
   }
 
@@ -598,8 +609,8 @@ function guessFor(game: OtspGame, actorId: string, itemId: string): ReduceResult
   if (!OPEN_PHASES.has(next.phase)) return { ok: false, error: "Guesses are closed." };
   const role = next.round.roles[actorId];
   if (role !== "inspector" && role !== "improviser") return { ok: false, error: "Builders already know the picture." };
-  if (next.round.guesses[actorId]) return { ok: false, error: "That guess is locked." };
   if (!next.round.guessIds.includes(itemId)) return { ok: false, error: "That isn't one of this round's pictures." };
+  if (next.round.guesses[actorId]?.itemId === itemId) return ok(next, []);
   const band = bandFor(next.phase, next.round.cursor);
   next.round.guesses[actorId] = { itemId, band };
   noteMajority(next);
@@ -635,8 +646,7 @@ const REVEAL_RANK: Record<RevealStep, number> = {
   improviser: 1,
   guess: 2,
   picture: 3,
-  replay: 4,
-  outcome: 5,
+  outcome: 4,
 };
 
 function revealAtLeast(game: OtspGame, step: RevealStep): boolean {
@@ -725,7 +735,6 @@ export function projectPlayState(
     canGuess:
       !viewer.isDisplay &&
       (myRole === "inspector" || myRole === "improviser") &&
-      !round.guesses[viewer.participantId] &&
       OPEN_PHASES.has(game.phase),
     canPin: !viewer.isDisplay && OPEN_PHASES.has(game.phase),
     canReact: !viewer.isDisplay && OPEN_PHASES.has(game.phase),

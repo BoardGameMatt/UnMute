@@ -159,7 +159,7 @@ describe("scoring", () => {
 });
 
 describe("round flow", () => {
-  it("places on Place, passes on an empty timeout, and places a full preview", () => {
+  it("places on Place, places a tile on an empty timeout, and places a full preview", () => {
     let game = started(8, 2, 5_000);
     game = must(reduceFor(game, { type: "expire", actorId: "p1" }, game.round.phaseEndsAt, PACK_A)).game;
     assert.equal(game.phase, "build");
@@ -170,10 +170,12 @@ describe("round flow", () => {
     assert.equal(game.round.placements.length, 1);
     assert.equal(game.round.cursor, 1);
 
-    const passer = game.round.placers[1] as string;
-    const passed = must(reduceFor(game, { type: "expire", actorId: passer }, game.round.phaseEndsAt + OTSP.graceMs, PACK_A));
-    assert.equal(passed.events[0]?.type, "pass");
-    game = passed.game;
+    const waiting = game.round.placers[1] as string;
+    const timed = must(reduceFor(game, { type: "expire", actorId: waiting }, game.round.phaseEndsAt + OTSP.graceMs, PACK_A));
+    assert.equal(timed.events[0]?.type, "place");
+    const timedTile = timed.game.round.placements.at(-1);
+    assert.ok(timedTile && !timedTile.passed);
+    game = timed.game;
 
     const next = game.round.placers[game.round.cursor % 5] as string;
     game = must(
@@ -185,16 +187,28 @@ describe("round flow", () => {
     assert.ok(tile && !tile.passed && tile.tile === "tri_ll");
   });
 
-  it("locks a guess once, and builders cannot guess", () => {
+  it("lets a player change a guess, and a later change scores fewer points", () => {
     let game = started(8, 5, 5_000);
     const inspector = game.playerIds.find((id) => game.round.roles[id] === "inspector");
     const builder = game.playerIds.find((id) => game.round.roles[id] === "builder");
-    const item = game.round.guessIds[0] as string;
+    const other = game.round.guessIds.find((id) => id !== game.round.pictureId) as string;
     assert.ok(inspector && builder);
-    game = must(reduceFor(game, { type: "guess", actorId: inspector, itemId: item }, 5_000, PACK_A)).game;
-    const again = reduceFor(game, { type: "guess", actorId: inspector, itemId: item }, 5_000, PACK_A);
-    assert.equal(again.ok, false);
-    const denied = reduceFor(game, { type: "guess", actorId: builder, itemId: item }, 5_000, PACK_A);
+    game = must(reduceFor(game, { type: "guess", actorId: inspector, itemId: game.round.pictureId }, 5_000, PACK_A)).game;
+    assert.equal(game.round.guesses[inspector]?.band, 1);
+    assert.equal(scoreRound(game).points[inspector], 5);
+    game = must(reduceFor(game, { type: "guess", actorId: inspector, itemId: game.round.pictureId }, 5_000, PACK_A)).game;
+    assert.equal(game.round.guesses[inspector]?.band, 1);
+    game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt, PACK_A)).game;
+    for (let turn = 0; turn < 10; turn += 1) {
+      game = must(reduceFor(game, { type: "expire", actorId: "x" }, game.round.phaseEndsAt + OTSP.graceMs, PACK_A)).game;
+    }
+    assert.equal(game.phase, "checkin");
+    game = must(reduceFor(game, { type: "guess", actorId: inspector, itemId: other }, 5_000, PACK_A)).game;
+    assert.equal(scoreRound(game).points[inspector], 0);
+    game = must(reduceFor(game, { type: "guess", actorId: inspector, itemId: game.round.pictureId }, 5_000, PACK_A)).game;
+    assert.equal(game.round.guesses[inspector]?.band, 2);
+    assert.equal(scoreRound(game).points[inspector], 4);
+    const denied = reduceFor(game, { type: "guess", actorId: builder, itemId: other }, 5_000, PACK_A);
     assert.equal(denied.ok, false);
   });
 

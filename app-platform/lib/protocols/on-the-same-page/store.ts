@@ -149,6 +149,12 @@ export async function saveGame(admin: SupabaseClient, sessionId: string, version
   return Boolean(data);
 }
 
+/** Round seeds are unsigned 32-bit. The column is a signed 32-bit integer. */
+function seedColumn(seed: number): number {
+  const bits = seed >>> 0;
+  return bits > 0x7fffffff ? bits - 0x1_0000_0000 : bits;
+}
+
 export async function insertRound(admin: SupabaseClient, sessionId: string, game: OtspGame): Promise<void> {
   const { error } = await admin.from("otsp_rounds").upsert(
     {
@@ -156,7 +162,7 @@ export async function insertRound(admin: SupabaseClient, sessionId: string, game
       round_number: game.roundNumber,
       picture_slug: game.round.pictureId,
       family: game.round.family,
-      seed: game.round.seed,
+      seed: seedColumn(game.round.seed),
     },
     { onConflict: "session_id,round_number" }
   );

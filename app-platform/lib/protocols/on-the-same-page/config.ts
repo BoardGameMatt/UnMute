@@ -52,7 +52,6 @@ export const OTSP = {
     improviser: 5_000,
     guess: 5_000,
     picture: 6_000,
-    replay: 15_000,
     outcome: 0,
   },
 } as const;

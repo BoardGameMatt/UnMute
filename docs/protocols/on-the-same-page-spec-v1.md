@@ -109,9 +109,9 @@ A guess locked during Deal scores as lap 1. A guess locked during Check-in score
 - From lap 3 on, the round ends after the current turn.
 - Final lock always runs after the build stops. Reveal always runs after Final lock.
 
-Lap 5 ends the build even if fewer than 25 tiles were placed. A pass counts as a turn and does not place a tile.
+Lap 5 ends the build even if fewer than 25 tiles were placed. Every turn places one tile.
 
-**Timeout.** The server keeps accepting Place for 2 seconds after the arc hits zero. Then a complete preview (tile and cell) is placed. Anything else is a pass. Place stays disabled until both are chosen. A pass is logged and shown on the turn strip.
+**Timeout.** The server keeps accepting Place for 2 seconds after the arc hits zero. Then a complete preview (tile and cell) is placed. If the preview is incomplete, the server places one tile on an empty square. There is no pass. Place stays disabled until both are chosen.
 
 **Placement.** One tile per cell. No rotate, move, or remove. Any empty cell is legal. Tiles need not touch. Others see a tile only after Place.
 
@@ -175,8 +175,7 @@ Timed beats, then the outcome holds for the facilitator.
 2. Improviser (5s).
 3. Improviser's guess (5s).
 4. Picture (6s), with the share of Inspectors who named it.
-5. Replay (15s). Tiles in order, one color on the shared screen, Improviser's tiles outlined.
-6. Outcome. Round points and running totals. Facilitator: **Another round** or **Reflection questions**.
+5. Outcome. Round points and running totals. Facilitator: **Another round** or **Reflection questions**.
 
 Reflection questions opens the session scoreboard. Continue there completes the session and follows NPS, then the reflection screen.
 
@@ -207,7 +206,7 @@ The Improviser cannot pin themselves, so the pin denominator is `headcount − 1
 | Read the picture | Correct Inspector guesses ÷ Inspectors, blanks included |
 | Read the person | Pins on the Improviser from everyone else ÷ everyone else, blanks included |
 
-**Stored, not displayed.** Time to a correct pin that stayed. Time to a correct Inspector majority. Pins on each Builder. Who left a pin or a guess blank. Each reaction and each pass, with role, in the event log.
+**Stored, not displayed.** Time to a correct pin that stayed. Time to a correct Inspector majority. Pins on each Builder. Who left a pin or a guess blank. Each reaction, with role, in the event log.
 
 ### 5.1 Worked example (12 phones)
 
@@ -241,7 +240,7 @@ REVEAL → SCOREBOARD → NPS → REFLECTION
 | Build | 15s round 1, 10s later, plus 2s Place grace | Place, or grace expiry |
 | Check-in | 60s | Server clock |
 | Final lock | 15s | Server clock |
-| Reveal beats | 6, 5, 5, 6, 15s, then hold | Server clock, then the facilitator |
+| Reveal beats | 6, 5, 5, 6s, then hold | Server clock, then the facilitator |
 | Scoreboard | none | Facilitator: Continue |
 
 ---
@@ -264,7 +263,7 @@ REVEAL → SCOREBOARD → NPS → REFLECTION
 | Sand | `#DDCC77` |
 | Rose | `#CC6677` |
 
-Shared-screen tiles are all indigo. Phones use the player's color. Every shape has a 1px `#4D4D4D` stroke. Tapping a name in the turn strip outlines that player's tiles with weight, not color alone. The active name has a 2px navy border. A pass shows the word `Pass`.
+Shared-screen tiles are all indigo. Phones use the player's color. Every shape has a 1px `#4D4D4D` stroke. Tapping a name in the turn strip outlines that player's tiles with weight, not color alone. The active name has a 2px navy border. Running scores are not on the shared screen during a round. They appear on the outcome and the scoreboard.
 
 **Your turn.** Board, then the tray in two rows of five, then Place. Place is disabled at opacity 40 until a tile and a cell are chosen, then `signal-amber`.
 
@@ -284,7 +283,7 @@ The picture, the role map, guesses, pins, reaction authors, and the active previ
 
 | Viewer | Sees | Must not see |
 |---|---|---|
-| Shared screen | Board in one color, five names, timer, lap, Inspector lock count, anonymous reactions, reveal beats, scores | Picture, roles, guesses, who pinned whom, who reacted, any preview |
+| Shared screen | Board in one color, five names, timer, lap, Inspector lock count, anonymous reactions, reveal beats. Scores only on the outcome and the scoreboard | Picture, roles, guesses, who pinned whom, who reacted, any preview |
 | Builder phone | Picture name, persistent Builder line, own pin, board in player colors | Other guesses, other pins, other previews, who reacted |
 | Improviser phone | Improviser line, guess list, own guess, own pin | The picture, other guesses, other pins, own role on the shared screen |
 | Inspector phone | Inspector line, guess list, own guess, own pin | The picture, other guesses, other pins |
@@ -297,7 +296,7 @@ A Builder's phone may show the picture during the reveal before the picture beat
 
 ## 9. Edge cases
 
-- Disconnect: the turn becomes a pass at the end of the grace. No removal. Rejoin with the same name gets the filtered state.
+- Disconnect: at the end of the grace the server places one tile for that turn. No removal. Rejoin with the same name gets the filtered state.
 - Place and timeout race: the write version accepts one of them. A Place that lands inside the 2-second grace counts.
 - Below 8 or above 16: cannot start, and the cap refuses the join.
 - 0 Inspectors cannot occur at the start floor. Builder bonus and early end use the integer test, which is false at 0.
@@ -372,7 +371,7 @@ Service role only. No client policy.
 
 `session_state.state_json.otsp` is the poke: phase, round number, lap, timestamp. Public fields only.
 
-Event types: `session_start`, `round_start`, `place`, `pass`, `react`, `pin_move`, `guess_lock`, `checkin_start`, `checkin_end`, `round_end`, `host_action`.
+Event types: `session_start`, `round_start`, `place`, `react`, `pin_move`, `guess_lock`, `checkin_start`, `checkin_end`, `round_end`, `host_action`. A timeout is a `place` with `timeout: true`.
 
 `round_end` stores the end reason, final pins, final guesses, points, blanks, and the two metrics.
 
@@ -427,7 +426,7 @@ The bridge line in §11.7 is on the reflection screen above those questions, and
 
 1. Two consecutive full-scale rehearsals, 8 or more people on phones, without the facilitator fixing a stuck turn.
 2. QR join works without help.
-3. A disconnected active player becomes a pass, then can rejoin and see only their role's state.
+3. A disconnected active player gets one placed tile at the end of the grace, then can rejoin and see only their role's state.
 4. Headcounts 8, 12, and 16. At 8, one correct Inspector guess does not end the round (majority is 2 of 3).
 5. Network tab: during Build, the shared screen and a non-Builder phone do not contain the picture or anyone else's guess or pin.
 6. A Place tapped as the arc hits zero still counts inside the 2-second grace. A throttled duplicate Place does not place a second tile.
