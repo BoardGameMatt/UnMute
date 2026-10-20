@@ -401,7 +401,6 @@ function Reveal({ state }: { state: OtspClientState }) {
               </li>
             ))}
           </ul>
-          {state.phase === "scoreboard" ? <p className="font-body text-base text-charcoal">{state.bridge}</p> : null}
         </div>
       ) : null}
     </section>

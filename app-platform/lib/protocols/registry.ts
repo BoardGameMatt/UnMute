@@ -38,7 +38,8 @@ export interface ProtocolDefinition {
     prompt1: string;
     prompt2: string;
     prompt3?: string;
-    /** Spoken ahead of the two Season questions. Display-only. */
+    prompt4?: string;
+    /** Spoken ahead of the questions. Display-only. */
     preface?: string;
   };
   /** Optional JSON-schema-shaped or app-specific config metadata */

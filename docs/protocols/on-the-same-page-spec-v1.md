@@ -321,7 +321,7 @@ Lead-only panel on the shared screen, label `FACILITATOR`. One line for the phas
 2. First turn. "Read your phone. If you know the picture, don't say it. Turns keep going."
 3. Build. "Your turn is three taps: tile, square, Place."
 4. Outcome. Read the two metrics in one line. Then another round, or the reflection.
-5. Reflection open. "In the game, the Builders couldn't say what the picture was. At work, you can. Where are we acting like we can't?"
+5. Reflection screen only. The four questions in §15 are not read on the scoreboard.
 
 ---
 
@@ -366,7 +366,7 @@ Event types: `session_start`, `round_start`, `place`, `react`, `pin_move`, `gues
 
 ## 14. Session end flow
 
-Outcome → **Reflection questions** → session scoreboard (totals, the two metrics from the last round, the bridge line for the facilitator) → Continue → NPS `/session/[id]/feedback` → reflection `/session/[id]/reflection`.
+Outcome → **Reflection questions** → session scoreboard (totals and the two metrics from the last round only) → Continue → NPS `/session/[id]/feedback` → reflection `/session/[id]/reflection`.
 
 Reflection is the final screen.
 
@@ -374,13 +374,14 @@ Reflection is the final screen.
 
 ## 15. Reflection close
 
-Three questions, in this order:
+Four questions, only on this screen, in this order:
 
-1. Where do we assume we’re on the same page about what is “good” even without ever saying it out loud?
+1. Where do we assume we’re on the same page about what is “good” without saying it out loud?
 2. When a teammate's work doesn't seem to fit the picture, do you tend to stay quiet or speak up? What enables you (or might enable you) to voice your concerns?
-3. Suspicion often landed on someone doing their part. How do we check our read of a situation (or another team member) before we act on it?
+3. In the game, the Builders couldn't say what the picture was. At work, you can. Where are we acting like we can't?
+4. Suspicion often landed on someone doing their part. How do we check our read of a situation (or another team member) before we act on it?
 
-The bridge line in §11.7 is on the reflection screen above those questions, and on the scoreboard so the facilitator can read it.
+The scoreboard does not carry these questions.
 
 ---
 
@@ -400,7 +401,7 @@ The bridge line in §11.7 is on the reflection screen above those questions, and
 | 10 | Reactions rise and fade. They do not travel on a wave. `see_it` ships. |
 | 11 | There is no Check-in, Deal wait, or Final lock. Speech during turns is not captured. |
 | 12 | Device beat is the first explainer pane. |
-| 13 | Three discussion questions, in §15. The bridge line is a preface, not a fourth question. |
+| 13 | Four discussion questions, only on the reflection screen, in §15. The scoreboard is scores and the two metrics. |
 
 ---
 

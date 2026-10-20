@@ -8,7 +8,9 @@ type SessionReflectionViewProps = {
   prompt2?: string;
   /** Optional; shown after prompt2 when set. */
   prompt3?: string;
-  /** Optional line the facilitator reads before the two questions. */
+  /** Optional; shown after prompt3 when set. */
+  prompt4?: string;
+  /** Optional line the facilitator reads before the questions. */
   preface?: string;
 };
 
@@ -20,8 +22,11 @@ export function SessionReflectionView({
   prompt1 = DEFAULT_PROMPT_1,
   prompt2 = DEFAULT_PROMPT_2,
   prompt3,
+  prompt4,
   preface,
 }: SessionReflectionViewProps) {
+  const prompts = [prompt1, prompt2, prompt3, prompt4].filter((line): line is string => Boolean(line?.trim()));
+
   return (
     <main className="min-h-screen bg-warm-white px-5 py-12">
       <div className="mx-auto flex w-full max-w-lg flex-col gap-10">
@@ -34,28 +39,15 @@ export function SessionReflectionView({
           ) : null}
         </header>
 
-        <section>
-          <h2 className="font-display text-2xl font-semibold leading-snug text-unmute-navy">
-            {prompt1}
-          </h2>
-        </section>
-
-        {prompt3 ? (
-          <section>
-            <h2 className="font-display text-2xl font-semibold leading-snug text-unmute-navy">
-              {prompt2}
-            </h2>
-          </section>
-        ) : null}
-
-        <section className="space-y-8">
-          <h2 className="font-display text-2xl font-semibold leading-snug text-unmute-navy">
-            {prompt3 ?? prompt2}
-          </h2>
-          <p className="text-center font-body text-base text-slate">
-            See you next week.
-          </p>
-        </section>
+        {prompts.map((line, index) => {
+          const last = index === prompts.length - 1;
+          return (
+            <section key={line} className={last ? "space-y-8" : undefined}>
+              <h2 className="font-display text-2xl font-semibold leading-snug text-unmute-navy">{line}</h2>
+              {last ? <p className="text-center font-body text-base text-slate">See you next week.</p> : null}
+            </section>
+          );
+        })}
       </div>
     </main>
   );

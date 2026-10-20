@@ -764,7 +764,7 @@ function headerCopy(game: OtspGame, role: Role | null, pictureLabel: string | nu
     if (game.phase === "checkin") return { title: "Check-in", body: "One question. One sentence. Don't name the picture." };
     if (game.phase === "final_lock") return { title: "Final lock", body: "Last chance to lock a guess and a pin." };
     if (game.phase === "reveal") return { title: "Reveal", body: "Watch the board. Scores land at the end." };
-    if (game.phase === "scoreboard") return { title: "Session scores", body: BRIDGE_LINE };
+    if (game.phase === "scoreboard") return { title: "Session scores", body: "Totals from this session." };
     return { title: `Lap ${displayLap(game)}`, body: "Tile, square, Place." };
   }
   if (game.phase === "deal") {
