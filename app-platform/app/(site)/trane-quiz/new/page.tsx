@@ -2,6 +2,9 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { TraneNewForm } from "./trane-new-form";
 
 export const dynamic = "force-dynamic";
+// The catalog query URL never changes, so Next's fetch cache would keep serving
+// the old course list after a new course is seeded.
+export const fetchCache = "force-no-store";
 
 export default async function TraneQuizNewPage() {
   const admin = createServiceClient();

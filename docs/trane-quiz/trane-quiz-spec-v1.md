@@ -154,7 +154,7 @@ No SSO, no admin role, no separate operator account. Control of a live class = p
 
 Flow:
 
-- Course picker (seven courses)
+- Course picker (eight courses)
 - Class date (required)
 - Optional label
 - Create → show host URL (copy) + land on live console
@@ -359,10 +359,11 @@ Rules:
 | 05 | `value-based-pricing` | Value-Based Pricing | Dec 2025 |
 | 06 | `pgt-foundations` | **PGT Foundations** | Jan 2026 |
 | 07 | `business-storytelling` | **Business Storytelling** | Sep 2026 |
+| 08 | `voice-of-the-customer` | **Voice of the Customer** | Oct 2026 |
 
 Full stems, options, answer keys: [`trane-quiz-question-bank-v1.md`](./trane-quiz-question-bank-v1.md).
 
-PM courses 01–06: PDFs are the content source of truth. Course 07 (Business Storytelling) is sourced from `Trane_Business_Storytelling_Quiz.docx`.
+PM courses 01–06: PDFs are the content source of truth. Course 07 (Business Storytelling) is sourced from `Trane_Business_Storytelling_Quiz.docx`. Course 08 (Voice of the Customer) is the October 2026 knowledge check.
 
 ---
 
@@ -424,13 +425,14 @@ None blocking. Optional later:
 
 - [x] Course 06 display name = **PGT Foundations**
 - [x] Course 07 display name = **Business Storytelling**
+- [x] Course 08 display name = **Voice of the Customer**
 - [x] Two actors only (Facilitator + Participant)
 - [x] Facilitator auth = **per-offering host token** (Unmute-style)
 - [x] Create offering = unlisted `/trane-quiz/new` (link possession); control = host URL
 - [x] No L&D login — facilitator downloads PDF and emails it
 - [x] Brand tokens from Visual Standards Reference 2026-08-09
 - [x] Logo PNG from Seeklogo in repo for v1
-- [x] Courses 01–06: PDFs are content source. Course 07 (Business Storytelling) sourced from the Word knowledge check.
+- [x] Courses 01–06: PDFs are content source. Course 07 (Business Storytelling) sourced from the Word knowledge check. Course 08 (Voice of the Customer) sourced from the October 2026 knowledge check.
 - [x] **No edit after submit**
 - [x] **POST without PRE allowed**, with required participant confirmation; unpaired excluded from headline paired delta
 - [x] **End-of-class results for the respondent:** POST % + missed-question correct answers; paired respondents also see beginning vs end %

@@ -647,3 +647,95 @@ According to the course, audience engagement during delivery comes primarily fro
 - b. Contrast in pace, tone, and volume
 - c. Minimizing gestures to avoid distraction
 - d. Delivering a fully memorized script
+
+---
+
+## Course 08 — Voice of the Customer
+
+**Slug:** `voice-of-the-customer`  
+**Revision:** October 2026  
+**Display title:** Voice of the Customer  
+**Source:** Knowledge check supplied October 2026
+
+| # | Correct |
+|---|---------|
+| 1 | `c` |
+| 2 | `a` |
+| 3 | `d` |
+| 4 | `b` |
+| 5 | `a` |
+| 6 | `c` |
+| 7 | `d` |
+| 8 | `b` |
+| 9 | `a` |
+| 10 | `c` |
+
+### Q1
+A customer says, "We need a unit with a bigger compressor." A demand-side approach:
+- a. Adds it to requirements, since customers know their own operating needs best
+- b. Surveys other customers to see how many share the same request
+- c. Treats it as a proposed solution and probes the underlying job
+- d. Benchmarks compressor sizes against competitors to confirm the gap
+
+### Q2
+Which is an unmet need, not a feature request?
+- a. "I lose my first hour each day figuring out which units need attention"
+- b. "Add a red warning light so we can see when a unit has a fault"
+- c. "I want a mobile app so I can check on the units from anywhere"
+- d. "Add a fourth fan speed so we have more control on mild days"
+
+### Q3
+A prospect loves your new system but hasn't switched. Four Forces says the most useful next question is:
+- a. How do we make the system even more appealing to them?
+- b. Which competing system are they weighing against ours?
+- c. What discount or incentive would be enough to move them?
+- d. What anxiety or habit is holding them to their current setup?
+
+### Q4
+You have ten assumptions behind a concept. Test first the ones that are:
+- a. Most likely to be true, so you build early momentum
+- b. Both highly uncertain and fatal if wrong
+- c. Fastest and cheapest to test with existing customers
+- d. All of them equally, working through the list in order
+
+### Q5
+To learn WHY customers abandon a workflow, the weakest method is:
+- a. A large-sample survey
+- b. Contextual inquiry
+- c. One-on-one discovery interviews
+- d. On-site observation
+
+### Q6
+Early in discovery, before you have a concept, the right posture is:
+- a. Evaluative: test whether your solution works
+- b. Confirmatory: validate the business case
+- c. Generative: learn what problem is worth solving
+- d. Quantitative: size the market before investing further
+
+### Q7
+Which question yields the most trustworthy insight?
+- a. "Wouldn't a faster startup save your team time each week?"
+- b. "How much do you like this feature compared to what you use today?"
+- c. "How much would you pay for a unit that starts up twice as fast?"
+- d. "Walk me through the last time you started up a unit."
+
+### Q8
+A customer enthusiastically praises your concept in an interview. The disciplined read is:
+- a. Strong validation; log it green in the validation matrix
+- b. Praise is weak evidence; probe what they've actually done
+- c. Discard it entirely; customers tend to exaggerate in interviews
+- d. Ask them to rate the concept 1–10 to quantify their enthusiasm
+
+### Q9
+Which is an insight, not an observation?
+- a. "Operators don't trust the dashboard enough to rely on it alone"
+- b. "Three of five operators kept a paper log beside the dashboard"
+- c. "Operators brought up the dashboard four times across the interviews"
+- d. "The dashboard was open on screen during every site interview"
+
+### Q10
+One influential customer loudly demands a feature no other research supports. Opportunity scoring and the validation matrix tell you to:
+- a. Build it; they're a major account and others will likely follow
+- b. Ignore vocal customers entirely; they skew the data
+- c. Score it on importance vs. satisfaction across segments first
+- d. Add it to Gate 1 as a validated customer need

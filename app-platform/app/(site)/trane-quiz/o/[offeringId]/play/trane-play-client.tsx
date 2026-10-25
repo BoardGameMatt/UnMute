@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { answerSelectionKey } from "@/lib/trane-quiz/answer-selection";
 
 type Option = { key: string; label: string };
 type Question = {
@@ -63,11 +64,15 @@ export function TranePlayClient({ offeringId }: TranePlayClientProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [dismissedUnpaired, setDismissedUnpaired] = useState(false);
+  const loadSeq = useRef(0);
+  const questionKeyRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
     const res = await fetch(`/api/trane-quiz/o/${offeringId}/state`, {
       cache: "no-store",
     });
+    if (seq !== loadSeq.current) return;
     if (res.status === 401) {
       setError("Not joined — scan the QR again.");
       return;
@@ -77,8 +82,18 @@ export function TranePlayClient({ offeringId }: TranePlayClientProps) {
       return;
     }
     const data = (await res.json()) as PlayState;
+    if (seq !== loadSeq.current) return;
+    const nextKey = answerSelectionKey(
+      data.activePhase,
+      data.questions[data.currentQuestionIndex]?.id
+    );
+    // Polls land every few seconds during a question. Only drop the tap when
+    // the question (or pre/post pass) actually changes.
+    if (questionKeyRef.current !== nextKey) {
+      questionKeyRef.current = nextKey;
+      setSelected(null);
+    }
     setState(data);
-    setSelected(null);
     try {
       window.localStorage.setItem(backupKey(offeringId), "1");
     } catch {

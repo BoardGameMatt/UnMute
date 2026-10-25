@@ -1670,6 +1670,243 @@
           "correct_option": "b"
         }
       ]
+    },
+    {
+      "slug": "voice-of-the-customer",
+      "title": "Voice of the Customer",
+      "revision_label": "October 2026",
+      "questions": [
+        {
+          "sort_order": 1,
+          "stem": "A customer says, \"We need a unit with a bigger compressor.\" A demand-side approach:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Adds it to requirements, since customers know their own operating needs best"
+            },
+            {
+              "key": "b",
+              "label": "Surveys other customers to see how many share the same request"
+            },
+            {
+              "key": "c",
+              "label": "Treats it as a proposed solution and probes the underlying job"
+            },
+            {
+              "key": "d",
+              "label": "Benchmarks compressor sizes against competitors to confirm the gap"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 2,
+          "stem": "Which is an unmet need, not a feature request?",
+          "options": [
+            {
+              "key": "a",
+              "label": "\"I lose my first hour each day figuring out which units need attention\""
+            },
+            {
+              "key": "b",
+              "label": "\"Add a red warning light so we can see when a unit has a fault\""
+            },
+            {
+              "key": "c",
+              "label": "\"I want a mobile app so I can check on the units from anywhere\""
+            },
+            {
+              "key": "d",
+              "label": "\"Add a fourth fan speed so we have more control on mild days\""
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 3,
+          "stem": "A prospect loves your new system but hasn't switched. Four Forces says the most useful next question is:",
+          "options": [
+            {
+              "key": "a",
+              "label": "How do we make the system even more appealing to them?"
+            },
+            {
+              "key": "b",
+              "label": "Which competing system are they weighing against ours?"
+            },
+            {
+              "key": "c",
+              "label": "What discount or incentive would be enough to move them?"
+            },
+            {
+              "key": "d",
+              "label": "What anxiety or habit is holding them to their current setup?"
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 4,
+          "stem": "You have ten assumptions behind a concept. Test first the ones that are:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Most likely to be true, so you build early momentum"
+            },
+            {
+              "key": "b",
+              "label": "Both highly uncertain and fatal if wrong"
+            },
+            {
+              "key": "c",
+              "label": "Fastest and cheapest to test with existing customers"
+            },
+            {
+              "key": "d",
+              "label": "All of them equally, working through the list in order"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 5,
+          "stem": "To learn WHY customers abandon a workflow, the weakest method is:",
+          "options": [
+            {
+              "key": "a",
+              "label": "A large-sample survey"
+            },
+            {
+              "key": "b",
+              "label": "Contextual inquiry"
+            },
+            {
+              "key": "c",
+              "label": "One-on-one discovery interviews"
+            },
+            {
+              "key": "d",
+              "label": "On-site observation"
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 6,
+          "stem": "Early in discovery, before you have a concept, the right posture is:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Evaluative: test whether your solution works"
+            },
+            {
+              "key": "b",
+              "label": "Confirmatory: validate the business case"
+            },
+            {
+              "key": "c",
+              "label": "Generative: learn what problem is worth solving"
+            },
+            {
+              "key": "d",
+              "label": "Quantitative: size the market before investing further"
+            }
+          ],
+          "correct_option": "c"
+        },
+        {
+          "sort_order": 7,
+          "stem": "Which question yields the most trustworthy insight?",
+          "options": [
+            {
+              "key": "a",
+              "label": "\"Wouldn't a faster startup save your team time each week?\""
+            },
+            {
+              "key": "b",
+              "label": "\"How much do you like this feature compared to what you use today?\""
+            },
+            {
+              "key": "c",
+              "label": "\"How much would you pay for a unit that starts up twice as fast?\""
+            },
+            {
+              "key": "d",
+              "label": "\"Walk me through the last time you started up a unit.\""
+            }
+          ],
+          "correct_option": "d"
+        },
+        {
+          "sort_order": 8,
+          "stem": "A customer enthusiastically praises your concept in an interview. The disciplined read is:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Strong validation; log it green in the validation matrix"
+            },
+            {
+              "key": "b",
+              "label": "Praise is weak evidence; probe what they've actually done"
+            },
+            {
+              "key": "c",
+              "label": "Discard it entirely; customers tend to exaggerate in interviews"
+            },
+            {
+              "key": "d",
+              "label": "Ask them to rate the concept 1–10 to quantify their enthusiasm"
+            }
+          ],
+          "correct_option": "b"
+        },
+        {
+          "sort_order": 9,
+          "stem": "Which is an insight, not an observation?",
+          "options": [
+            {
+              "key": "a",
+              "label": "\"Operators don't trust the dashboard enough to rely on it alone\""
+            },
+            {
+              "key": "b",
+              "label": "\"Three of five operators kept a paper log beside the dashboard\""
+            },
+            {
+              "key": "c",
+              "label": "\"Operators brought up the dashboard four times across the interviews\""
+            },
+            {
+              "key": "d",
+              "label": "\"The dashboard was open on screen during every site interview\""
+            }
+          ],
+          "correct_option": "a"
+        },
+        {
+          "sort_order": 10,
+          "stem": "One influential customer loudly demands a feature no other research supports. Opportunity scoring and the validation matrix tell you to:",
+          "options": [
+            {
+              "key": "a",
+              "label": "Build it; they're a major account and others will likely follow"
+            },
+            {
+              "key": "b",
+              "label": "Ignore vocal customers entirely; they skew the data"
+            },
+            {
+              "key": "c",
+              "label": "Score it on importance vs. satisfaction across segments first"
+            },
+            {
+              "key": "d",
+              "label": "Add it to Gate 1 as a validated customer need"
+            }
+          ],
+          "correct_option": "c"
+        }
+      ]
     }
   ]
 }
