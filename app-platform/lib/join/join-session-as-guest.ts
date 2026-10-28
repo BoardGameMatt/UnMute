@@ -128,6 +128,19 @@ export async function joinSessionAsGuestCore(input: {
     }
   }
 
+  if (protocolSlug === "say-less") {
+    const { count, error: countErr } = await supabase
+      .from("session_participants")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { ok: false, error: "Could not count the room. Try again." };
+    }
+    if ((count ?? 0) >= 14) {
+      return { ok: false, error: "This moment is full." };
+    }
+  }
+
   const { data: team, error: teamErr } = await supabase
     .from("teams")
     .select("id, require_auth")

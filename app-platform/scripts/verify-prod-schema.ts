@@ -93,6 +93,12 @@ const CHECKS: SchemaCheck[] = [
   { migration: "031", moment: "On the Same Page", table: "otsp_rounds" },
   { migration: "031", moment: "On the Same Page", table: "otsp_events" },
   { migration: "031", moment: "On the Same Page", table: "otsp_rotation_debt" },
+  { migration: "032", moment: "Say Less", table: "say_less_cards" },
+  { migration: "032", moment: "Say Less", table: "say_less_sessions" },
+  { migration: "032", moment: "Say Less", table: "say_less_teams" },
+  { migration: "032", moment: "Say Less", table: "say_less_previews" },
+  { migration: "032", moment: "Say Less", table: "say_less_turns" },
+  { migration: "032", moment: "Say Less", table: "say_less_card_events" },
 ];
 
 async function checkObject(

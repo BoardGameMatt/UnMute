@@ -920,6 +920,105 @@ export type TalkTrackScoreNudgeInsert = Omit<TalkTrackScoreNudge, "id" | "create
   created_at?: string;
 };
 
+export interface SayLessCard {
+  id: string;
+  content_pack_id: string;
+  category: string;
+  name: string;
+  hint: string;
+  active: boolean;
+  sort_index: number;
+  created_at: string;
+}
+
+export type SayLessCardInsert = Omit<SayLessCard, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+  active?: boolean;
+  sort_index?: number;
+};
+
+export interface SayLessSession {
+  session_id: string;
+  phase: string;
+  category_a: string;
+  category_b: string;
+  deck_card_ids: string[];
+  round: number;
+  pile_card_ids: string[];
+  first_team: string;
+  next_team: string;
+  cursor_a: number;
+  cursor_b: number;
+  current_turn_id: string | null;
+  phase_deadline: string | null;
+  hold_started_at: string | null;
+  paused: boolean;
+  version: number;
+  last_turn_got_it: number | null;
+  last_turn_end_reason: string | null;
+  round_1_ended_early: boolean;
+  round_2_ended_early: boolean;
+  created_at: string;
+}
+
+export type SayLessSessionInsert = Omit<SayLessSession, "created_at"> & {
+  created_at?: string;
+};
+
+export interface SayLessTeam {
+  id: string;
+  session_id: string;
+  label: string;
+  member_ids: string[];
+  created_at: string;
+}
+
+export type SayLessTeamInsert = Omit<SayLessTeam, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export interface SayLessPreview {
+  session_id: string;
+  participant_id: string;
+  card_ids: string[];
+  created_at: string;
+}
+
+export type SayLessPreviewInsert = Omit<SayLessPreview, "created_at"> & {
+  created_at?: string;
+};
+
+export interface SayLessTurn {
+  id: string;
+  session_id: string;
+  round: number;
+  team_id: string;
+  clue_giver_id: string;
+  started_at: string | null;
+  ended_at: string | null;
+  end_reason: string | null;
+  created_at: string;
+}
+
+export type SayLessTurnInsert = Omit<SayLessTurn, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export interface SayLessCardEvent {
+  id: string;
+  turn_id: string;
+  card_id: string;
+  outcome: string;
+  at: string;
+}
+
+export type SayLessCardEventInsert = Omit<SayLessCardEvent, "id"> & {
+  id?: string;
+};
+
 export interface ZoningRightsBuilding {
   id: string;
   content_pack_id: string;
@@ -1376,6 +1475,42 @@ export type Database = {
         Row: TalkTrackScoreNudge;
         Insert: TalkTrackScoreNudgeInsert;
         Update: Partial<TalkTrackScoreNudgeInsert>;
+        Relationships: [];
+      };
+      say_less_cards: {
+        Row: SayLessCard;
+        Insert: SayLessCardInsert;
+        Update: Partial<SayLessCardInsert>;
+        Relationships: [];
+      };
+      say_less_sessions: {
+        Row: SayLessSession;
+        Insert: SayLessSessionInsert;
+        Update: Partial<SayLessSessionInsert>;
+        Relationships: [];
+      };
+      say_less_teams: {
+        Row: SayLessTeam;
+        Insert: SayLessTeamInsert;
+        Update: Partial<SayLessTeamInsert>;
+        Relationships: [];
+      };
+      say_less_previews: {
+        Row: SayLessPreview;
+        Insert: SayLessPreviewInsert;
+        Update: Partial<SayLessPreviewInsert>;
+        Relationships: [];
+      };
+      say_less_turns: {
+        Row: SayLessTurn;
+        Insert: SayLessTurnInsert;
+        Update: Partial<SayLessTurnInsert>;
+        Relationships: [];
+      };
+      say_less_card_events: {
+        Row: SayLessCardEvent;
+        Insert: SayLessCardEventInsert;
+        Update: Partial<SayLessCardEventInsert>;
         Relationships: [];
       };
       zoning_rights_buildings: {

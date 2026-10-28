@@ -184,6 +184,16 @@ async function main(): Promise<void> {
       config_schema: {},
     },
     {
+      slug: "say-less",
+      name: "Say Less",
+      description:
+        "Two teams build a shared shorthand: describe freely, then the same cards in one word.",
+      type: "realtime",
+      min_players: 4,
+      max_players: 14,
+      config_schema: {},
+    },
+    {
       slug: "zoning-rights",
       name: "Zoning Rights",
       description:

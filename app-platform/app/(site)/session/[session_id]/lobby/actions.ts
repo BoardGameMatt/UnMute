@@ -9,6 +9,7 @@ import { resetAirtimeToLobby, startAirtime } from "@/lib/protocols/airtime/actio
 import { AIRTIME_CONFIG } from "@/lib/protocols/airtime/config";
 import { OTSP } from "@/lib/protocols/on-the-same-page/config";
 import { resetOnTheSamePageToLobby, startOnTheSamePage } from "@/lib/protocols/on-the-same-page/actions";
+import { resetSayLessToLobby, startSayLess } from "@/lib/protocols/say-less/actions";
 import { resetRankAndFileToLobby, startRankAndFile } from "@/lib/protocols/rank-and-file/actions";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import { resetCodeSwitchToLobby, startCodeSwitch } from "@/lib/protocols/code-switch/actions";
@@ -270,6 +271,22 @@ export async function startSessionAction(
     }
   }
 
+  if (protocolSlug === "say-less") {
+    const { count, error: countErr } = await supabase
+      .from("session_participants")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+    if (countErr) {
+      return { error: "Could not count the room." };
+    }
+    if ((count ?? 0) < 4) {
+      return { error: "Say Less needs at least 4 people." };
+    }
+    if ((count ?? 0) > 14) {
+      return { error: "Say Less holds 14 people at most." };
+    }
+  }
+
   // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
@@ -386,6 +403,20 @@ export async function startSessionAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not start On the Same Page.",
+      };
+    }
+  }
+
+  if (protocolSlug === "say-less") {
+    try {
+      const admin = createServiceClient();
+      const started = await startSayLess(admin, sessionId);
+      if (!started.ok) {
+        return { error: started.error };
+      }
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not start Say Less.",
       };
     }
   }
@@ -565,6 +596,17 @@ export async function returnToLobbyAction(
     } catch (err) {
       return {
         error: err instanceof Error ? err.message : "Could not reset On the Same Page.",
+      };
+    }
+  }
+
+  if (protocolSlug === "say-less") {
+    try {
+      const admin = createServiceClient();
+      await resetSayLessToLobby(admin, sessionId);
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : "Could not reset Say Less.",
       };
     }
   }

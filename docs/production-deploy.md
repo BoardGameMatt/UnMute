@@ -97,6 +97,7 @@ Open `app-platform/supabase/verify-schema.sql`, run the full script. Any row in 
 | Zoning Rights | `zoning-rights` | Start session → `zoning_rights_*` tables (needs `021`) |
 | I Know What You Meme | `i-know-what-you-meme` | Start session → `ikwym_*` tables (needs `023`). Giphy: `NEXT_PUBLIC_GIPHY_API_KEY` on unmute-app + redeploy. |
 | Airtime | `airtime` | Start session → `airtime_sessions` / `airtime_boats` (needs `030`) |
+| Say Less | `say-less` | Start session → `say_less_*` tables (needs `032`). Cards are in the migration. |
 
 ### Content seeds (after schema, when needed)
 
@@ -147,6 +148,8 @@ All files live in `app-platform/supabase/migrations/`. Production must have **ev
 | 028 | `028_the_truth_is.sql` | The Truth Is private session and entries |
 | 029 | `029_truth_is_atomic_save.sql` | The Truth Is atomic save function |
 | 030 | `030_airtime.sql` | Airtime protocol row + `airtime_*` tables |
+| 031 | `031_on_the_same_page.sql` | On the Same Page |
+| 032 | `032_say_less.sql` | Say Less protocol, Pack A (75 cards), live tables |
 
 When adding migration `021+`, update this table, `verify-schema.sql`, and `scripts/verify-prod-schema.ts`.
 

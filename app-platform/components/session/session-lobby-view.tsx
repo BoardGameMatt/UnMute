@@ -291,7 +291,7 @@ export function SessionLobbyView({
                 ? "Need 2 to start."
               : protocolSlug === "on-the-same-page"
                 ? "Need 8 to start."
-              : protocolSlug === "code-switch"
+              : protocolSlug === "code-switch" || protocolSlug === "say-less"
                 ? "Need 4 to start."
               : `Start unlocks when at least ${minPlayers} ${
                   protocolSlug === "cover-story" ? "players" : "people"

@@ -15,6 +15,7 @@ import "./code-switch";
 import "./rank-and-file";
 import "./airtime";
 import "./on-the-same-page";
+import "./say-less";
 
 export {
   displayProtocolName,
