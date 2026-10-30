@@ -1,0 +1,34 @@
+# Compile the product the same way Vercel does: committed files only.
+# Catches missing @/ imports before unmute-app production can fail.
+name: App build
+
+on:
+  pull_request:
+    paths:
+      - "app-platform/**"
+      - ".github/workflows/app-platform-build.yml"
+  push:
+    branches: [main]
+    paths:
+      - "app-platform/**"
+      - ".github/workflows/app-platform-build.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app-platform
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: build-placeholder
+      SUPABASE_SERVICE_ROLE_KEY: build-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: app-platform/package-lock.json
+      - run: npm ci
+      - run: npm run build

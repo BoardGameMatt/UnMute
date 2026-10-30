@@ -1,0 +1,183 @@
+/**
+ * Verify production Supabase schema matches repo migrations.
+ * Uses .env.local (service role). Exit 1 if anything is missing.
+ *
+ * npm run verify:schema
+ */
+
+import { config } from "dotenv";
+import { resolve } from "node:path";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+config({ path: resolve(process.cwd(), ".env.local") });
+
+type SchemaCheck = {
+  migration: string;
+  moment: string;
+  table: string;
+  column?: string;
+};
+
+const CHECKS: SchemaCheck[] = [
+  { migration: "001", moment: "Core", table: "sessions" },
+  { migration: "001", moment: "Core", table: "protocols" },
+  { migration: "003", moment: "Draw It By Ear", table: "protocol_images" },
+  { migration: "003", moment: "Draw It By Ear", table: "dibe_teams" },
+  { migration: "002", moment: "All Moments", table: "session_feedback" },
+  { migration: "005", moment: "Lead", table: "sessions", column: "designated_lead_name" },
+  { migration: "006", moment: "Host link", table: "sessions", column: "host_token" },
+  { migration: "008", moment: "Wrong Answers Only", table: "wao_questions" },
+  { migration: "008", moment: "Wrong Answers Only", table: "wao_pairs" },
+  {
+    migration: "009",
+    moment: "Wrong Answers Only",
+    table: "session_participants",
+    column: "department",
+  },
+  { migration: "013", moment: "Trane Quiz", table: "trane_offerings" },
+  { migration: "013", moment: "Trane Quiz", table: "trane_participants" },
+  { migration: "014", moment: "Cover Story", table: "cover_story_agencies" },
+  { migration: "014", moment: "Cover Story", table: "cover_story_deals" },
+  { migration: "014", moment: "Cover Story", table: "cover_story_sessions" },
+  {
+    migration: "016",
+    moment: "Cover Story",
+    table: "cover_story_word_logs",
+    column: "note",
+  },
+  {
+    migration: "018",
+    moment: "Cover Story",
+    table: "cover_story_deals",
+    column: "pick_token",
+  },
+  { migration: "019", moment: "Talk Track", table: "content_packs" },
+  { migration: "019", moment: "Talk Track", table: "talk_track_cards" },
+  { migration: "019", moment: "Talk Track", table: "talk_track_sessions" },
+  { migration: "019", moment: "Talk Track", table: "sessions", column: "content_pack_id" },
+  { migration: "020", moment: "Unmute Console", table: "clients" },
+  { migration: "020", moment: "Unmute Console", table: "staff_profiles" },
+  { migration: "020", moment: "Unmute Console", table: "session_events" },
+  { migration: "020", moment: "Unmute Console", table: "teams", column: "client_id" },
+  { migration: "021", moment: "Zoning Rights", table: "zoning_rights_buildings" },
+  { migration: "021", moment: "Zoning Rights", table: "zoning_rights_sessions" },
+  { migration: "021", moment: "Zoning Rights", table: "zoning_rights_rounds" },
+  { migration: "021", moment: "Zoning Rights", table: "zoning_rights_guesses" },
+  // 022 drops team_round_index <= 3; no new table/column to detect.
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_prompts" },
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_sessions" },
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_responses" },
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_reveal_items" },
+  { migration: "023", moment: "I Know What You Meme", table: "ikwym_guesses" },
+  { migration: "025", moment: "SwitchCode", table: "code_switch_words" },
+  { migration: "025", moment: "SwitchCode", table: "code_switch_sessions" },
+  { migration: "025", moment: "SwitchCode", table: "code_switch_rounds" },
+  { migration: "025", moment: "SwitchCode", table: "code_switch_clues" },
+  { migration: "027", moment: "Rank and File", table: "rank_and_file_subjects" },
+  { migration: "027", moment: "Rank and File", table: "rank_and_file_sessions" },
+  { migration: "027", moment: "Rank and File", table: "rank_and_file_rounds" },
+  { migration: "027", moment: "Rank and File", table: "rank_and_file_deals" },
+  { migration: "028", moment: "The Truth Is", table: "truth_is_sessions" },
+  { migration: "028", moment: "The Truth Is", table: "truth_is_entries" },
+  { migration: "029", moment: "The Truth Is", table: "truth_is_sessions", column: "write_version" },
+  { migration: "030", moment: "Airtime", table: "airtime_sessions" },
+  { migration: "030", moment: "Airtime", table: "airtime_boats" },
+  { migration: "030", moment: "Airtime", table: "airtime_boat_members" },
+  { migration: "030", moment: "Airtime", table: "airtime_dives" },
+  { migration: "030", moment: "Airtime", table: "airtime_boat_dives" },
+  { migration: "030", moment: "Airtime", table: "airtime_diver_dives" },
+  { migration: "030", moment: "Airtime", table: "airtime_choices" },
+  { migration: "030", moment: "Airtime", table: "airtime_events" },
+  { migration: "031", moment: "On the Same Page", table: "otsp_pictures" },
+  { migration: "031", moment: "On the Same Page", table: "otsp_sessions" },
+  { migration: "031", moment: "On the Same Page", table: "otsp_rounds" },
+  { migration: "031", moment: "On the Same Page", table: "otsp_events" },
+  { migration: "031", moment: "On the Same Page", table: "otsp_rotation_debt" },
+  { migration: "032", moment: "Say Less", table: "say_less_cards" },
+  { migration: "032", moment: "Say Less", table: "say_less_sessions" },
+  { migration: "032", moment: "Say Less", table: "say_less_teams" },
+  { migration: "032", moment: "Say Less", table: "say_less_previews" },
+  { migration: "032", moment: "Say Less", table: "say_less_turns" },
+  { migration: "032", moment: "Say Less", table: "say_less_card_events" },
+];
+
+async function checkObject(
+  supabase: SupabaseClient,
+  check: SchemaCheck
+): Promise<string | null> {
+  const select = check.column ?? "*";
+  const { error } = await supabase.from(check.table).select(select).limit(1);
+
+  if (!error) return null;
+
+  const message = error.message ?? "unknown error";
+  if (
+    message.includes("schema cache") ||
+    message.includes("does not exist") ||
+    message.includes("Could not find")
+  ) {
+    const target = check.column ? `${check.table}.${check.column}` : check.table;
+    return `[${check.moment}] missing ${target} (migration ${check.migration}) — ${message}`;
+  }
+
+  return null;
+}
+
+async function main(): Promise<void> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local");
+    process.exit(1);
+  }
+
+  const supabase = createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const host = new URL(url).hostname;
+  console.log(`Verifying schema against ${host} …\n`);
+
+  const failures: string[] = [];
+  for (const check of CHECKS) {
+    const failure = await checkObject(supabase, check);
+    if (failure) failures.push(failure);
+  }
+  const { data: transactionsReady, error: transactionError } = await supabase.rpc("workshop_transaction_schema_ready");
+  if (transactionError || transactionsReady !== true) {
+    failures.push(`[Workshop transactions] missing or unavailable atomic transition functions (migration 033) — ${transactionError?.message ?? "schema probe returned false"}`);
+  }
+  const { data: recoveryReady, error: recoveryError } = await supabase.rpc("workshop_browser_recovery_schema_ready");
+  if (recoveryError || recoveryReady !== true) {
+    failures.push(`[Browser input recovery] missing or unavailable durable input receipts (migration 034) — ${recoveryError?.message ?? "schema probe returned false"}`);
+  }
+  const { data: sessionsReady, error: sessionsError } = await supabase.rpc("workshop_session_reliability_schema_ready");
+  if (sessionsError || sessionsReady !== true) {
+    failures.push(`[Session recovery/lifecycle] missing snapshot revision or lifecycle functions (migrations 035/036) — ${sessionsError?.message ?? "schema probe returned false"}`);
+  }
+
+  const { data: remainingReady, error: remainingError } = await supabase.rpc("workshop_remaining_reliability_schema_ready");
+  if (remainingError || remainingReady !== true) {
+    failures.push(`[Remaining protocol recovery] missing transaction, drawing, or pair input guards (migrations 037/038) — ${remainingError?.message ?? "schema probe returned false"}`);
+  }
+
+  if (failures.length === 0) {
+    console.log("All schema checks passed.");
+    console.log("\nNext: smoke-test affected Moments, then share join codes.");
+    return;
+  }
+
+  console.error(`Schema verification failed (${failures.length} issue(s)):\n`);
+  for (const failure of failures) {
+    console.error(`  • ${failure}`);
+  }
+  console.error("\nApply pending migrations — see docs/production-deploy.md");
+  console.error("  cd app-platform && npx supabase db push");
+  console.error("  or run files in supabase/migrations/ in Supabase SQL editor.");
+  process.exit(1);
+}
+
+main().catch((err: unknown) => {
+  console.error(err);
+  process.exit(1);
+});

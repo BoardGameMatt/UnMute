@@ -1,0 +1,207 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { SessionProvider } from "@/components/providers/SessionProvider";
+import { BackToLobbyLink } from "@/components/session/back-to-lobby-link";
+import { SessionCompletedRedirect } from "@/components/session/session-completed-redirect";
+import { PARTICIPANT_COOKIE } from "@/lib/constants";
+import { displayProtocolName, getProtocol } from "@/lib/protocols";
+import { createClient } from "@/lib/supabase/server";
+import type { Session, SessionStatus } from "@/lib/types/database";
+
+type SessionPageProps = {
+  params: { session_id: string };
+};
+
+type ProtocolEmbed = {
+  slug: string;
+  name: string;
+};
+
+function protocolFromSession(session: {
+  protocols: ProtocolEmbed | ProtocolEmbed[] | null;
+}): { slug: string; name: string } {
+  const raw = session.protocols;
+  if (raw == null) {
+    return { slug: "", name: "Session" };
+  }
+  const row = Array.isArray(raw) ? raw[0] : raw;
+  if (!row || typeof row !== "object") {
+    return { slug: "", name: "Session" };
+  }
+  return {
+    slug: row.slug ?? "",
+    name: displayProtocolName(row.slug ?? "", row.name ?? "Session"),
+  };
+}
+
+export default async function SessionPage({ params }: SessionPageProps) {
+  const sessionId = params.session_id;
+  const supabase = createClient();
+
+  const { data: session, error: sessionErr } = await supabase
+    .from("sessions")
+    .select(
+      "id, protocol_id, team_id, status, lifecycle_version, join_code, designated_lead_name, host_token, started_at, completed_at, created_at, protocol_slot_id, protocols ( slug, name )"
+    )
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (sessionErr || !session) {
+    redirect("/join");
+  }
+
+  const sessionRow = session as typeof session & {
+    protocols: ProtocolEmbed | ProtocolEmbed[] | null;
+  };
+
+  const { slug: protocolSlug, name: protocolName } = protocolFromSession(sessionRow);
+
+  const cookieStore = cookies();
+  const participantId = cookieStore.get(PARTICIPANT_COOKIE)?.value ?? null;
+
+  if (!participantId) {
+    redirect("/join");
+  }
+
+  const { data: sessionLink, error: linkErr } = await supabase
+    .from("session_participants")
+    .select("role_in_session")
+    .eq("session_id", sessionId)
+    .eq("participant_id", participantId)
+    .maybeSingle();
+
+  if (linkErr) {
+    return (
+      <main className="min-h-screen bg-warm-white px-5 py-12">
+        <div className="mx-auto max-w-md text-center">
+          <p className="text-signal-red" role="alert">
+            Could not load your place in this session.
+          </p>
+          <BackToLobbyLink sessionId={sessionId} />
+        </div>
+      </main>
+    );
+  }
+
+  if (!sessionLink) {
+    return (
+      <main className="min-h-screen bg-warm-white px-5 py-12">
+        <div className="mx-auto max-w-md text-center">
+          <h1 className="font-display text-2xl font-bold text-unmute-navy">
+            Not in this session
+          </h1>
+          <p className="mt-3 font-body text-slate">
+            Join with the session code first, then open this link again.
+          </p>
+          <BackToLobbyLink sessionId={sessionId} />
+        </div>
+      </main>
+    );
+  }
+
+  const { data: participant, error: participantErr } = await supabase
+    .from("participants")
+    .select(
+      "id, team_id, person_id, display_name, role, avatar_seed, joined_at"
+    )
+    .eq("id", participantId)
+    .maybeSingle();
+
+  if (participantErr || !participant) {
+    return (
+      <main className="min-h-screen bg-warm-white px-5 py-12">
+        <div className="mx-auto max-w-md text-center">
+          <p className="text-signal-red" role="alert">
+            Could not load participant profile.
+          </p>
+          <BackToLobbyLink sessionId={sessionId} />
+        </div>
+      </main>
+    );
+  }
+
+  const sessionStatus = sessionRow.status as SessionStatus;
+  if (sessionStatus === "cancelled") {
+    return (
+      <main className="min-h-screen bg-warm-white px-5 py-12">
+        <div className="mx-auto max-w-md text-center">
+          <h1 className="font-display text-2xl font-bold text-unmute-navy">
+            This session has ended
+          </h1>
+          <p className="mt-3 font-body text-slate">
+            Staff cancelled this session. You can close this page.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (sessionStatus === "completed") {
+    if (protocolSlug === "wrong-answers-only") {
+      redirect(`/session/${sessionId}/wao-scoreboard`);
+    }
+    if (protocolSlug === "zoning-rights") {
+      redirect(`/session/${sessionId}/zoning-rights-scoreboard`);
+    }
+    redirect(`/session/${sessionId}/feedback`);
+  }
+
+  if (sessionStatus === "lobby") {
+    return (
+      <main className="min-h-screen bg-warm-white px-5 py-12">
+        <div className="mx-auto max-w-md text-center">
+          <h1 className="font-display text-2xl font-bold text-unmute-navy">
+            Session not started yet
+          </h1>
+          <p className="mt-3 font-body text-slate">
+            This session is still in the lobby. When everyone is ready, the lead
+            can start from the lobby screen.
+          </p>
+          <BackToLobbyLink sessionId={sessionId} />
+        </div>
+      </main>
+    );
+  }
+
+  const definition = protocolSlug ? getProtocol(protocolSlug) : undefined;
+  const role = sessionLink.role_in_session;
+
+  return (
+    <main className="min-h-screen bg-warm-white py-12">
+      <SessionProvider
+        session={sessionRow as unknown as Session}
+        currentParticipant={participant}
+        roleInSession={role}
+        protocolName={protocolName}
+      >
+        <SessionCompletedRedirect
+          sessionId={sessionId}
+          href={
+            protocolSlug === "wrong-answers-only"
+              ? `/session/${sessionId}/wao-scoreboard`
+              : protocolSlug === "zoning-rights"
+                ? `/session/${sessionId}/zoning-rights-scoreboard`
+              : protocolSlug === "cover-story"
+                ? `/session/${sessionId}/reflection`
+                : `/session/${sessionId}/feedback`
+          }
+        />
+        {definition ? (
+          <definition.component
+            sessionId={sessionId}
+            participantId={participantId}
+            role={role}
+            teamId={sessionRow.team_id}
+          />
+        ) : (
+          <div className="mx-auto max-w-lg px-6 text-center">
+            <h1 className="font-display text-2xl font-semibold text-unmute-navy">
+              Protocol coming soon
+            </h1>
+            <p className="mt-3 font-body text-lg text-slate">{protocolName}</p>
+          </div>
+        )}
+      </SessionProvider>
+    </main>
+  );
+}

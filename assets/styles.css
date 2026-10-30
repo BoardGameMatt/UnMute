@@ -1,0 +1,303 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --color-ink: #0F2240;
+  --color-ink-soft: #4A5A78;
+  --color-accent: #F5A623;
+  --color-accent-2: #C1442E;
+  --color-base: #FFFFFF;
+  --color-base-warm: #F7F5F1;
+  --color-line: rgba(15,34,64,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--color-base);
+  color: var(--color-ink);
+  font-family: 'Inter', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+:focus-visible { outline: 2px solid var(--color-accent-2); outline-offset: 3px; }
+
+/* .wrap sets HORIZONTAL padding only, via longhand. A `padding` shorthand here
+   out-specifies the element-level rules on nav/section/header and silently zeroes
+   their vertical rhythm. */
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: 40px; padding-right: 40px; }
+
+/* NAV */
+nav { display: flex; align-items: center; justify-content: space-between; gap: 16px 20px; flex-wrap: wrap; padding-top: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--color-line); }
+.logo { display: flex; align-items: center; flex-shrink: 0; line-height: 0; text-decoration: none; }
+.logo img { height: 36px; width: auto; display: block; }
+ul.nav-links { display: flex; gap: 28px; list-style: none; align-items: center; flex: 1; justify-content: center; min-width: 0; }
+ul.nav-links a { text-decoration: none; font-size: 14px; font-weight: 500; opacity: 0.75; transition: opacity 0.15s ease; }
+ul.nav-links a:hover, ul.nav-links a.current { opacity: 1; }
+.nav-cta { flex-shrink: 0; background: var(--color-ink); color: var(--color-base) !important; padding: 10px 20px; border-radius: 3px; opacity: 1 !important; font-size: 13.5px !important; text-decoration: none; }
+
+/* TYPE SCAFFOLD */
+.eyebrow, .section-eyebrow { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-2); margin-bottom: 18px; }
+h1 { font-family: 'Fraunces', serif; font-optical-sizing: auto; font-weight: 500; font-size: 56px; line-height: 1.06; letter-spacing: -0.015em; max-width: 780px; margin-bottom: 24px; }
+h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 36px; line-height: 1.15; letter-spacing: -0.01em; max-width: 640px; margin-bottom: 22px; }
+h3 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; line-height: 1.2; margin-bottom: 12px; }
+.hero-sub, .lede { font-size: 18px; line-height: 1.6; color: var(--color-ink-soft); max-width: 500px; margin-bottom: 36px; }
+.body-text { font-size: 17px; line-height: 1.7; color: var(--color-ink-soft); max-width: 640px; }
+.body-text + .body-text { margin-top: 18px; }
+
+/* HERO / PAGE HEADER
+   NOTE: use padding-top/bottom longhand only. A `padding` shorthand here overrides
+   .wrap's horizontal padding and knocks every hero 40px out of alignment. */
+.page-hero { padding-top: 84px; padding-bottom: 60px; border-bottom: 1px solid var(--color-line); }
+
+/* CTA */
+.cta-row { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.btn-primary { display: inline-block; background: var(--color-accent); color: var(--color-ink); font-weight: 600; font-size: 15.5px; padding: 15px 28px; border-radius: 3px; text-decoration: none; transition: transform 0.15s ease; }
+.btn-primary:hover { transform: translateY(-1px); }
+.btn-secondary { display: inline-block; background: transparent; color: var(--color-ink); font-weight: 600; font-size: 15px; padding: 13px 24px; border-radius: 3px; text-decoration: none; border: 1.5px solid var(--color-ink); }
+.secondary-link { font-size: 14px; color: var(--color-ink-soft); text-decoration: underline; text-underline-offset: 3px; }
+
+/* SECTIONS */
+section { padding-top: 78px; padding-bottom: 78px; }
+.section-line { border-top: 1px solid var(--color-line); }
+
+/* STATS (homepage) */
+.problem-grid { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 40px; }
+.stat { display: grid; grid-template-columns: 200px 1fr; gap: 28px; align-items: start; padding: 28px 0; border-top: 1px solid var(--color-line); }
+.stat:last-child { border-bottom: 1px solid var(--color-line); }
+.stat-number { font-family: 'Fraunces', serif; font-weight: 500; font-size: 30px; color: var(--color-ink); line-height: 1.15; }
+@media (prefers-reduced-motion: no-preference) {
+  .stat-number { opacity: 0.001; transform: translateY(8px); transition: opacity 0.6s ease, transform 0.6s ease; animation: stat-fallback-show 0s 1.2s forwards; }
+  .stat.revealed .stat-number { opacity: 1; transform: translateY(0); }
+  @keyframes stat-fallback-show { to { opacity: 1; transform: translateY(0); } }
+}
+.stat-source { font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--color-accent-2); display: block; margin-top: 8px; }
+.stat-body { font-size: 15.5px; line-height: 1.65; color: var(--color-ink-soft); padding-top: 4px; }
+
+/* CALLOUT BOX */
+.callout { margin-top: 22px; padding: 20px 24px; background: var(--color-base-warm); border-left: 3px solid var(--color-accent); font-size: 15px; line-height: 1.6; color: var(--color-ink-soft); max-width: 560px; }
+.callout a { font-weight: 600; color: var(--color-ink); }
+
+/* CARDS: pricing / process */
+.card-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; margin-top: 40px; }
+.card { border: 1px solid var(--color-line); border-radius: 4px; padding: 32px 28px; }
+.card.featured { border-color: var(--color-ink); border-width: 2px; }
+.card-price { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 500; margin-bottom: 6px; }
+.card-tag { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-accent-2); margin-bottom: 14px; display: block; }
+.card p { font-size: 15px; line-height: 1.6; color: var(--color-ink-soft); margin-bottom: 20px; }
+
+/* TEAM */
+.team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 40px; margin-top: 40px; }
+.team-photo { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 6px; margin-bottom: 18px; background: var(--color-base-warm); }
+.team-photo.placeholder { display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--color-ink-soft); text-align: center; padding: 20px; letter-spacing: 0.04em; text-transform: uppercase; border: 1px dashed var(--color-line); }
+.team-name { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; margin-bottom: 3px; }
+.team-title { font-size: 13.5px; color: var(--color-accent-2); font-weight: 600; margin-bottom: 12px; }
+.team-bio { font-size: 14.5px; line-height: 1.6; color: var(--color-ink-soft); }
+
+/* IMAGE PLACEHOLDER */
+.img-placeholder { background: var(--color-base-warm); border: 1px dashed var(--color-line); display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--color-ink-soft); text-align: center; padding: 30px; letter-spacing: 0.03em; text-transform: uppercase; border-radius: 4px; }
+
+/* FORM (contact) */
+.form-field { margin-bottom: 20px; max-width: 440px; }
+.form-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.form-field input, .form-field textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--color-line); border-radius: 3px; font-family: 'Inter', sans-serif; font-size: 15px; background: var(--color-base); }
+.form-field textarea { min-height: 110px; resize: vertical; }
+
+/* FOOTER */
+footer { background: var(--color-ink); color: var(--color-base); padding: 72px 0 36px; margin-top: 0; }
+footer h2 { color: var(--color-base); max-width: 520px; }
+.footer-cta { margin-top: 28px; }
+.footer-nav { margin-top: 52px; padding-top: 28px; border-top: 1px solid rgba(255,255,255,0.14); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; font-size: 13px; color: rgba(255,255,255,0.5); }
+.footer-nav a { color: rgba(255,255,255,0.65); text-decoration: none; margin-right: 20px; }
+.footer-nav a:hover { color: #fff; }
+.footer-logo { margin-right: 0; }
+.footer-nav a.footer-logo { margin-right: 0; }
+.footer-logo img { height: 36px; width: auto; display: block; }
+
+/* SHOT FRAME — real product screenshots, no device chrome implied */
+.shot-frame {
+  width: 240px;
+  border: 1.5px solid var(--color-line);
+  border-radius: 10px;
+  padding: 6px;
+  background: var(--color-base);
+  box-shadow: 0 20px 40px -18px rgba(15,34,64,0.22);
+}
+.shot-image { overflow: hidden; border-radius: 6px; background: var(--color-base-warm); aspect-ratio: 9 / 15.1; }
+.shot-image img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.shot-caption { margin-top: 16px; font-family: 'DM Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; line-height: 1.6; color: var(--color-ink-soft); text-align: center; max-width: 240px; }
+.shot-caption strong { color: var(--color-ink); font-weight: 500; }
+
+/* SHOT ROW — a triptych of real screens, smaller than the single showcase frame */
+.shot-row { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 12px; }
+.shot-row .shot-frame { width: 220px; }
+.shot-row .shot-item { display: flex; flex-direction: column; align-items: flex-start; }
+.shot-row .shot-step { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-accent-2); margin-top: 14px; margin-bottom: 4px; }
+.shot-row .shot-desc { font-size: 14px; line-height: 1.55; color: var(--color-ink-soft); max-width: 220px; }
+.shot-row .shot-frame.landscape { width: 260px; }
+.shot-row .shot-frame.landscape .shot-image { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; }
+.shot-row .shot-frame.landscape .shot-image img { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+
+/* SETUP GRAPHIC — the phone+laptop how-it-works illustration */
+.setup-graphic { max-width: 380px; border: 1.5px solid var(--color-line); border-radius: 10px; overflow: hidden; background: var(--color-base-warm); }
+.setup-graphic img { width: 100%; display: block; }
+
+/* SHOWCASE — pairs a phone mockup with text, within the standard grid */
+.showcase { display: grid; grid-template-columns: 1fr 260px; gap: 56px; align-items: start; }
+.showcase.reverse { grid-template-columns: 260px 1fr; }
+.showcase.reverse .showcase-phone { order: -1; }
+.showcase-phone { display: flex; flex-direction: column; align-items: center; }
+
+/* ICONS */
+.icon { width: 28px; height: 28px; flex-shrink: 0; }
+.icon-row { display: flex; align-items: flex-start; gap: 16px; color: var(--color-accent-2); }
+.icon-row + .icon-row { margin-top: 26px; }
+.icon-row .icon-text h3 { margin-bottom: 5px; font-size: 17px; color: var(--color-ink); }
+.icon-row .icon-text p { font-size: 15px; line-height: 1.6; color: var(--color-ink-soft); margin: 0; }
+.card .icon { color: var(--color-accent-2); margin-bottom: 16px; }
+
+/* PRODUCT-DEMO PAGES — Season and Try a Moment intentionally break the editorial grid */
+.demo-page .page-hero { padding-top: 0; padding-bottom: 0; border-bottom: none; }
+.demo-hero { display: grid; grid-template-columns: 1fr 300px; gap: 56px; align-items: start; padding: 76px 0 60px; }
+.demo-hero .showcase-phone { justify-self: end; }
+
+/* TIMELINE — Season structure */
+.timeline { display: flex; align-items: center; margin: 44px 0 10px; }
+.timeline-node { width: 30px; height: 30px; border-radius: 50%; background: var(--color-base-warm); border: 1.5px solid var(--color-line); display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 10.5px; color: var(--color-ink-soft); flex-shrink: 0; }
+.timeline-node.anchor { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-base); width: 40px; height: 40px; font-size: 11px; }
+.timeline-connector { flex: 1; height: 1px; background: var(--color-line); min-width: 8px; }
+.timeline-labels { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-ink-soft); }
+
+/* STEP FLOW — Try a Moment mechanic */
+.step-flow { display: flex; flex-direction: column; gap: 26px; }
+.step { display: flex; gap: 18px; align-items: flex-start; }
+.step-num { font-family: 'Fraunces', serif; font-size: 21px; font-weight: 500; color: var(--color-accent-2); width: 32px; flex-shrink: 0; }
+.step h3 { font-size: 16.5px; margin-bottom: 4px; }
+.step p { font-size: 15px; line-height: 1.6; color: var(--color-ink-soft); margin: 0; }
+
+@media (max-width: 900px) {
+  ul.nav-links { gap: 18px; }
+  .showcase, .showcase.reverse, .demo-hero { grid-template-columns: 1fr; }
+  .showcase.reverse .showcase-phone, .demo-hero .showcase-phone { order: -1; justify-self: center; }
+  .demo-hero { padding-top: 56px; gap: 40px; }
+}
+
+@media (max-width: 720px) {
+  .wrap { padding-left: 24px; padding-right: 24px; }
+  h1 { font-size: 38px; }
+  ul.nav-links { gap: 14px; flex-wrap: wrap; justify-content: flex-start; }
+  .stat { grid-template-columns: 1fr; gap: 8px; }
+  .card-row { grid-template-columns: 1fr; }
+  .timeline-labels span:nth-child(2) { display: none; }
+}
+
+
+/* ============================================================
+   EDITORIAL SCAFFOLD
+   Sections run as a narrow label rail + a wide content column, so the
+   right-hand third of the page is occupied on purpose instead of left
+   over. Matches the 200px rail the stat rows already used.
+   ============================================================ */
+.editorial { display: grid; grid-template-columns: 200px 1fr; gap: 56px; align-items: start; }
+.editorial > .rail { position: sticky; top: 32px; }
+.editorial .rail .section-eyebrow { margin-bottom: 12px; }
+.rail-note { font-size: 13.5px; line-height: 1.6; color: var(--color-ink-soft); border-top: 1px solid var(--color-line); padding-top: 12px; }
+.rail-note strong { color: var(--color-ink); font-weight: 600; display: block; margin-bottom: 4px; }
+.editorial h2 { max-width: 700px; }
+.editorial .body-text { max-width: 700px; }
+
+/* two even columns inside the content well */
+.col-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 36px; }
+.col-2 > div > h3 { font-size: 19px; }
+
+/* HERO GRID — hero copy left, credibility panel right */
+.hero-grid { display: grid; grid-template-columns: 1fr 320px; gap: 64px; align-items: start; }
+.hero-grid h1 { max-width: none; }
+
+/* CREDIBILITY PANEL */
+.credibility { border: 1px solid var(--color-line); border-radius: 4px; padding: 26px 24px; background: var(--color-base-warm); }
+.credibility .section-eyebrow { margin-bottom: 14px; }
+.credibility p { font-size: 14.5px; line-height: 1.6; color: var(--color-ink-soft); margin-bottom: 18px; }
+.source-list { list-style: none; border-top: 1px solid var(--color-line); }
+.source-list li { font-family: 'DM Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; color: var(--color-ink); padding: 10px 0; border-bottom: 1px solid var(--color-line); }
+.source-list li span { display: block; font-family: 'Inter', sans-serif; font-size: 12.5px; letter-spacing: 0; color: var(--color-ink-soft); margin-top: 3px; }
+
+/* TAG ROW — what a Moment produces */
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+.tag { font-family: 'DM Mono', monospace; font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-ink); border: 1px solid var(--color-line); border-radius: 100px; padding: 7px 14px; background: var(--color-base-warm); }
+
+/* PHOTOGRAPHY — duotone session photography */
+.photo { border-radius: 5px; overflow: hidden; background: var(--color-ink); }
+.photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-band { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 36px; }
+.photo-band .photo { aspect-ratio: 4 / 3; }
+.photo-caption { font-family: 'DM Mono', monospace; font-size: 11.5px; letter-spacing: 0.04em; line-height: 1.6; color: var(--color-ink-soft); margin-top: 14px; }
+.photo-side { width: 100%; aspect-ratio: 4 / 5; }
+
+/* NUMBERED NEXT-STEPS LIST (contact) */
+.next-steps { list-style: none; }
+.next-steps li { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--color-line); font-size: 15px; line-height: 1.6; color: var(--color-ink-soft); }
+.next-steps li:first-child { border-top: 1px solid var(--color-line); }
+.next-steps b { font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--color-accent-2); flex-shrink: 0; padding-top: 3px; }
+.next-steps strong { color: var(--color-ink); font-weight: 600; }
+
+/* FINDINGS — research page stat rows reuse the .stat rail */
+.finding { display: grid; grid-template-columns: 200px 1fr; gap: 28px; align-items: start; padding: 26px 0; border-top: 1px solid var(--color-line); }
+.finding:last-of-type { border-bottom: 1px solid var(--color-line); }
+.finding-number { font-family: 'Fraunces', serif; font-weight: 500; font-size: 30px; line-height: 1.15; }
+.finding-source { font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--color-accent-2); display: block; margin-top: 8px; line-height: 1.5; }
+.finding-body { font-size: 15.5px; line-height: 1.65; color: var(--color-ink-soft); padding-top: 4px; max-width: 640px; }
+
+@media (max-width: 900px) {
+  .editorial, .hero-grid { grid-template-columns: 1fr; gap: 28px; }
+  .editorial > .rail { position: static; }
+  .col-2 { grid-template-columns: 1fr; gap: 32px; }
+  .photo-band { grid-template-columns: 1fr 1fr; }
+  .finding { grid-template-columns: 1fr; gap: 10px; }
+}
+@media (max-width: 720px) {
+  .photo-band { grid-template-columns: 1fr; }
+}
+
+
+/* HERO SPLIT — display headline left, deck right, so page heroes occupy
+   the full measure instead of trailing off into a dead right rail. */
+.hero-split { display: grid; grid-template-columns: 1fr 380px; gap: 64px; align-items: start; }
+.hero-split h1 { max-width: none; margin-bottom: 0; }
+.hero-split .hero-deck { padding-top: 10px; }
+.hero-split .hero-sub { margin-bottom: 20px; }
+.hero-split .hero-sub:last-child { margin-bottom: 0; }
+
+/* first block inside a section shouldn't add to the section's own top padding */
+section > .team-grid:first-child,
+section > .card-row:first-child { margin-top: 0; }
+
+/* shot row sits inside the narrower editorial column now — grid, not fixed widths */
+.shot-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; align-items: start; }
+.shot-row .shot-frame, .shot-row .shot-frame.landscape { width: 100%; }
+.shot-row .shot-desc { max-width: none; }
+
+@media (max-width: 900px) {
+  .hero-split { grid-template-columns: 1fr; gap: 24px; align-items: start; }
+  .shot-row { grid-template-columns: 1fr; }
+}
+
+
+/* Season timeline: 13 nodes won't fit a phone. Scroll it rather than break the page. */
+@media (max-width: 720px) {
+  .timeline, .timeline-labels { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .timeline { min-width: 0; }
+  .timeline-node { width: 26px; height: 26px; font-size: 9.5px; }
+  .timeline-node.anchor { width: 34px; height: 34px; font-size: 9.5px; }
+  .timeline-connector { min-width: 4px; }
+  .timeline-labels { font-size: 10px; gap: 12px; }
+}
+
+
+/* FORM STATUS — feedback after a submission */
+.form-status { font-size: 14.5px; line-height: 1.6; margin-top: 16px; }
+.form-status[data-kind="ok"] { color: var(--color-ink); }
+.form-status[data-kind="error"] { color: var(--color-accent-2); }
+.form-status:empty { display: none; }
+button[type="submit"][disabled] { opacity: 0.6; cursor: default; }

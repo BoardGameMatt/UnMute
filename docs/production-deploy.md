@@ -1,0 +1,179 @@
+# Production Deploy — Unmute Labs
+
+**Owner:** Matt Hendricks  
+**Applies to:** Every merge to `main` that ships app code to Vercel (`app.unmutelabs.com`)
+
+Vercel deploys the Next.js app automatically when `main` updates. **Supabase schema does not.** If app code references a column or table that production Postgres does not have yet, live sessions fail mid-flow (e.g. Cover Story “Deal cover cards” before migration `018`).
+
+**Rule:** Apply SQL migrations to production **before** anyone runs a live session on the new build.
+
+---
+
+## Which Vercel project is production
+
+This GitHub repo is connected to more than one Vercel project. Only one of them is the product facilitators use.
+
+| Vercel project | Domain | Role |
+|----------------|--------|------|
+| **`unmute-app`** | [app.unmutelabs.com](https://app.unmutelabs.com) | **Production product.** Root Directory must be `app-platform`. Confirm this project's Production deployment is Ready before minting join codes. |
+| `un-mute` | Preview hosts such as `un-mute-*.vercel.app` | Separate project. A green deploy here does **not** mean `app.unmutelabs.com` updated. Do not turn on Production auto-deploy for this project. |
+
+If a Vercel email says “Failed production deployment on unmute-app”, that is the product. Fix that build; do not assume the other project shipped the Moment.
+
+---
+
+## Compile check (committed files only)
+
+Vercel builds **git**, not your laptop. A local `npm run build` can pass because untracked files exist on disk, then `unmute-app` fails with `Module not found`.
+
+That is what broke production in August 2026: `lobby/actions.ts` imported `@/lib/console/session-events`, but that file was not in the merge.
+
+Before merging to `main`:
+
+```bash
+cd app-platform
+git status          # every new @/ import must be a tracked file in the same ship
+npm run build       # must succeed on the files git will send
+```
+
+GitHub Actions workflow `.github/workflows/app-platform-build.yml` runs the same compile. Do not merge if that check is red.
+
+---
+
+## Release checklist (every production push)
+
+Copy this list when merging to `main` or announcing a demo:
+
+```
+Production release:
+- [ ] Identify new/changed files under app-platform/supabase/migrations/
+- [ ] Apply pending migrations to production Supabase (CLI or SQL editor)
+- [ ] Run schema verification (see below) — all checks pass
+- [ ] cd app-platform && npm run build  (or App build CI green)
+- [ ] Merge to main
+- [ ] Confirm Vercel project unmute-app Production deploy is Ready (not un-mute)
+- [ ] Smoke-test the first action that touches new schema for each affected Moment
+- [ ] Run content seed scripts if the release adds pack/card/question data
+- [ ] Only then mint join codes or share host links with facilitators
+```
+
+### Apply migrations (pick one path)
+
+**Preferred — Supabase CLI** (applies every pending file in order):
+
+```bash
+cd app-platform
+npx supabase link --project-ref <your-project-ref>   # once per machine
+npx supabase db push
+```
+
+**Manual — Supabase SQL editor**  
+Run each file from `app-platform/supabase/migrations/` that production has not seen yet, **in numeric order** (`001` → `020`). Files use `IF NOT EXISTS` where possible; re-running an applied migration is usually safe.
+
+### Verify schema
+
+**From your laptop** (uses `app-platform/.env.local` pointed at production):
+
+```bash
+cd app-platform
+npm run verify:schema
+```
+
+**In Supabase SQL editor** (no local env):
+
+Open `app-platform/supabase/verify-schema.sql`, run the full script. Any row in the result set is a missing object — apply the migration listed in that row.
+
+### Smoke tests by Moment
+
+| Moment | Slug | First schema touchpoint after lobby |
+|--------|------|-------------------------------------|
+| Draw It By Ear | `draw-it-by-ear` | Start session → team formation |
+| Wrong Answers Only | `wrong-answers-only` | Start round → pair/tap tables |
+| The Truth Is | `the-truth-is` | Start session → `truth_is_sessions` / `truth_is_entries` (needs `028`) |
+| Trane Quiz | `trane-quiz` | Create offering / join |
+| Cover Story | `cover-story` | **Deal cover cards** (needs `014`–`018`) |
+| Talk Track | `talk-track` | Start session → `talk_track_*` tables (needs `019`) |
+| Unmute Console | `/console` | Staff sign-in → `clients`, `staff_profiles` (needs `020`) |
+| Zoning Rights | `zoning-rights` | Start session → `zoning_rights_*` tables (needs `021`) |
+| I Know What You Meme | `i-know-what-you-meme` | Start session → `ikwym_*` tables (needs `023`). Giphy: `NEXT_PUBLIC_GIPHY_API_KEY` on unmute-app + redeploy. |
+| Airtime | `airtime` | Start session → `airtime_sessions` / `airtime_boats` (needs `030`) |
+| Say Less | `say-less` | Start session → `say_less_*` tables (needs `032`). Cards are in the migration. |
+
+### Content seeds (after schema, when needed)
+
+These are **data**, not DDL — run after migrations if the Moment needs library content on prod:
+
+```bash
+cd app-platform
+npm run load:wao              # WAO question bank
+npm run load:cover-story      # Cover Story agencies
+npm run load:talk-track       # Talk Track Pack A cards
+npm run seed:trane-quiz       # Trane Quiz fixtures
+```
+
+---
+
+## Migration catalog
+
+All files live in `app-platform/supabase/migrations/`. Production must have **every file through the latest** before demoing any Moment.
+
+| # | File | Moment / area |
+|---|------|----------------|
+| 001 | `001_initial_schema.sql` | Core platform |
+| 002 | `002_session_feedback.sql` | All Moments (feedback) |
+| 003 | `003_draw_it_by_ear.sql` | Draw It By Ear |
+| 004 | `004_allow_duplicate_display_names.sql` | Join / roster |
+| 005 | `005_session_lead_designation.sql` | Lead role |
+| 006 | `006_session_host_token.sql` | Host link |
+| 007 | `007_unambiguous_join_codes.sql` | Join codes |
+| 008 | `008_wrong_answers_only.sql` | Wrong Answers Only |
+| 009 | `009_session_participant_department.sql` | WAO departments |
+| 010 | `010_wrong_answers_only_protocol.sql` | WAO protocol row |
+| 011 | `011_wao_timer_default_60.sql` | WAO timer default |
+| 012 | `012_wao_saver_participant.sql` | WAO saver |
+| 013 | `013_trane_quiz.sql` | Trane Quiz |
+| 014 | `014_cover_story.sql` | Cover Story tables |
+| 015 | `015_cover_story_protocol.sql` | Cover Story protocol row |
+| 016 | `016_cover_story_mission_report.sql` | Cover Story mission / note |
+| 017 | `017_cover_story_sessions_rls.sql` | Cover Story session RLS |
+| 018 | `018_cover_story_pick_token.sql` | Cover Story pick links |
+| 019 | `019_talk_track.sql` | Talk Track + content packs |
+| 020 | `020_unmute_console.sql` | Unmute Console |
+| 021 | `021_zoning_rights.sql` | Zoning Rights |
+| 023 | `023_ikwym.sql` | I Know What You Meme |
+| 024 | `024_ikwym_precise_prompts.sql` | I Know What You Meme prompt copy |
+| 025 | `025_code_switch.sql` | SwitchCode |
+| 026 | `026_switchcode_name.sql` | SwitchCode display name |
+| 027 | `027_rank_and_file.sql` | Rank and File |
+| 028 | `028_the_truth_is.sql` | The Truth Is private session and entries |
+| 029 | `029_truth_is_atomic_save.sql` | The Truth Is atomic save function |
+| 030 | `030_airtime.sql` | Airtime protocol row + `airtime_*` tables |
+| 031 | `031_on_the_same_page.sql` | On the Same Page |
+| 032 | `032_say_less.sql` | Say Less protocol, Pack A (75 cards), live tables |
+
+When adding migration `021+`, update this table, `verify-schema.sql`, and `scripts/verify-prod-schema.ts`.
+
+---
+
+## Why this happens
+
+| Surface | Trigger | What updates |
+|---------|---------|--------------|
+| **Vercel** | Push to `main` | App code |
+| **Supabase** | Manual `db push` or SQL editor | Postgres schema |
+
+There is no automatic link between the two today. Until Supabase GitHub integration (or CI) runs migrations on deploy, **migrations are a required human step** in every release.
+
+---
+
+## Agent / Cursor workflow
+
+When an agent merges protocol work or says “push to production”:
+
+1. Read `docs/production-deploy.md` (this file).
+2. List migrations added or changed in the branch.
+3. Tell the operator which migrations to apply before the session/demo.
+4. Run or instruct `npm run verify:schema` after apply.
+5. Do not mint production join codes until verification passes.
+
+See also: `docs/cursor-workflow-plan.md` §7, `.cursorrules` (Production deploy), `.cursor/skills/new-unmute-protocol/SKILL.md` (Step 7).

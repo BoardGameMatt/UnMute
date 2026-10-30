@@ -1,0 +1,54 @@
+"use client";
+
+const DEFAULT_PROMPT_1 = "What did you assume that turned out to be wrong?";
+const DEFAULT_PROMPT_2 = "Where does that same assumption show up in how we work?";
+
+type SessionReflectionViewProps = {
+  prompt1?: string;
+  prompt2?: string;
+  /** Optional; shown after prompt2 when set. */
+  prompt3?: string;
+  /** Optional; shown after prompt3 when set. */
+  prompt4?: string;
+  /** Optional line the facilitator reads before the questions. */
+  preface?: string;
+};
+
+/**
+ * Season reflection close — display-only discussion prompts.
+ * Final screen after NPS. Nothing is typed or stored.
+ */
+export function SessionReflectionView({
+  prompt1 = DEFAULT_PROMPT_1,
+  prompt2 = DEFAULT_PROMPT_2,
+  prompt3,
+  prompt4,
+  preface,
+}: SessionReflectionViewProps) {
+  const prompts = [prompt1, prompt2, prompt3, prompt4].filter((line): line is string => Boolean(line?.trim()));
+
+  return (
+    <main className="min-h-screen bg-warm-white px-5 py-12">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-10">
+        <header className="text-center">
+          <h1 className="font-display text-3xl font-bold text-unmute-navy">
+            Further reflection
+          </h1>
+          {preface ? (
+            <p className="mt-6 text-left font-body text-lg text-charcoal">{preface}</p>
+          ) : null}
+        </header>
+
+        {prompts.map((line, index) => {
+          const last = index === prompts.length - 1;
+          return (
+            <section key={line} className={last ? "space-y-8" : undefined}>
+              <h2 className="font-display text-2xl font-semibold leading-snug text-unmute-navy">{line}</h2>
+              {last ? <p className="text-center font-body text-base text-slate">See you next week.</p> : null}
+            </section>
+          );
+        })}
+      </div>
+    </main>
+  );
+}
