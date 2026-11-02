@@ -20,6 +20,7 @@ registerProtocol({
     prompt1: "Which one-word clue did you assume would land, and it didn't?",
     prompt2:
       "Where does our team's shorthand help us, and where might it hide where we mean different things?",
-    prompt3: "What phrase do we use when we don't want to say something directly?",
+    prompt3:
+      "How do we communicate (words, phrases, patterns) when we don't want to say something directly?",
   },
 });

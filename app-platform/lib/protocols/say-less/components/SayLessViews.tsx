@@ -281,6 +281,10 @@ export function SayLessViews({ state, pending, error, send }: Props) {
           <h1 className="text-center font-display text-2xl font-bold text-unmute-navy">
             Same cards. One word only.
           </h1>
+          <p className="text-center font-body text-slate">
+            One-word clues only. Your team gets one guess. If they miss, tap Pass / Oops and
+            move on. You can pass the same way.
+          </p>
           {state.hostLine && state.isLead ? (
             <p className="text-center font-body text-slate">{state.hostLine}</p>
           ) : null}

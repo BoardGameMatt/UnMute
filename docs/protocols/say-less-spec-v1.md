@@ -182,7 +182,11 @@ Standard shell. Explainer as §3. `lobbyLeadControls` renders the **category pic
 
 ### 7.2 ROUND_BREAK
 
-Everyone sees "Same cards. One word only." and the **round 1 score for each team** (whole numbers, nothing else). Lead screen shows the host line: *"Same cards. Now you get one word. Use what you just heard, from either team."*
+Everyone sees "Same cards. One word only.", the round 2 reminder, and the **round 1 score for each team** (whole numbers, nothing else).
+
+Reminder, shown to every player: *"One-word clues only. Your team gets one guess. If they miss, tap Pass / Oops and move on. You can pass the same way."*
+
+Lead screen also shows the host line: *"Same cards. Now you get one word. Use what you just heard, from either team."*
 
 ---
 
@@ -273,7 +277,7 @@ Every route using the service client verifies first: caller identity from cookie
 1. **Open (1 min):** the Return sentence, then "Every team builds its own language. Today we'll build some on purpose."
 2. **Setup (2 min):** name the teams, paste the rules box into chat. "You'll each see two cards that are in the deck. Remember them; they will help you guess."
 3. **Round 1 (~6 min):** let it run. No passing in round 1; a card nobody recognizes: the clue-giver taps Hint and keeps going.
-4. **Between rounds:** read the round 1 team scores, then "Same cards. Now you get one word. Use what you just heard, from either team."
+4. **Between rounds:** the room already sees the round 2 reminder (one word, one guess, Pass / Oops). Read the round 1 team scores, then "Same cards. Now you get one word. Use what you just heard, from either team."
 5. **Round 2 (~4 min):** one guess per card. A wrong guess, two words, or a blank → Pass / Oops, move on, no debate.
 6. **Score:** announce the winning team (or the tie), then the host line §8.2 as the bridge to reflection.
 7. **Reflection (7 min):** three questions in order, 2–2.5 minutes each. If play ran long, shorten question 1, never question 2.
@@ -301,7 +305,7 @@ Opt-out of the two standard Season prompts: Say Less replaces them with its own 
 
 1. Which one-word clue did you assume would land, and it didn't?
 2. Where does our team's shorthand help us, and where might it hide where we mean different things?
-3. What phrase do we use when we don't want to say something directly?
+3. How do we communicate (words, phrases, patterns) when we don't want to say something directly?
 
 **Facilitator notes (Lead copy, not on the shared reflection):**
 
