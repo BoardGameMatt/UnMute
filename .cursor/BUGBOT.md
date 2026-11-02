@@ -18,6 +18,14 @@ Apply these rules when reviewing PRs in the UnMute monorepo. App code lives in `
 
 - Timers may display client-side, but phase transitions must be server-authoritative.
 - Realtime tap/selection state must reconcile to server truth on lock or timer expiry — flag client-only intersection logic that bypasses the server.
+- **Liveness (`docs/protocols/moment-conventions.md` §3.1).** Flag any change that lets one screen, one player, or one failed write stop the room:
+  - A timed phase with no server default when nobody acts.
+  - A play read or action route that does not advance overdue state first.
+  - Client code that advances only on realtime pokes or timer completion, with no check-in interval while a deadline is pending.
+  - Timer completion driven only by `requestAnimationFrame`.
+  - A facilitator control on a state the server cannot reach without player input.
+  - Event, log, or analytics writes placed before the public state update.
+  - Concurrent advances without a version check.
 
 ## Design system
 

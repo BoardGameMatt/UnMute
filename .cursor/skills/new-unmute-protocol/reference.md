@@ -57,6 +57,8 @@ Point rules, zero/partial credit, tie-breaking, what gets shown at reveal. Worke
 
 Named phases, who acts, timer or “no timer”, what advances.
 
+For every timed phase, also name the server default: what happens at the deadline when nobody acts. Mark which states are facilitator holds. Every facilitator control must sit on a hold the server reaches with no player input (moment-conventions §3.1).
+
 ### 7. UI notes (mobile-first)
 
 Protocol label, UI state table (not color-only), timer thresholds, button states (grey → navy → amber).
@@ -71,6 +73,8 @@ Protocol label, UI state table (not color-only), timer thresholds, button states
 ### 9. Edge cases
 
 Disconnect/reconnect, timer expiry with no input, min players, Lead end-early, late join closed.
+
+Also cover every phone locked with the shared screen in the background, and one player who never acts. The answer for both is that the room still reaches the next facilitator hold on time (moment-conventions §3.1).
 
 ### 10. Authorization boundary
 
@@ -130,6 +134,8 @@ Before invoking implementation, verify:
 - [ ] Header includes pack mode and the follows-conventions line
 - [ ] State machine has no unnamed phases
 - [ ] Every phase has timer duration or "no timer"
+- [ ] Every timed phase names its server default with no input, and every facilitator control sits on a hold the server reaches by itself
+- [ ] Acceptance bar includes the walk-away test
 - [ ] Scoring has a worked example
 - [ ] Role visibility table is complete (including the secret)
 - [ ] Envelope time is realistic for the player-count range

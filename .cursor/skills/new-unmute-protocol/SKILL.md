@@ -42,6 +42,7 @@ Protocol build:
 - [ ] Import added to app-platform/lib/protocols/index.ts
 - [ ] Action route wired in app/api/session/[id]/action/route.ts (if engine-backed)
 - [ ] SQL migration(s) added under app-platform/supabase/migrations/
+- [ ] Liveness (moment-conventions §3.1): server catch-up on read and write, client check-in interval, engine liveness test
 - [ ] Mobile-first participant views verified
 - [ ] /review-bugbot run before PR
 - [ ] Production: migrations applied + npm run verify:schema (see docs/production-deploy.md)
@@ -134,6 +135,7 @@ interface SessionProtocolProps {
 Rules:
 - **All state transitions via `sendAction(type, payload)`** — never mutate `state_json` client-side
 - Timers display client-side; **phase transitions are server-authoritative**
+- **Nothing hangs the room** (moment-conventions §3.1). The play read and every action run advance-if-due first. While a deadline is pending, the client re-reads every 2–3 seconds. Timer completion fires from a `setTimeout` deadline and `visibilitychange`, not only `requestAnimationFrame`. Make the state change visible before writing logs.
 - **Mobile-first** for all participant-facing screens
 - **Role-check before serving sensitive data** (see Draw It By Ear: images never sent to Drawer role)
 - Use Tailwind design tokens only — no hardcoded hex or font-family strings
@@ -162,9 +164,10 @@ Before opening a PR:
 
 1. Spec coverage — every phase in the state machine has a view
 2. Scoring edge cases from spec are handled in engine
-3. Role visibility constraints enforced server-side, not just hidden in UI
-4. Join codes remain 6-char uppercase alphanumeric (session shell, not protocol)
-5. Run `/review-bugbot` on branch changes
+3. Engine liveness test passes: from every timed phase, repeated expire reaches the next facilitator hold with no player actions
+4. Role visibility constraints enforced server-side, not just hidden in UI
+5. Join codes remain 6-char uppercase alphanumeric (session shell, not protocol)
+6. Run `/review-bugbot` on branch changes
 
 Before merging to `main` or demoing on production:
 

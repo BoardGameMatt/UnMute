@@ -151,9 +151,38 @@ Follow the WAO timer pattern (`WaoPlayTimer.tsx`):
 | Final ~3 seconds | Large numeric 3-2-1 only (accessibility exception to no-countdown rule) |
 | Settle / lock | Numerals disappear; "locking in" state |
 
-**Server-authoritative:** Timers display client-side; phase transitions are driven by server state, not client timer expiry alone.
+**Server-authoritative:** Timers display client-side; phase transitions are driven by server state, not client timer expiry alone. How the server gets woken up is §3.1, and it is not optional.
 
 Spec must document: duration, urgent threshold, numeric threshold, settle window (if any).
+
+### 3.1 Liveness: nothing hangs the room (required for every Moment)
+
+**A Moment must reach its next facilitator hold on time, with no further player input, as long as any one screen is open.** A player who walks away, a locked phone, a background tab, a stalled animation, or a failed log write may slow one turn down. None of them may stop the room.
+
+A facilitator hold is a state that waits for the Lead on purpose, such as the reveal outcome, the scoreboard, or the lobby. Every other state has a deadline or is waiting on a player. Those states must always be moving toward a hold.
+
+Build rules:
+
+1. **Every timed phase has a server default.** When the deadline passes, the server already knows what happens with no input. It places a tile for the absent player, submits what is there, or closes the vote with the votes it has. No phase waits on one particular person. The spec names this default for every timed phase in its state machine table.
+2. **The server catches up on every read and every write.** The play read and every action write first run an advance-if-due step. That step applies each expired transition in a bounded loop until the state is no longer due. Any one screen's request moves the whole room. A room left alone for ten minutes catches up on the next request.
+3. **Clients check in on an interval while a deadline is pending.** Re-read play state every 2–3 seconds whenever the current state has a deadline. Stop at facilitator holds. Realtime pokes and timer completion make the room faster. They are not what keeps it moving.
+4. **Timer completion fires from a real deadline.** `requestAnimationFrame` pauses in background tabs and on locked phones. Fire completion from a `setTimeout` at the deadline and again on `visibilitychange`, then retry until the state changes. `WaoPlayTimer` does this. A timer that is hidden on one screen still has to report completion.
+5. **Facilitator controls sit on holds the server reaches by itself.** Another round, Reflection questions, and Continue each live on a state that rules 1 and 2 reach with no player acting. The only way forward is never behind a phase that needs one particular player.
+6. **Make the transition visible first.** Save the game, then update the public state that tells clients to refresh, then write events, logs, and analytics. A failing secondary write must not leave every screen on the old step. Store each value in a column type that fits its full range.
+7. **Simultaneous advances are safe.** Many screens will try to advance at the same moment. Use a version check so exactly one write wins. The others re-read and return the fresh state. They do not surface an error.
+8. **No error strands a player.** Expire and advance failures are silent and retried. An error a player does see names what to do next.
+
+Required tests:
+
+- **Engine liveness test.** From every timed phase, repeated expire calls at deadline plus grace reach the next facilitator hold within a bounded number of steps, with no player actions.
+- **Walk-away rehearsal.** In acceptance bar item 8 (§14).
+
+Incidents this rule comes from:
+
+| Moment | What hung | Rules |
+|--------|-----------|-------|
+| On the Same Page, Oct 19 2026 | Another round saved the new deal, then a log write failed because the round seed was too large for its column. The public state never updated, so every screen stayed on the old reveal. | 6 |
+| On the Same Page, Oct 20 2026 | The last turn of lap 5 ran out. No screen's timer fired and no screen checked in, so the turn never closed. Reflection questions exists only on the outcome, so the facilitator had no way forward. | 2, 3, 4, 5 |
 
 ---
 
@@ -307,8 +336,9 @@ Every spec includes **§ Acceptance bar** — non-negotiable rehearsal criteria 
 5. RLS / authorization verified (participants cannot read other pairs' state)
 6. Throttled-network path tested for realtime actions
 7. Degraded fallback documented in facilitator notes
+8. Walk-away test (§3.1): start a round, then lock every phone and send the shared-screen tab to the background. Wait twice the round envelope, then open any one screen. The room is at the next facilitator hold or later, and the facilitator's control is on screen. Repeat with one player who never acts.
 
-Customize items 3–4 per protocol; items 1, 2, 5, 6, 7 are platform-standard.
+Customize items 3–4 per protocol; items 1, 2, 5, 6, 7, 8 are platform-standard.
 
 ---
 
@@ -343,6 +373,7 @@ Before marking a spec "locked for v1":
 - [ ] § Device context — phone + laptop video
 - [ ] § UI states — shape/weight table (if multi-state)
 - [ ] § Timer — durations and presentation thresholds (if timed)
+- [ ] § Liveness (§3.1) — server default at every deadline; facilitator controls only on holds the server reaches by itself; walk-away test in the acceptance bar
 - [ ] § Persistent play instruction — exact copy
 - [ ] § Facilitator script beats — plus which Lead-only metrics appear
 - [ ] § Session end flow — scoreboard → NPS → reflection
@@ -364,6 +395,8 @@ Before marking a spec "locked for v1":
 | Lobby explainer dots | `app-platform/components/ui/LobbyExplainerDots.tsx` |
 | Item visual states | `app-platform/lib/protocols/wrong-answers-only/components/WaoItemFace.tsx` |
 | Timer | `app-platform/lib/protocols/wrong-answers-only/components/WaoPlayTimer.tsx` |
+| Liveness: server catch-up | `advanceIfDue` in `app-platform/lib/protocols/on-the-same-page/actions.ts` |
+| Liveness: client check-in | `app-platform/lib/protocols/on-the-same-page/use-otsp-play.ts` |
 | Reveal buckets | `app-platform/lib/protocols/wrong-answers-only/components/WaoRevealView.tsx` |
 | Lead controls | `app-platform/lib/protocols/wrong-answers-only/components/WaoLeadAdvanceControls.tsx` |
 | Scoreboard → NPS | `app-platform/lib/protocols/wrong-answers-only/components/WaoSessionScoreboard.tsx` |

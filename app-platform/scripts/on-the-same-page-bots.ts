@@ -2,7 +2,7 @@
  * On the Same Page bot crew. They join a lobby, play through the same
  * endpoints a phone uses, and write a report of anything a person would notice.
  *
- *   npm run bots:on-the-same-page -- --code ABC123 [--count 12] [--base http://localhost:3000]
+ *   npm run bots:on-the-same-page -- --code ABC123 [--count 12] [--minutes 25] [--base http://localhost:3000]
  *
  * Open the host link yourself (Shared screen) and press Start once eight
  * phones are in. Bots stop when the session completes.
@@ -26,6 +26,7 @@ const CODE = arg("code", "").toUpperCase();
 const COUNT = Math.max(1, Math.min(16, Number(arg("count", "12"))));
 const BASE = arg("base", "http://localhost:3000").replace(/\/$/, "");
 const POLL_MS = Math.max(400, Number(arg("poll-ms", "700")));
+const MINUTES = Math.max(5, Number(arg("minutes", "25")));
 const COOKIE = "unmute_participant_id";
 
 if (!CODE) {
@@ -457,23 +458,27 @@ async function main() {
 
   const startedAt = new Date();
   const bots = NAMES.slice(0, COUNT).map((name, i) => new Bot(name, PERSONA_MIX[i] ?? "steady"));
-  if (session.status === "active") {
-    const { data: rows, error: rowErr } = await admin
-      .from("session_participants")
-      .select("participant_id, participants(display_name)")
-      .eq("session_id", session.id);
-    if (rowErr) throw new Error(rowErr.message);
-    const byName = new Map<string, string>();
-    for (const row of rows ?? []) {
-      const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
-      const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
-      if (name && row.participant_id) byName.set(name, row.participant_id);
-    }
+  const { data: rows, error: rowErr } = await admin
+    .from("session_participants")
+    .select("participant_id, participants(display_name)")
+    .eq("session_id", session.id);
+  if (rowErr) throw new Error(rowErr.message);
+  const byName = new Map<string, string>();
+  for (const row of rows ?? []) {
+    const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+    const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+    if (name && row.participant_id && !byName.has(name)) byName.set(name, row.participant_id);
+  }
+  const seated = bots.every((bot) => byName.has(bot.name));
+  if (session.status === "active" || seated) {
     console.log(`${clock()} resuming ${bots.length} bots on ${CODE} at ${BASE}`);
     for (const bot of bots) {
       const participantId = byName.get(bot.name);
       if (!participantId) throw new Error(`${bot.name} is not in this room`);
       bot.adopt(session.id, participantId);
+    }
+    if (session.status !== "active") {
+      console.log(`${clock()} lobby ready. Press Start on the Shared screen.`);
     }
   } else {
     console.log(`${clock()} joining ${bots.length} bots on ${CODE} at ${BASE}`);
@@ -485,7 +490,7 @@ async function main() {
     console.log(`${clock()} lobby ready. Press Start on the Shared screen.`);
   }
 
-  const deadline = Date.now() + 25 * 60 * 1000;
+  const deadline = Date.now() + MINUTES * 60 * 1000;
   await Promise.race([
     Promise.all(bots.map((b) => b.run())),
     (async () => {
