@@ -44,6 +44,8 @@ export type SayLessPlayState = {
   phase: SayLessPhase;
   round: 1 | 2;
   isLead: boolean;
+  /** The laptop. Timer and room state only. Never a card. */
+  isDisplay: boolean;
   participantId: string;
   viewerRole: SayLessViewerRole | null;
   instruction: string;

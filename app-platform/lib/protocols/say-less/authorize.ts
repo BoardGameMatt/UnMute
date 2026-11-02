@@ -5,6 +5,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
+import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -19,6 +20,7 @@ export type SayLessMemberAuth = {
   participantId: string;
   sessionId: string;
   isLead: boolean;
+  isSharedScreen: boolean;
   admin: ReturnType<typeof createServiceClient>;
 };
 
@@ -62,7 +64,7 @@ export async function authorizeSayLessParticipant(
 
   const { data: row, error: rowErr } = await supabase
     .from("session_participants")
-    .select("role_in_session")
+    .select("role_in_session, participants ( display_name )")
     .eq("session_id", sessionId)
     .eq("participant_id", participantId)
     .maybeSingle();
@@ -81,11 +83,15 @@ export async function authorizeSayLessParticipant(
     return { ok: false, status: 500, error: "Service client is not configured." };
   }
 
+  const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+  const displayName = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+
   return {
     ok: true,
     participantId,
     sessionId,
     isLead: row.role_in_session === "lead",
+    isSharedScreen: isSharedScreenName(displayName ?? ""),
     admin,
   };
 }

@@ -75,9 +75,11 @@ export async function buildSayLessPlayState(input: {
   sessionId: string;
   participantId: string;
   isLead: boolean;
+  isDisplay?: boolean;
   skipMaintenance?: boolean;
 }): Promise<SayLessPlayState> {
   const { admin, sessionId, participantId, isLead, skipMaintenance } = input;
+  const isDisplay = input.isDisplay === true;
   if (!skipMaintenance) {
     await advanceIfDue(admin, sessionId);
   }
@@ -93,7 +95,7 @@ export async function buildSayLessPlayState(input: {
   const liveTeam = liveTurn ? teams.find((team) => team.id === liveTurn.team_id) : undefined;
 
   let viewerRole: SayLessViewerRole | null = null;
-  if (row.phase === "turn" && liveTurn) {
+  if (!isDisplay && row.phase === "turn" && liveTurn) {
     if (liveTurn.clue_giver_id === participantId) viewerRole = "clue";
     else if (liveTeam?.member_ids.includes(participantId)) viewerRole = "guess";
     else viewerRole = "listen";
@@ -101,7 +103,9 @@ export async function buildSayLessPlayState(input: {
 
   const topId = row.pile_card_ids[0] ?? null;
   const topCard =
-    row.phase === "turn" && topId && viewerRole === "clue" ? await loadCard(admin, topId) : null;
+    !isDisplay && row.phase === "turn" && topId && viewerRole === "clue"
+      ? await loadCard(admin, topId)
+      : null;
   const currentCard = cardForViewer(
     participantId,
     liveTurn?.clue_giver_id ?? null,
@@ -111,7 +115,7 @@ export async function buildSayLessPlayState(input: {
   );
 
   let previewCards: SayLessPlayState["previewCards"] = null;
-  if (row.phase === "preview") {
+  if (!isDisplay && row.phase === "preview") {
     const ids = await loadPreviewCardIds(admin, sessionId, participantId);
     if (ids) {
       const cards = await loadCardsByIds(admin, ids);
@@ -130,7 +134,7 @@ export async function buildSayLessPlayState(input: {
       id,
       displayName: names[id] ?? "Player",
     })),
-    isYours: team.member_ids.includes(participantId),
+    isYours: !isDisplay && team.member_ids.includes(participantId),
   }));
 
   const round1 = row.phase === "lobby" || row.phase === "teams" || row.phase === "preview" || row.phase === "ready"
@@ -202,6 +206,7 @@ export async function buildSayLessPlayState(input: {
     phase: row.phase,
     round: row.round,
     isLead,
+    isDisplay,
     participantId,
     viewerRole,
     instruction: playInstruction(row.round),
@@ -236,6 +241,7 @@ export async function buildSayLessPlayState(input: {
     canSkipTurn: Boolean(
       row.phase === "turn" && liveTurn && (isLead || liveTurn.clue_giver_id === participantId)
     ),
-    canActOnCard: viewerRole === "clue" && row.phase === "turn" && Boolean(currentCard),
+    canActOnCard:
+      !isDisplay && viewerRole === "clue" && row.phase === "turn" && Boolean(currentCard),
   };
 }

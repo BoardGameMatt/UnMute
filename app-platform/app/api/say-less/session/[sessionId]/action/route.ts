@@ -39,6 +39,13 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Unknown action." }, { status: 400 });
   }
 
+  if (auth.isSharedScreen && type === "cardAction") {
+    return NextResponse.json(
+      { error: "The shared screen never marks a card." },
+      { status: 403 }
+    );
+  }
+
   const result = await dispatchSayLessAction({
     admin: auth.admin,
     sessionId: auth.sessionId,
@@ -56,6 +63,7 @@ export async function POST(request: Request, context: RouteContext) {
     sessionId: auth.sessionId,
     participantId: auth.participantId,
     isLead: auth.isLead,
+    isDisplay: auth.isSharedScreen,
     skipMaintenance: true,
   });
   return NextResponse.json({ ok: true, state });

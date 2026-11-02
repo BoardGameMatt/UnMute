@@ -272,17 +272,22 @@ export async function startSessionAction(
   }
 
   if (protocolSlug === "say-less") {
-    const { count, error: countErr } = await supabase
+    const { data: rows, error: countErr } = await supabase
       .from("session_participants")
-      .select("id", { count: "exact", head: true })
+      .select("participants ( display_name )")
       .eq("session_id", sessionId);
     if (countErr) {
       return { error: "Could not count the room." };
     }
-    if ((count ?? 0) < 4) {
+    const players = (rows ?? []).filter((row) => {
+      const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+      const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+      return !isSharedScreenName(name ?? "Player");
+    });
+    if (players.length < 4) {
       return { error: "Say Less needs at least 4 people." };
     }
-    if ((count ?? 0) > 14) {
+    if (players.length > 14) {
       return { error: "Say Less holds 14 people at most." };
     }
   }

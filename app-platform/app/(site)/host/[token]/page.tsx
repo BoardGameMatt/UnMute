@@ -6,6 +6,7 @@ import { displayProtocolName } from "@/lib/protocols";
 import { AirtimeHostEntry } from "@/lib/protocols/airtime/components/AirtimeHostEntry";
 import { OtspHostEntry } from "@/lib/protocols/on-the-same-page/components/OtspHostEntry";
 import { RankAndFileHostEntry } from "@/lib/protocols/rank-and-file/components/RankAndFileHostEntry";
+import { SayLessHostEntry } from "@/lib/protocols/say-less/components/SayLessHostEntry";
 import { TruthIsHostEntry } from "@/lib/protocols/the-truth-is/components/TruthIsHostEntry";
 import { createClient } from "@/lib/supabase/server";
 import { PARTICIPANT_COOKIE } from "@/lib/constants";
@@ -106,6 +107,12 @@ export default async function HostTokenPage({ params }: HostTokenPageProps) {
         sessionId={session.id}
         joinCode={String(session.join_code ?? "")}
       />
+    );
+  }
+
+  if (protocol.slug === "say-less") {
+    return (
+      <SayLessHostEntry hostToken={token} joinCode={String(session.join_code ?? "")} />
     );
   }
 

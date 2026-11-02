@@ -17,6 +17,7 @@ export async function GET(_request: Request, context: RouteContext) {
       sessionId: auth.sessionId,
       participantId: auth.participantId,
       isLead: auth.isLead,
+      isDisplay: auth.isSharedScreen,
     });
     return NextResponse.json({ state });
   } catch (err) {

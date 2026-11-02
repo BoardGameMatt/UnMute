@@ -29,8 +29,9 @@ A simplified Time's Up / Monikers in two rounds. On a turn, one person gives clu
 ## 2. Players, join, device
 
 - **Start floor: 4** (two teams of 2). **Cap: 14** (two teams of 7). Always exactly two teams.
-- **The facilitator is a player.** They sit on a team and take clue-giving turns. They also get Lead-only controls (category pick, team edits, pause, skip turn, end round).
-- No auth. Lobby: display name. Same 6-character join code as every Moment. Phone is the primary controller; desktop works but is not optimized. Video call stays on the laptop.
+- **The facilitator is a player, on a phone.** They sit on a team and take clue-giving turns. The host link is not their player. Opening it claims a **Shared screen** seat (the same pattern as Airtime and On The Same Page) and shows the join code. They join with that code on a second device.
+- **The shared screen is the room clock.** It shows the timer, whose turn it is, the scores, and the facilitator controls (category pick, team switch, start, pause, skip, end round). It is never that person's turn. It never receives a card, a hint, or a preview, even while the facilitator is the clue-giver on their phone.
+- No auth. Lobby: display name. Same 6-character join code as every Moment. Phones are the controllers. The laptop is the shared screen. Video call stays on the laptop.
 - **New names close at Start.** Cookie / tap-your-name rejoin works for people already on the roster. No Admit late in v1.
 - Single main room on Teams. No breakouts. Cameras encouraged, not required; nothing depends on video.
 
@@ -223,7 +224,8 @@ Amber is reserved for Got it and timer urgency.
 | **Clue-giver** | Card name, Hint button (round 1 only), timer, Got it and Pass / Oops, Skip turn (ghost, small), round instruction |
 | **Active team guesser** | Timer, cards left, "X is giving clues to …", round role line. **No card, no hint** |
 | **Other team** | Timer, cards left, "X is giving clues to …", "Stay muted. Listen." **No card, no hint** |
-| **Lead** (in addition to player role) | Pause / Resume and End round now on HOLD; Skip turn during any TURN; round, turns this round, cards left |
+| **Shared screen** | Timer, cards left, who is giving clues and to whom, scores, facilitator controls. **No card, no hint, no preview, no Got it / Pass / Oops.** Labeled "Shared screen", never "you" |
+| **Lead controls** (on the shared screen) | Pause / Resume and End round now on HOLD; Skip turn during any TURN; round, turns this round, cards left |
 
 ### 9.2 Controls
 
@@ -263,12 +265,12 @@ Connectivity uses the same presence signal Talk Track uses at turn start.
 
 The card name and hint are the DIBE image.
 
-- **TURN:** only the current clue-giver's play read contains the current card (name, plus hint in round 1 only; round 2 sends no hint). Everyone else, including their own teammates, never receives it — not in the play payload, Realtime, or an error.
-- **PREVIEW:** each player's read contains only their own two preview cards.
+- **TURN:** only the current clue-giver's play read contains the current card (name, plus hint in round 1 only; round 2 sends no hint). Everyone else, including their own teammates and the shared screen, never receives it — not in the play payload, Realtime, or an error. The shared screen is identified by the reserved name "Shared screen", and that read is built with no card lookup at all.
+- **PREVIEW:** the shared screen's read contains no cards. Each phone's read contains only that player's two.
 - **The deck list is never sent to any client**, including the Lead.
 - Not on `session_state.state_json` if that column is open RLS; not on a session-wide channel.
 
-Every route using the service client verifies first: caller identity from cookie; caller belongs to the session; Got it and Pass / Oops — caller is the current clue-giver and the request's card id is the current card (stale or duplicate taps are rejected, not double-counted), and Pass / Oops is rejected in round 1; Skip turn — caller is the clue-giver or the Lead; category pick, team switches, Confirm teams, Start round, Pause, End round — caller is the Lead.
+Every route using the service client verifies first: caller identity from cookie; caller belongs to the session; Got it and Pass / Oops — caller is the current clue-giver and the request's card id is the current card (stale or duplicate taps are rejected, not double-counted), Pass / Oops is rejected in round 1, and the shared screen is rejected outright; Skip turn — caller is the clue-giver or the Lead; category pick, team switches, Confirm teams, Start round, Pause, End round — caller is the Lead (the shared screen).
 
 ---
 
@@ -372,7 +374,7 @@ Scores are derived from `say_less_card_events` + `say_less_turns` (got_it events
 | Default categories | Automotive & Fleet + Movie People |
 | Card collisions across categories | Kept |
 | Team formation | Random even split at Start; Lead **switches two people** before preview (Airtime / On The Same Page pattern) *(rev. Oct 27)* |
-| Facilitator | Plays on a team |
+| Facilitator | Plays on a phone. The host link is a shared screen: timer and controls, never a card |
 | Headcount | 4–14, always two teams of 2–7 |
 | Preview | **10s** server-timed, then READY hold, Lead starts round 1 *(rev. Oct 27)* |
 | Preview coverage | Max coverage, duplicates spread; gaps under 10 players accepted |

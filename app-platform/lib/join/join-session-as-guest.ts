@@ -129,14 +129,22 @@ export async function joinSessionAsGuestCore(input: {
   }
 
   if (protocolSlug === "say-less") {
-    const { count, error: countErr } = await supabase
+    if (isSharedScreenName(displayName)) {
+      return { ok: false, error: "That name is reserved. Pick another." };
+    }
+    const { data: rows, error: countErr } = await supabase
       .from("session_participants")
-      .select("id", { count: "exact", head: true })
+      .select("participants ( display_name )")
       .eq("session_id", sessionId);
     if (countErr) {
       return { ok: false, error: "Could not count the room. Try again." };
     }
-    if ((count ?? 0) >= 14) {
+    const players = (rows ?? []).filter((row) => {
+      const person = row.participants as { display_name?: string } | { display_name?: string }[] | null;
+      const name = Array.isArray(person) ? person[0]?.display_name : person?.display_name;
+      return !isSharedScreenName(name ?? "Player");
+    });
+    if (players.length >= 14) {
       return { ok: false, error: "This moment is full." };
     }
   }

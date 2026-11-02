@@ -19,7 +19,13 @@ import { createClient } from "@/lib/supabase/client";
 import type { LobbyParticipant } from "@/lib/types/lobby";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 
-const SHARED_SCREEN_SLUGS = new Set(["rank-and-file", "the-truth-is", "airtime", "on-the-same-page"]);
+const SHARED_SCREEN_SLUGS = new Set([
+  "rank-and-file",
+  "the-truth-is",
+  "airtime",
+  "on-the-same-page",
+  "say-less",
+]);
 
 function usesSharedScreen(slug: string | undefined): boolean {
   return slug !== undefined && SHARED_SCREEN_SLUGS.has(slug);

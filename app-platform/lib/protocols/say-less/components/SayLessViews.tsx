@@ -149,7 +149,7 @@ export function SayLessViews({ state, pending, error, send }: Props) {
     <div className="mx-auto flex min-h-[70vh] w-full max-w-lg flex-col gap-6 px-5 py-6">
       <SessionProgressBar progress={state.progress} />
       <p className="text-center font-mono text-[10px] font-medium uppercase tracking-widest text-steel-blue">
-        Say Less
+        {state.isDisplay ? "Shared screen" : "Say Less"}
       </p>
       <Instruction text={state.instruction} />
       {state.roleLine ? <Instruction text={state.roleLine} /> : null}
@@ -200,7 +200,9 @@ export function SayLessViews({ state, pending, error, send }: Props) {
             A preview of the deck
           </h1>
           <p className="-mt-3 text-center font-body text-slate">
-            These cards will come up in play. Remember them.
+            {state.isDisplay
+              ? "Each phone has two cards. Nothing to show here."
+              : "These cards will come up in play. Remember them."}
           </p>
           <WaoPlayTimer
             durationSeconds={SAY_LESS_PREVIEW_SECONDS}
