@@ -1,3 +1,4 @@
+import { isWorkshopTransaction, withWorkshopTransaction, workshopActionContext, workshopSnapshotRevision } from "@/lib/session/workshop-transaction";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { AIRTIME_CONFIG, cardById } from "./config";
@@ -182,6 +183,12 @@ export async function buildAirtimePlayState(input: {
   canControl: boolean;
   row: AirtimeSessionRow;
 }): Promise<AirtimePlayState> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopTransaction(input.admin, input.sessionId, "view", async client => {
+    const row = await loadAirtimeSession(client, input.sessionId);
+    if (!row) throw new Error("Airtime has not started.");
+    const state = await buildAirtimePlayState({ ...input, row, admin: client });
+    return state ? { ...state, workshopContext: workshopActionContext(client), workshopRevision: workshopSnapshotRevision(client) } : state;
+  });
   const { admin, sessionId, participantId, isDisplay, canControl, row } = input;
 
   const [roster, boats, members] = await Promise.all([

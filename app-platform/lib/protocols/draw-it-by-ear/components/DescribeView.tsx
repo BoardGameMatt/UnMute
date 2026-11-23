@@ -60,8 +60,8 @@ export const DescribeView = ({
   const handleTimerComplete = useCallback(async () => {
     if (firedRef.current) return;
     firedRef.current = true;
-    await sendAction("describeTimerExpired", { armedPhase, participantId });
-  }, [sendAction, armedPhase, participantId]);
+    await sendAction("describeTimerExpired", { armedPhase, participantId, timerStartedAt });
+  }, [sendAction, armedPhase, participantId, timerStartedAt]);
 
   const handleGo = useCallback(async () => {
     await sendAction("startBreakoutRound", { participantId });

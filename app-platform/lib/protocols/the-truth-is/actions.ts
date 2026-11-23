@@ -1,4 +1,5 @@
 import "server-only";
+import { isWorkshopTransaction, withWorkshopTransaction, withWorkshopAction, requireWorkshopDeadline, assertWorkshopActionContext } from "@/lib/session/workshop-transaction";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import {
@@ -72,6 +73,7 @@ async function persist(
 }
 
 export async function expireIfNeeded(admin: SupabaseClient, sessionId: string): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => expireIfNeeded(client, sessionId));
   for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt++) {
     const loaded = await loadTruthIsRecord(admin, sessionId);
     if (!loaded) return;
@@ -88,6 +90,7 @@ export async function expireIfNeeded(admin: SupabaseClient, sessionId: string): 
 }
 
 export async function resetTruthIsToLobby(admin: SupabaseClient, sessionId: string): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "reset", client => resetTruthIsToLobby(client, sessionId));
   const { error: entriesErr } = await admin.from("truth_is_entries").delete().eq("session_id", sessionId);
   if (entriesErr) throw new Error(entriesErr.message);
   const { error } = await admin.from("truth_is_sessions").delete().eq("session_id", sessionId);
@@ -98,6 +101,7 @@ export async function startTruthIs(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<ActionOk | ActionErr> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "start", client => startTruthIs(client, sessionId));
   const roster = (await loadRoster(admin, sessionId)).filter(
     (member) => !isSharedScreenName(member.displayName)
   );
@@ -132,6 +136,7 @@ export async function dispatchTruthIsAction(input: {
   isLead: boolean;
   action: TruthIsClientAction;
 }): Promise<TruthIsActionResult> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopAction(input.admin, input.sessionId, input.participantId, input.action, client => dispatchTruthIsAction({ ...input, admin: client }));
   const { admin, sessionId, participantId, isLead, action } = input;
 
   if (action.type === "advanceRecap") {
@@ -152,6 +157,7 @@ export async function dispatchTruthIsAction(input: {
     return { ok: true };
   }
 
+  assertWorkshopActionContext(admin);
   return commitAction(admin, sessionId, (state) => {
     if (action.type === "submitEntry" || action.type === "submitOnTimeout") {
       const round = action.round;
@@ -170,6 +176,7 @@ export async function dispatchTruthIsAction(input: {
         };
       }
 
+      if (action.type === "submitEntry") requireWorkshopDeadline(admin, Date.parse(state.timer_started_at ?? "") + state.timer_duration_seconds * 1000);
       const already = state.entries.some(
         (entry) => entry.author_id === participantId && entry.round_submitted === round
       );
@@ -189,6 +196,7 @@ export async function dispatchTruthIsAction(input: {
     }
 
     if (action.type === "submitVote") {
+      if (state.phase === "VOTING") requireWorkshopDeadline(admin, Date.parse(state.timer_started_at ?? "") + state.timer_duration_seconds * 1000);
       if (!state.participants.some((person) => person.id === participantId)) {
         return { kind: "result", result: fail(403, "The shared screen does not guess.") };
       }

@@ -1,3 +1,4 @@
+import { isWorkshopTransaction, withWorkshopTransaction, workshopActionContext, workshopSnapshotRevision } from "@/lib/session/workshop-transaction";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
@@ -10,7 +11,7 @@ import type {
   CoverStoryWordLog,
 } from "@/lib/types/database";
 import { COVER_STORY_GUESS_SECONDS, type CoverStoryPlayState } from "./types";
-import { missionCopyPaste, loadDeals, loadMembers } from "./session";
+import { missionCopyPaste, loadDeals, loadMembers, loadCoverStorySession } from "./session";
 import { missionScore, type1Score, type2Score } from "./score";
 import { ensureDealPickToken } from "./pick-token";
 import { buildPickUrl } from "./pick-page";
@@ -23,6 +24,12 @@ export async function buildPlayState(input: {
   cs: CoverStorySession;
   appOrigin?: string;
 }): Promise<CoverStoryPlayState> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopTransaction(input.admin, input.sessionId, "view", async client => {
+    const cs = await loadCoverStorySession(client, input.sessionId);
+    if (!cs) throw new Error("Cover Story is not initialized.");
+    const state = await buildPlayState({ ...input, cs, admin: client });
+    return { ...state, workshopContext: workshopActionContext(client), workshopRevision: workshopSnapshotRevision(client) };
+  });
   const { admin, sessionId, participantId, isLead, cs, appOrigin } = input;
   const members = await loadMembers(admin, sessionId);
   const deals = await loadDeals(admin, cs.id);

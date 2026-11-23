@@ -27,8 +27,8 @@ export const ShowDrawingsView = ({
   const handleTimerComplete = useCallback(async () => {
     if (firedRef.current) return;
     firedRef.current = true;
-    await sendAction("showDrawingsTimerExpired", { armedPhase });
-  }, [sendAction, armedPhase]);
+    await sendAction("showDrawingsTimerExpired", { armedPhase, timerStartedAt: state.timer_started_at });
+  }, [sendAction, armedPhase, state.timer_started_at]);
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center px-5 py-12">

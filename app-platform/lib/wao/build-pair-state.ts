@@ -108,6 +108,8 @@ export async function buildPairPlayState(args: {
     items,
     selectionMine: perspective.selectionMine,
     selectionTheirs: perspective.selectionTheirs,
+    lastClientSeq: taps.reduce((last, tap) =>
+      tap.participant_id === participantId ? Math.max(last, tap.client_seq) : last, 0),
     channel: waoPairChannelName(round.id, pair.id),
   };
 

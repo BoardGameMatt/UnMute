@@ -80,6 +80,8 @@ export interface DibeRoundState {
 }
 
 export interface DibeState {
+  /** Persistence revision; absent on sessions saved before concurrency protection. */
+  write_revision?: number;
   version: typeof DIBE_PROTOCOL_VERSION;
   phase: DibePhase;
   participants: DibeParticipant[];
@@ -111,6 +113,8 @@ export interface DibeState {
   rounds: DibeRoundState[];
   /** participant id → { criterionText → true/false } for current scoring sub-phase */
   scoring_submissions: Record<string, Record<string, boolean>>;
+  /** Accepted answers remain available after each tier's form closes. */
+  round_scoring_submissions?: Record<string, Record<string, Record<string, boolean>>>;
   /** Merged hits for current round scoring tiers */
   round_criterion_hits: Record<string, number>;
   /** Cumulative individual scores across scored rounds */

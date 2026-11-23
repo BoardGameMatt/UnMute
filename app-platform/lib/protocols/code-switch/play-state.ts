@@ -189,6 +189,7 @@ export async function buildCodeSwitchPlayState(input: {
     persistentInstruction: copy.persistent,
     progress: completed / expected,
     roundIndex: round?.round_index ?? 0,
+    roundId: round?.id ?? null,
     teamScore: cs?.team_score ?? 0,
     guesserName,
     lockedCount: clues.length,

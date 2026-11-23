@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authorizePairMember } from "@/lib/wao/authorize-pair";
 import { broadcastPairEvent } from "@/lib/wao/broadcast";
 import { reduceTaps } from "@/lib/wao/reduce-taps";
+import { WAO_SETTLE_SECONDS } from "@/lib/wao/types";
 import type { WaoTap, WaoTapAction } from "@/lib/types/database";
 
 type RouteContext = { params: { pairId: string } };
@@ -10,6 +11,7 @@ type TapBody = {
   itemId?: unknown;
   action?: unknown;
   clientSeq?: unknown;
+  operationId?: unknown;
 };
 
 /**
@@ -50,8 +52,15 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
+  if (body.operationId !== undefined && (typeof body.operationId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.operationId))) return NextResponse.json({ error: "Invalid operation ID." }, { status: 400 });
+
   if (auth.round.locked_at) {
     return NextResponse.json({ error: "Round is already locked." }, { status: 409 });
+  }
+  const startedMs = Date.parse(auth.round.started_at ?? "");
+  const cutoffMs = startedMs + (auth.waoSession.timer_seconds + WAO_SETTLE_SECONDS) * 1000;
+  if (!Number.isFinite(cutoffMs) || Date.now() >= cutoffMs) {
+    return NextResponse.json({ error: "The round's input window has ended." }, { status: 409 });
   }
 
   const { data: item, error: itemErr } = await auth.admin
@@ -68,7 +77,16 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Item is not part of this question." }, { status: 400 });
   }
 
-  const { data: inserted, error: insertErr } = await auth.admin
+  let inserted: WaoTap | null = null;
+  let insertErr: { code?: string; message: string } | null = null;
+  let wasDeduped = false;
+  if (typeof body.operationId === "string") {
+    const result = await auth.admin.rpc("record_wao_tap", { p_pair_id: auth.pair.id, p_actor_id: auth.participantId,
+      p_item_id: itemId, p_action: action, p_client_seq: clientSeq, p_operation_id: body.operationId });
+    insertErr = result.error;
+    if (result.data) { inserted = result.data.tap as WaoTap; wasDeduped = result.data.deduped === true; }
+  } else {
+    const result = await auth.admin
     .from("wao_taps")
     .insert({
       pair_id: auth.pair.id,
@@ -79,21 +97,31 @@ export async function POST(request: Request, context: RouteContext) {
     })
     .select("id, pair_id, participant_id, item_id, action, client_seq, created_at")
     .maybeSingle();
+    inserted = result.data as WaoTap | null; insertErr = result.error;
+  }
 
   if (insertErr) {
+    if (insertErr.code === "40001" || insertErr.code === "40P01") return NextResponse.json({ error: "The round input window changed. Refresh the pair state." }, { status: 409 });
     if (insertErr.code === "23505") {
-      const { data: existing } = await auth.admin
+      const { data: existing, error: existingErr } = await auth.admin
         .from("wao_taps")
         .select("id, pair_id, participant_id, item_id, action, client_seq, created_at")
         .eq("pair_id", auth.pair.id)
         .eq("participant_id", auth.participantId)
         .eq("client_seq", clientSeq)
         .maybeSingle();
+      if (existingErr || !existing) {
+        return NextResponse.json({ error: existingErr?.message ?? "Could not verify the prior tap." }, { status: 500 });
+      }
+      if (existing.item_id !== itemId || existing.action !== action) {
+        return NextResponse.json({ error: "This tap sequence was already used for a different action. Refresh the pair state and try again." }, { status: 409 });
+      }
 
-      const { data: allTaps } = await auth.admin
+      const { data: allTaps, error: allTapsErr } = await auth.admin
         .from("wao_taps")
         .select("id, pair_id, participant_id, item_id, action, client_seq, created_at")
         .eq("pair_id", auth.pair.id);
+      if (allTapsErr) return NextResponse.json({ error: allTapsErr.message }, { status: 500 });
 
       const sets = reduceTaps(
         (allTaps ?? []) as WaoTap[],
@@ -149,7 +177,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   return NextResponse.json({
     ok: true,
-    deduped: false,
+    deduped: wasDeduped,
     tap,
     selectionA: sets.selectionA,
     selectionB: sets.selectionB,

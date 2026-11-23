@@ -1,4 +1,6 @@
 "use client";
+import { usePersistedDraft } from "@/hooks/usePersistedDraft";
+import { useSessionContext } from "@/components/providers/SessionProvider";
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -414,13 +416,13 @@ export function RankAndFileViews({
 }: Props) {
   const router = useRouter();
   const reduceMotion = useReducedMotion() ?? false;
-  const [draft, setDraft] = useState("");
+  const { session } = useSessionContext();
+  const [draft, setDraft] = usePersistedDraft(`unmute:draft:rank:${sessionId}:${session.lifecycle_version}:${state.participantId}:${state.roundIndex}`);
   const [wrapConfirm, setWrapConfirm] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const showFacilitatorPhone = state.isLead && !isDisplay;
 
   useEffect(() => {
-    setDraft("");
     setSelectedId(null);
     setWrapConfirm(false);
   }, [state.roundIndex, state.phase]);

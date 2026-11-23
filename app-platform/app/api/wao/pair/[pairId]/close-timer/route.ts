@@ -1,3 +1,4 @@
+import { withWorkshopTransaction, WorkshopWriteConflict } from "@/lib/session/workshop-transaction";
 import { NextResponse } from "next/server";
 import { authorizePairMember } from "@/lib/wao/authorize-pair";
 import { broadcastPairEvent } from "@/lib/wao/broadcast";
@@ -18,6 +19,24 @@ export async function POST(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
+  try {
+    const response = await withWorkshopTransaction(auth.admin, auth.waoSession.session_id, "action", async client => {
+      const { data: fresh } = await client.from("wao_rounds").select("*").eq("id", auth.round.id).maybeSingle();
+      if (!fresh) return NextResponse.json({ error: "The round no longer exists." }, { status: 409 });
+      return closeAuthorizedRound({ ...auth, admin: client, round: fresh as WaoRound });
+    });
+    if (response.ok) {
+      const result = await response.clone().json() as { lockedAt: string; lockReason: "timer" };
+      await broadcastPairEvent(auth.admin, auth.round.id, auth.pair.id, { type: "round_locked", pairId: auth.pair.id, lockedAt: result.lockedAt, lockReason: result.lockReason });
+    }
+    return response;
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Could not close the round." }, { status: error instanceof WorkshopWriteConflict ? 409 : 500 });
+  }
+}
+
+type PairAuth = Extract<Awaited<ReturnType<typeof authorizePairMember>>, { ok: true }>;
+async function closeAuthorizedRound(auth: PairAuth): Promise<Response> {
   let round: WaoRound = auth.round;
   let alreadyLocked = Boolean(auth.round.locked_at);
 
@@ -80,13 +99,6 @@ export async function POST(_request: Request, context: RouteContext) {
   if (!scored.ok) {
     return NextResponse.json({ error: scored.error }, { status: 500 });
   }
-
-  await broadcastPairEvent(auth.admin, round.id, auth.pair.id, {
-    type: "round_locked",
-    pairId: auth.pair.id,
-    lockedAt: round.locked_at,
-    lockReason: round.lock_reason,
-  });
 
   return NextResponse.json({
     ok: true,

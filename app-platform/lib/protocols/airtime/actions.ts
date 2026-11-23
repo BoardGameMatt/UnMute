@@ -1,4 +1,5 @@
 import "server-only";
+import { isWorkshopTransaction, withWorkshopTransaction, withWorkshopAction, requireWorkshopDeadline, assertWorkshopActionContext } from "@/lib/session/workshop-transaction";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Json } from "@/lib/types/database";
 import { AIRTIME_CONFIG } from "./config";
@@ -62,6 +63,7 @@ function publicExtra(row: Pick<AirtimeSessionRow, "current_dive" | "current_turn
 // Start / reset
 
 export async function resetAirtimeToLobby(admin: SupabaseClient, sessionId: string): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "reset", client => resetAirtimeToLobby(client, sessionId));
   for (const table of [
     "airtime_events",
     "airtime_choices",
@@ -78,6 +80,7 @@ export async function resetAirtimeToLobby(admin: SupabaseClient, sessionId: stri
 }
 
 export async function startAirtime(admin: SupabaseClient, sessionId: string): Promise<AirtimeActionResult> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "start", client => startAirtime(client, sessionId));
   const players = playersOf(await loadRoster(admin, sessionId));
   if (players.length < AIRTIME_CONFIG.minPlayers) return fail(400, "Need 2 to start.");
   if (players.length > AIRTIME_CONFIG.maxPlayers) return fail(400, "Airtime holds 16 players at most.");
@@ -293,6 +296,7 @@ async function resolveOpenTurn(
 
 /** Server clocks: a legacy rules-phase session auto-starts dive 1; an expired window resolves. */
 export async function expireIfNeeded(admin: SupabaseClient, sessionId: string): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => expireIfNeeded(client, sessionId));
   const row = await loadAirtimeSession(admin, sessionId);
   if (!row) return;
   const now = Date.now();
@@ -334,9 +338,11 @@ export async function dispatchAirtimeAction(input: {
   isDisplay: boolean;
   action: AirtimeAction;
 }): Promise<AirtimeActionResult> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopAction(input.admin, input.sessionId, input.participantId, input.action, client => dispatchAirtimeAction({ ...input, admin: client }));
   const { admin, sessionId, participantId, canControl, isDisplay, action } = input;
 
   await expireIfNeeded(admin, sessionId);
+  if (action.type !== "timerExpired") assertWorkshopActionContext(admin);
   const row = await loadAirtimeSession(admin, sessionId);
   if (!row) return fail(400, "Airtime has not started.");
 
@@ -354,6 +360,7 @@ export async function dispatchAirtimeAction(input: {
       const choice: Choice | null =
         action.choice === "deeper" || action.choice === "up" ? action.choice : null;
       if (!choice) return fail(400, "Pick Dive Deeper or Swim back up.");
+      requireWorkshopDeadline(admin, Date.parse(row.turn_ends_at ?? "") + AIRTIME_CONFIG.lateChoiceGraceSeconds * 1000);
       const openTurn = row.current_turn + 1;
       if (action.turn !== openTurn) return fail(409, "That turn is over.");
       if (row.window_opens_at && Date.now() < new Date(row.window_opens_at).getTime()) {
@@ -364,6 +371,8 @@ export async function dispatchAirtimeAction(input: {
       if (!canChoose(diver, choice)) {
         return fail(400, diver.status === "underwater" ? "You're as deep as it goes." : "You're out of the water.");
       }
+      const previous = (await loadChoices(admin, sessionId, row.current_dive, openTurn))[participantId];
+      if (previous && previous !== choice) return fail(409, "You already locked a different choice for this turn.");
       const { error } = await admin.from("airtime_choices").upsert(
         {
           session_id: sessionId,

@@ -15,11 +15,9 @@ export async function broadcastPairEvent(
   payload: WaoBroadcastPayload
 ): Promise<void> {
   const topic = waoPairChannelName(roundId, pairId);
-  const channel = admin.channel(topic, {
-    config: { broadcast: { ack: false, self: false } },
-  });
-
+  let channel: ReturnType<SupabaseClient["channel"]> | undefined;
   try {
+    channel = admin.channel(topic, { config: { broadcast: { ack: false, self: false } } });
     const result = await channel.httpSend(payload.type, payload);
     if (!result.success) {
       console.error(
@@ -30,6 +28,9 @@ export async function broadcastPairEvent(
   } catch (err) {
     console.error(`[wao] broadcast threw on ${topic}:`, err);
   } finally {
-    await admin.removeChannel(channel);
+    if (channel) {
+      try { await admin.removeChannel(channel); }
+      catch (error) { console.error(`[wao] channel cleanup failed on ${topic}:`, error); }
+    }
   }
 }

@@ -16,6 +16,7 @@ import { SessionJoinQr } from "@/components/session/session-join-qr";
 import { JOIN_URL_DISPLAY } from "@/lib/constants";
 import { useSessionParticipants } from "@/hooks/useSessionParticipants";
 import { createClient } from "@/lib/supabase/client";
+import { withActionTimeout } from "@/lib/session/action-timeout";
 import type { LobbyParticipant } from "@/lib/types/lobby";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 
@@ -33,6 +34,7 @@ function usesSharedScreen(slug: string | undefined): boolean {
 
 type SessionLobbyViewProps = {
   sessionId: string;
+  lifecycleVersion?: number;
   protocolName: string;
   protocolSlug?: string;
   minPlayers?: number;
@@ -47,7 +49,7 @@ type SessionLobbyViewProps = {
 };
 
 export function SessionLobbyView({
-  sessionId,
+  sessionId, lifecycleVersion,
   protocolName,
   protocolSlug,
   minPlayers = 3,
@@ -63,6 +65,7 @@ export function SessionLobbyView({
   const participants = useSessionParticipants(sessionId, initialParticipants);
   const supabase = useMemo(() => createClient(), []);
   const [startError, setStartError] = useState<string | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [transferError, setTransferError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isStarting, setIsStarting] = useState(false);
@@ -105,31 +108,44 @@ export function SessionLobbyView({
   }, [participants, currentRole, currentParticipantId, router]);
 
   useEffect(() => {
-    if (currentRole !== "member") return;
-
-    const channel = supabase
-      .channel(`sessions_lobby:${sessionId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "sessions",
-          filter: `id=eq.${sessionId}`,
-        },
-        (payload) => {
-          const next = payload.new as { status?: string };
-          if (next.status === "active") {
-            router.replace(`/session/${sessionId}`);
-          }
+    let stopped = false;
+    let controller: AbortController | null = null;
+    let sequence = 0;
+    const reconcile = async (force = false) => {
+      if (stopped || (controller && !force)) return;
+      controller?.abort();
+      const active = new AbortController(); controller = active;
+      const token = ++sequence;
+      const timeout = window.setTimeout(() => active.abort(), 2500);
+      try {
+        const { data, error } = await supabase.from("sessions").select("status,lifecycle_version")
+          .eq("id", sessionId).abortSignal(active.signal).maybeSingle();
+        if (stopped || token !== sequence) return;
+        if (error || !data) throw new Error("Session unavailable");
+        setConnectionError(null);
+        if (data.status !== "lobby") { stopped = true; router.replace(`/session/${sessionId}`); }
+        else if (lifecycleVersion !== undefined && data.lifecycle_version !== lifecycleVersion) {
+          stopped = true; router.refresh();
         }
-      )
-      .subscribe();
-
+      } catch {
+        if (!stopped && token === sequence) setConnectionError("Connection interrupted. Reconnecting…");
+      } finally { window.clearTimeout(timeout); if (controller === active) controller = null; }
+    };
+    const channel = supabase.channel(`sessions_lobby:${sessionId}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "sessions", filter: `id=eq.${sessionId}` }, () => { void reconcile(); })
+      .subscribe((status) => { if (status === "SUBSCRIBED") void reconcile(true); });
+    void reconcile();
+    const interval = window.setInterval(() => { void reconcile(); }, 2000);
+    const resume = () => { if (document.visibilityState !== "hidden") void reconcile(true); };
+    window.addEventListener("online", resume); window.addEventListener("focus", resume);
+    window.addEventListener("pageshow", resume); document.addEventListener("visibilitychange", resume);
     return () => {
+      stopped = true; ++sequence; controller?.abort(); window.clearInterval(interval);
+      window.removeEventListener("online", resume); window.removeEventListener("focus", resume);
+      window.removeEventListener("pageshow", resume); document.removeEventListener("visibilitychange", resume);
       void supabase.removeChannel(channel);
     };
-  }, [currentRole, sessionId, supabase, router]);
+  }, [sessionId, lifecycleVersion, supabase, router]);
 
   // New lead (after transfer) should see Start; refresh when our row becomes lead.
   useEffect(() => {
@@ -148,10 +164,13 @@ export function SessionLobbyView({
     setIsStarting(true);
     setShareAckOpen(false);
     startTransition(async () => {
-      const result = await startSessionAction(sessionId);
-      if (result && "error" in result && result.error) {
+      try {
+        const result = await withActionTimeout(() => startSessionAction(sessionId, lifecycleVersion));
+        if (result && "error" in result && result.error) setStartError(result.error);
+      } catch {
+        setStartError("Start was not confirmed. Check the workshop and try again.");
+      } finally {
         setIsStarting(false);
-        setStartError(result.error);
       }
     });
   };
@@ -181,6 +200,7 @@ export function SessionLobbyView({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-5 py-10 sm:px-8 sm:py-14">
+      {connectionError ? <p role="status" className="font-body text-sm text-slate">{connectionError}</p> : null}
       <header className="space-y-2 text-center">
         <h1 className="font-display text-3xl font-bold leading-tight text-deep-navy sm:text-4xl">
           {protocolName}

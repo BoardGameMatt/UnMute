@@ -117,56 +117,47 @@ function findMinCostMatching(
     throw new Error("findMinCostMatching requires an even-sized list");
   }
 
-  let bestCost = Number.POSITIVE_INFINITY;
-  const bestMatchings: Pairing[][] = [];
-
-  const dfs = (
-    remaining: readonly string[],
-    current: Pairing[],
-    costSoFar: number
-  ): void => {
-    if (remaining.length === 0) {
-      if (costSoFar < bestCost) {
-        bestCost = costSoFar;
-        bestMatchings.length = 0;
-        bestMatchings.push(current.map((p) => [p[0], p[1]] as Pairing));
-      } else if (costSoFar === bestCost) {
-        bestMatchings.push(current.map((p) => [p[0], p[1]] as Pairing));
-      }
-      return;
+  // Memoise subset costs/counts instead of retaining every equally good
+  // matching (23!! possibilities at the supported 24-person maximum).
+  const memo = new Map<number, { cost: number; count: number }>();
+  memo.set(0, { cost: 0, count: 1 });
+  const solve = (mask: number): { cost: number; count: number } => {
+    const cached = memo.get(mask);
+    if (cached) return cached;
+    const firstBit = mask & -mask;
+    const first = 31 - Math.clz32(firstBit);
+    const rest = mask ^ firstBit;
+    let cost = Infinity, count = 0;
+    for (let candidates = rest; candidates; candidates &= candidates - 1) {
+      const bit = candidates & -candidates;
+      const partner = 31 - Math.clz32(bit);
+      const child = solve(rest ^ bit);
+      const candidate = child.cost + edgeCost(costs, ids[first]!, ids[partner]!);
+      if (candidate < cost) { cost = candidate; count = child.count; }
+      else if (candidate === cost) count += child.count;
     }
-    if (costSoFar > bestCost) return;
-
-    const first = remaining[0];
-    if (first === undefined) return;
-
-    for (let i = 1; i < remaining.length; i += 1) {
-      const partner = remaining[i];
-      if (partner === undefined) continue;
-      const nextCost = costSoFar + edgeCost(costs, first, partner);
-      if (nextCost > bestCost) continue;
-
-      const nextRemaining: string[] = [];
-      for (let j = 1; j < remaining.length; j += 1) {
-        if (j === i) continue;
-        const id = remaining[j];
-        if (id !== undefined) nextRemaining.push(id);
-      }
-
-      current.push([first, partner]);
-      dfs(nextRemaining, current, nextCost);
-      current.pop();
-    }
+    const result = { cost, count };
+    memo.set(mask, result);
+    return result;
   };
-
-  dfs(ids, [], 0);
-
-  if (bestMatchings.length === 0) {
-    throw new Error("No perfect matching found for even roster");
+  const matching: Pairing[] = [];
+  let mask = (1 << ids.length) - 1;
+  while (mask) {
+    const best = solve(mask);
+    const firstBit = mask & -mask, first = 31 - Math.clz32(firstBit);
+    const rest = mask ^ firstBit;
+    let pick = Math.floor(Math.min(1 - Number.EPSILON, Math.max(0, random())) * best.count);
+    for (let candidates = rest; candidates; candidates &= candidates - 1) {
+      const bit = candidates & -candidates, partner = 31 - Math.clz32(bit);
+      const child = solve(rest ^ bit);
+      if (child.cost + edgeCost(costs, ids[first]!, ids[partner]!) !== best.cost) continue;
+      pick -= child.count;
+      if (pick < 0 || (candidates & (candidates - 1)) === 0) {
+        matching.push([ids[first]!, ids[partner]!]); mask = rest ^ bit; break;
+      }
+    }
   }
-
-  const pick = Math.floor(random() * bestMatchings.length);
-  return bestMatchings[pick] ?? bestMatchings[0]!;
+  return matching;
 }
 
 function toAssignedPairs(
@@ -218,6 +209,8 @@ export function assignPairs(
     seen.add(id);
     roster.push(id);
   }
+
+  if (roster.length > 24) return { ok: false, reason: "Wrong Answers Only holds 24 people at most." };
 
   const orderIndex = new Map(roster.map((id, i) => [id, i]));
   const costs = buildPairCosts(history);

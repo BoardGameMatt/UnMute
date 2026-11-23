@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { TimerArc } from "@/components/ui/TimerArc";
+import { useDibeScoringInput } from "../hooks/useDibeScoringInput";
 import { useDibeImage } from "../hooks/useDibeImage";
 import type { DibeCriterion, DibePhase } from "../types";
 
@@ -32,40 +33,25 @@ export const ScoringCriteriaForm = ({
   sendAction,
 }: ScoringCriteriaFormProps) => {
   const { signedUrl, loading, error } = useDibeImage(sessionId, participantId, true);
-  const [answers, setAnswers] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    for (const c of criteria) {
-      if (typeof existingAnswers?.[c.text] === "boolean") {
-        initial[c.text] = existingAnswers[c.text];
-      }
-    }
-    return initial;
-  });
-  const [submitted, setSubmitted] = useState(false);
+  const scoring = useDibeScoringInput(sessionId, participantId, phase, timerStartedAt, existingAnswers);
+  const { answers, submitted, submit } = scoring;
 
   const allAnswered = useMemo(
     () => criteria.every((c) => typeof answers[c.text] === "boolean"),
     [criteria, answers]
   );
 
-  const handleToggle = (text: string, value: boolean) => {
-    if (submitted) return;
-    setAnswers((prev) => ({ ...prev, [text]: value }));
-  };
-
+  const handleToggle = scoring.setAnswer;
   const handleSubmit = useCallback(async () => {
-    if (!allAnswered || submitted) return;
-    setSubmitted(true);
-    await sendAction("submitScoring", { participantId, answers });
-  }, [allAnswered, submitted, sendAction, participantId, answers]);
-
+    if (allAnswered && !submitted) await submit();
+  }, [allAnswered, submitted, submit]);
   const handleTimerComplete = useCallback(async () => {
-    if (!submitted) {
-      setSubmitted(true);
-      await sendAction("submitScoring", { participantId, answers });
+    try { if (!submitted) await submit(); }
+    finally {
+      // A failed submission must never prevent the shared timer from advancing.
+      await sendAction("scoringTimerExpired", { armedPhase: phase, timerStartedAt }).catch(() => {});
     }
-    await sendAction("scoringTimerExpired", { armedPhase: phase });
-  }, [submitted, sendAction, participantId, answers, phase]);
+  }, [submitted, submit, sendAction, phase, timerStartedAt]);
 
   let buttonClass =
     "mt-8 w-full rounded-md px-5 py-4 font-display text-base font-semibold transition-colors duration-200";
@@ -155,13 +141,14 @@ export const ScoringCriteriaForm = ({
           })}
         </ul>
 
+        {scoring.error ? <p role="status" className="mt-4 font-body text-sm text-slate">{scoring.error}</p> : null}
         <button
           type="button"
           disabled={!allAnswered || submitted}
           onClick={() => void handleSubmit()}
           className={buttonClass}
         >
-          {submitted ? "Submitted" : "Submit"}
+          {scoring.pending ? "Saving…" : submitted ? "Submitted" : "Submit"}
         </button>
       </div>
     </div>

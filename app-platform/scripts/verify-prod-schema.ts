@@ -143,6 +143,23 @@ async function main(): Promise<void> {
     const failure = await checkObject(supabase, check);
     if (failure) failures.push(failure);
   }
+  const { data: transactionsReady, error: transactionError } = await supabase.rpc("workshop_transaction_schema_ready");
+  if (transactionError || transactionsReady !== true) {
+    failures.push(`[Workshop transactions] missing or unavailable atomic transition functions (migration 033) — ${transactionError?.message ?? "schema probe returned false"}`);
+  }
+  const { data: recoveryReady, error: recoveryError } = await supabase.rpc("workshop_browser_recovery_schema_ready");
+  if (recoveryError || recoveryReady !== true) {
+    failures.push(`[Browser input recovery] missing or unavailable durable input receipts (migration 034) — ${recoveryError?.message ?? "schema probe returned false"}`);
+  }
+  const { data: sessionsReady, error: sessionsError } = await supabase.rpc("workshop_session_reliability_schema_ready");
+  if (sessionsError || sessionsReady !== true) {
+    failures.push(`[Session recovery/lifecycle] missing snapshot revision or lifecycle functions (migrations 035/036) — ${sessionsError?.message ?? "schema probe returned false"}`);
+  }
+
+  const { data: remainingReady, error: remainingError } = await supabase.rpc("workshop_remaining_reliability_schema_ready");
+  if (remainingError || remainingReady !== true) {
+    failures.push(`[Remaining protocol recovery] missing transaction, drawing, or pair input guards (migrations 037/038) — ${remainingError?.message ?? "schema probe returned false"}`);
+  }
 
   if (failures.length === 0) {
     console.log("All schema checks passed.");

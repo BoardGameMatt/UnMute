@@ -93,6 +93,7 @@ export interface ProtocolSlot {
 export type SessionStatus = "lobby" | "active" | "completed" | "cancelled";
 
 export interface Session {
+  lifecycle_version?: number;
   id: string;
   protocol_id: string;
   protocol_slot_id: string | null;
@@ -130,6 +131,7 @@ export interface SessionParticipant {
 }
 
 export interface SessionState {
+  revision: number;
   id: string;
   session_id: string;
   current_round: number;

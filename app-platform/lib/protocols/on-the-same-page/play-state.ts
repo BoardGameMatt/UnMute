@@ -1,3 +1,4 @@
+import { isWorkshopTransaction, withWorkshopTransaction, workshopActionContext, workshopSnapshotRevision } from "@/lib/session/workshop-transaction";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { advanceIfDue } from "./actions";
@@ -13,6 +14,10 @@ export async function loadOtspPlayState(input: {
   canControl: boolean;
   skipMaintenance?: boolean;
 }): Promise<OtspClientState | null> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopTransaction(input.admin, input.sessionId, "view", async client => {
+    const state = await loadOtspPlayState({ ...input, admin: client });
+    return state ? { ...state, workshopContext: workshopActionContext(client), workshopRevision: workshopSnapshotRevision(client) } : state;
+  });
   let stored = await loadStoredGame(input.admin, input.sessionId);
   if (!stored) return null;
 

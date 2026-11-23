@@ -525,6 +525,7 @@ export function initializeGame(
     images_used: [],
     rounds: [],
     scoring_submissions: {},
+    round_scoring_submissions: {},
     round_criterion_hits: {},
     participant_cumulative_scores: emptyScores(ids),
     describer_best_round_scores: emptyScores(ids),
@@ -656,6 +657,28 @@ export function onDescribeTimerExpired(
     return markRoomDrawingComplete(state, participantId);
   }
   return state;
+}
+
+/** Server action gate. Lead recovery remains deliberately independent of expiry. */
+export function dibeExpiryDelayMs(
+  state: DibeState,
+  actionType: string,
+  payload: Record<string, unknown>,
+  nowMs = Date.now()
+): number | null {
+  if (![
+    "describeTimerExpired", "showDrawingsTimerExpired", "scoringTimerExpired",
+  ].includes(actionType)) return 0;
+  if (payload.armedPhase !== state.phase) return null;
+  const participantId = typeof payload.participantId === "string" ? payload.participantId : null;
+  const start = actionType === "describeTimerExpired" && state.phase === "ROUND_DESCRIBE"
+    ? (participantId ? getBreakoutRoundStart(state, participantId)?.drawing_started_at : null)
+    : state.timer_started_at;
+  if (!start || state.timer_duration_seconds <= 0) return null;
+  // Older open clients omit this field. Their expiry still obeys the deadline.
+  if (payload.timerStartedAt !== undefined && payload.timerStartedAt !== start) return null;
+  const deadline = Date.parse(start) + state.timer_duration_seconds * 1000;
+  return Number.isFinite(deadline) ? Math.max(0, deadline - nowMs) : null;
 }
 
 /**
@@ -840,6 +863,10 @@ function advanceScoringPhase(state: DibeState): DibeState {
     };
   }
 
+  state = { ...state, round_scoring_submissions: {
+    ...state.round_scoring_submissions, [state.phase]: state.scoring_submissions,
+  } };
+
   if (state.phase === "ROUND_SCORING_1PT") {
     const criteria = criteriaForPoints(allCriteria, 1);
     const hits = mergeCriterionHits(
@@ -901,8 +928,10 @@ function finalizeRoundScoring(state: DibeState): DibeState {
   const allCriteria = activeImageCriteria(state);
   const participant_round_scores: Record<string, number> = {};
   for (const p of state.participants) {
-    const answers = state.scoring_submissions[p.id] ?? {};
-    participant_round_scores[p.id] = scoreSubmission(allCriteria, answers);
+    participant_round_scores[p.id] = ([1, 2, 3] as const).reduce<number>((total, points) => {
+      const answers = state.round_scoring_submissions?.[`ROUND_SCORING_${points}PT`]?.[p.id] ?? {};
+      return total + scoreSubmission(criteriaForPoints(allCriteria, points), answers);
+    }, 0);
   }
 
   const team_round_scores = computeTeamRoundScores(state.teams, participant_round_scores);
@@ -1099,6 +1128,7 @@ export function startRound(state: DibeState): DibeState {
     images_used: [...state.images_used, image.id],
     round_criterion_hits: {},
     scoring_submissions: {},
+    round_scoring_submissions: {},
     team_round_starts: {},
     timer_started_at: null,
     last_expired_timer_at: null,

@@ -47,6 +47,8 @@ export type WaoPairPlayState = {
   items: WaoPublicItem[];
   selectionMine: string[];
   selectionTheirs: string[];
+  /** Last persisted sequence for this viewer; optional for older server responses. */
+  lastClientSeq?: number;
   channel: string;
 };
 

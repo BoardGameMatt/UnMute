@@ -77,6 +77,44 @@ WITH expected AS (
   UNION ALL SELECT '031_on_the_same_page.sql', 'table', 'otsp_rounds', NULL
   UNION ALL SELECT '031_on_the_same_page.sql', 'table', 'otsp_events', NULL
   UNION ALL SELECT '031_on_the_same_page.sql', 'table', 'otsp_rotation_debt', NULL
+  UNION ALL SELECT '032_say_less.sql', 'table', 'say_less_cards', NULL
+  UNION ALL SELECT '032_say_less.sql', 'table', 'say_less_sessions', NULL
+  UNION ALL SELECT '032_say_less.sql', 'table', 'say_less_teams', NULL
+  UNION ALL SELECT '032_say_less.sql', 'table', 'say_less_previews', NULL
+  UNION ALL SELECT '032_say_less.sql', 'table', 'say_less_turns', NULL
+  UNION ALL SELECT '032_say_less.sql', 'table', 'say_less_card_events', NULL
+  UNION ALL SELECT '033_atomic_workshop_transitions.sql', 'function', 'publish_workshop_state(uuid,text,text,jsonb)', NULL
+  UNION ALL SELECT '033_atomic_workshop_transitions.sql', 'function', 'commit_code_switch_transition(uuid,uuid,text,text,jsonb,jsonb,integer,jsonb)', NULL
+  UNION ALL SELECT '033_atomic_workshop_transitions.sql', 'function', 'lock_code_switch_clue(uuid,uuid,uuid,text,text)', NULL
+  UNION ALL SELECT '033_atomic_workshop_transitions.sql', 'function', 'commit_say_less_turn(uuid,integer,uuid,jsonb,jsonb,text)', NULL
+  UNION ALL SELECT '033_atomic_workshop_transitions.sql', 'function', 'workshop_transaction_schema_ready()', NULL
+  UNION ALL SELECT '034_browser_input_recovery.sql', 'column', 'operation_id', 'say_less_card_events'
+  UNION ALL SELECT '034_browser_input_recovery.sql', 'column', 'operation_version', 'say_less_card_events'
+  UNION ALL SELECT '034_browser_input_recovery.sql', 'unique_index', 'say_less_card_operation_once', NULL
+  UNION ALL SELECT '034_browser_input_recovery.sql', 'function', 'workshop_browser_recovery_schema_ready()', NULL
+  UNION ALL SELECT '035_session_snapshot_revision.sql', 'column', 'revision', 'session_state'
+  UNION ALL SELECT '035_session_snapshot_revision.sql', 'trigger', 'session_snapshot_revision', 'session_state'
+  UNION ALL SELECT '036_workshop_lifecycle.sql', 'column', 'lifecycle_version', 'sessions'
+  UNION ALL SELECT '036_workshop_lifecycle.sql', 'function', 'start_workshop_session(uuid,text,integer,jsonb)', NULL
+  UNION ALL SELECT '036_workshop_lifecycle.sql', 'function', 'reset_workshop_session(uuid,integer)', NULL
+  UNION ALL SELECT '036_workshop_lifecycle.sql', 'function', 'commit_say_less_setup(uuid,integer,text,jsonb,jsonb,jsonb,jsonb)', NULL
+  UNION ALL SELECT '036_workshop_lifecycle.sql', 'function', 'start_code_switch_round(uuid,uuid,jsonb)', NULL
+  UNION ALL SELECT '036_workshop_lifecycle.sql', 'function', 'finish_code_switch_phase(uuid,uuid,boolean)', NULL
+  UNION ALL SELECT '036_workshop_lifecycle.sql', 'function', 'complete_say_less_session(uuid,integer)', NULL
+  UNION ALL SELECT '036_workshop_lifecycle.sql', 'function', 'workshop_session_reliability_schema_ready()', NULL
+  UNION ALL SELECT '037_remaining_workshop_transactions.sql', 'table', 'workshop_action_receipts', NULL
+  UNION ALL SELECT '037_remaining_workshop_transactions.sql', 'function', 'load_workshop_transaction(uuid)', NULL
+  UNION ALL SELECT '037_remaining_workshop_transactions.sql', 'function', 'prepare_workshop_rows(uuid,text,jsonb)', NULL
+  UNION ALL SELECT '037_remaining_workshop_transactions.sql', 'function', 'commit_workshop_transaction(uuid,jsonb,jsonb,timestamp with time zone)', NULL
+  UNION ALL SELECT '038_json_and_pair_workshop_guards.sql', 'function', 'lookup_workshop_receipt(uuid,integer,uuid,uuid,jsonb)', NULL
+  UNION ALL SELECT '038_json_and_pair_workshop_guards.sql', 'function', 'commit_dibe_snapshot(uuid,integer,bigint,uuid,uuid,jsonb,jsonb)', NULL
+  UNION ALL SELECT '038_json_and_pair_workshop_guards.sql', 'function', 'record_wao_tap(uuid,uuid,uuid,text,integer,uuid)', NULL
+  UNION ALL SELECT '038_json_and_pair_workshop_guards.sql', 'function', 'workshop_remaining_reliability_schema_ready()', NULL
+  UNION ALL SELECT '038_json_and_pair_workshop_guards.sql', 'column', 'operation_id', 'wao_taps'
+  UNION ALL SELECT '038_json_and_pair_workshop_guards.sql', 'unique_index', 'wao_tap_operation_unique', NULL
+  UNION ALL SELECT '038_json_and_pair_workshop_guards.sql', 'trigger', 'dibe_snapshot_side_effects', 'session_state'
+  UNION ALL SELECT '038_json_and_pair_workshop_guards.sql', 'trigger', 'wao_tap_admission', 'wao_taps'
+  UNION ALL SELECT '038_json_and_pair_workshop_guards.sql', 'trigger', 'wao_session_lifecycle', 'sessions'
 ),
 present AS (
   SELECT
@@ -97,6 +135,14 @@ present AS (
         WHERE c.table_schema = 'public'
           AND c.table_name = e.parent_table
           AND c.column_name = e.object_name
+      )
+      WHEN e.kind = 'function' THEN to_regprocedure('public.' || e.object_name) IS NOT NULL
+      WHEN e.kind = 'trigger' THEN EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgrelid=to_regclass('public.' || e.parent_table)
+          AND tgname=e.object_name AND tgenabled IN ('O','A')
+      )
+      WHEN e.kind = 'unique_index' THEN EXISTS (
+        SELECT 1 FROM pg_index WHERE indexrelid = to_regclass('public.' || e.object_name) AND indisunique
       )
       ELSE false
     END AS ok

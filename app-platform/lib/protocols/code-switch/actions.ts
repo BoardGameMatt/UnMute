@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Json } from "@/lib/types/database";
+import { loadLifecycle } from "@/lib/session/lifecycle";
 import {
   GUESS_SECONDS,
   MIN_PLAYERS,
@@ -25,12 +25,11 @@ import {
   loadRoster,
   loadWord,
   resolvePackId,
-  syncPublicState,
   type CodeSwitchRoundRow,
   type CodeSwitchSessionRow,
   type RosterMember,
 } from "./store";
-import type { CodeSwitchAction, CodeSwitchEndReason, CodeSwitchPhase } from "./types";
+import type { CodeSwitchAction, CodeSwitchEndReason } from "./types";
 
 type ActionOk = { ok: true };
 type ActionErr = { ok: false; status: number; error: string };
@@ -40,79 +39,36 @@ function fail(status: number, error: string): ActionErr {
   return { ok: false, status, error };
 }
 
-async function poke(
-  admin: SupabaseClient,
-  sessionId: string,
-  phase: CodeSwitchPhase,
-  extra: Record<string, Json> = {}
-): Promise<void> {
-  await syncPublicState(admin, sessionId, phase, extra);
-}
-
-async function patchSession(
-  admin: SupabaseClient,
-  sessionId: string,
-  patch: Record<string, unknown>
-): Promise<void> {
-  const { error } = await admin
-    .from("code_switch_sessions")
-    .update(patch)
-    .eq("session_id", sessionId);
-  if (error) throw new Error(error.message);
-}
-
-async function patchSessionIfPhase(
-  admin: SupabaseClient,
-  sessionId: string,
-  expected: CodeSwitchPhase,
-  patch: Record<string, unknown>
-): Promise<boolean> {
-  const { data, error } = await admin
-    .from("code_switch_sessions")
-    .update(patch)
-    .eq("session_id", sessionId)
-    .eq("phase", expected)
-    .select("session_id")
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return Boolean(data);
-}
-
 export async function resetCodeSwitchToLobby(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
-  await admin
-    .from("code_switch_sessions")
-    .update({ current_round_id: null })
-    .eq("session_id", sessionId);
-  await admin.from("code_switch_rounds").delete().eq("session_id", sessionId);
-  await admin.from("code_switch_sessions").delete().eq("session_id", sessionId);
+  const lifecycle = await loadLifecycle(admin, sessionId);
+  const { data, error } = await admin.rpc("reset_workshop_session", {
+    p_session_id: sessionId, p_expected_version: lifecycle.lifecycle_version,
+  });
+  if (error || data !== true) throw new Error(error?.message ?? "The workshop changed. Refresh before resetting.");
 }
 
 export async function startCodeSwitch(
-  admin: SupabaseClient,
-  sessionId: string
+  admin: SupabaseClient, sessionId: string, expectedVersion?: number
 ): Promise<CodeSwitchActionResult> {
+  const lifecycle = await loadLifecycle(admin, sessionId);
+  if (lifecycle.status !== "lobby") return fail(409, "This workshop has already started or ended.");
   const roster = await loadRoster(admin, sessionId);
-  if (roster.length < MIN_PLAYERS) {
-    return fail(400, "Need 4 to start.");
-  }
-
-  await resolvePackId(admin, sessionId);
-  await resetCodeSwitchToLobby(admin, sessionId);
-
-  const { error } = await admin.from("code_switch_sessions").insert({
-    session_id: sessionId,
-    phase: "write",
-    team_score: 0,
-    current_round_id: null,
+  if (roster.length < MIN_PLAYERS) return fail(400, "Need 4 to start.");
+  const packId = await resolvePackId(admin, sessionId);
+  const words = await loadPackWords(admin, packId);
+  const word = pickWord(words, 1);
+  const guesserId = pickGuesser(roster.map(row => row.participantId), [], connectedIds(roster));
+  if (!word || !guesserId) return fail(400, "Could not prepare the first round.");
+  const { data, error } = await admin.rpc("start_workshop_session", {
+    p_session_id: sessionId, p_protocol: "code-switch",
+    p_expected_version: expectedVersion ?? lifecycle.lifecycle_version,
+    p_init: { wordId: word.id, guesserId, roundType: pickRoundType() },
   });
   if (error) return fail(500, error.message);
-
-  const cs = await loadCodeSwitchSession(admin, sessionId);
-  if (!cs) return fail(500, "SwitchCode session did not save.");
-  return beginRound(admin, sessionId, cs, roster);
+  return data === true ? { ok: true } : fail(409, "The workshop changed before Start. Refresh and try again.");
 }
 
 async function beginRound(
@@ -146,27 +102,12 @@ async function beginRound(
     return fail(500, "Could not pick a guesser.");
   }
 
-  const now = new Date().toISOString();
-  const { data: inserted, error } = await admin
-    .from("code_switch_rounds")
-    .insert({
-      session_id: sessionId,
-      round_index: nextIndex,
-      guesser_id: guesserId,
-      word_id: word.id,
-      round_type: pickRoundType(),
-      write_started_at: now,
-    })
-    .select("id")
-    .single();
-  if (error || !inserted) return fail(500, error?.message ?? "Could not start the round.");
-
-  await patchSession(admin, sessionId, {
-    phase: "write",
-    current_round_id: inserted.id,
+  const { data, error } = await admin.rpc("start_code_switch_round", {
+    p_session_id: sessionId, p_expected_round_id: cs.current_round_id,
+    p_round: { index: nextIndex, guesserId, wordId: word.id, roundType: pickRoundType() },
   });
-  await poke(admin, sessionId, "write");
-  return { ok: true };
+  if (error) return fail(500, error.message);
+  return data === true ? { ok: true } : fail(409, "Another facilitator already moved this round.");
 }
 
 function clueGiverIds(roster: RosterMember[], guesserId: string): string[] {
@@ -180,63 +121,48 @@ async function closeWrite(
   sessionId: string,
   round: CodeSwitchRoundRow
 ): Promise<void> {
-  const claimed = await patchSessionIfPhase(admin, sessionId, "write", { phase: "guess" });
-  if (!claimed) return;
-
-  const clues = await loadClues(admin, round.id);
-  const surviving = shuffleCopy(filterClues(clues.map((c) => c.normalized), round.round_type));
-  const survivedSet = new Set(surviving);
-
-  for (const clue of clues) {
-    const { error } = await admin
-      .from("code_switch_clues")
-      .update({ survived: survivedSet.has(clue.normalized) })
-      .eq("id", clue.id);
+  for (let attempt = 0; attempt < 25; attempt++) {
+    const clues = await loadClues(admin, round.id);
+    const surviving = shuffleCopy(filterClues(clues.map((c) => c.normalized), round.round_type));
+    const survivedSet = new Set(surviving);
+    const { data, error } = await admin.rpc("commit_code_switch_transition", {
+      p_session_id: sessionId, p_round_id: round.id,
+      p_expected_phase: "write", p_next_phase: "guess",
+      p_round_patch: { filtered_clues_json: surviving, guess_started_at: new Date().toISOString() },
+      p_clues: clues.map((clue) => ({ id: clue.id, normalized: clue.normalized, survived: survivedSet.has(clue.normalized) })),
+      p_score_delta: 0, p_extra: {},
+    });
     if (error) throw new Error(error.message);
+    if (data === true) return;
+    const current = await loadCodeSwitchSession(admin, sessionId);
+    if (current?.phase !== "write" || current.current_round_id !== round.id) return;
+    // A clue arrived while we computed the filter. Retry the whole decision.
   }
-
-  const { error } = await admin
-    .from("code_switch_rounds")
-    .update({
-      filtered_clues_json: surviving,
-      guess_started_at: new Date().toISOString(),
-    })
-    .eq("id", round.id);
-  if (error) throw new Error(error.message);
-
-  await poke(admin, sessionId, "guess");
+  throw new Error("The room is updating. Please try again.");
 }
 
 async function resolveGuess(
   admin: SupabaseClient,
   sessionId: string,
-  cs: CodeSwitchSessionRow,
   round: CodeSwitchRoundRow,
   guessText: string | null,
   reason: Extract<CodeSwitchEndReason, "guessed" | "timer">
 ): Promise<void> {
-  const claimed = await patchSessionIfPhase(admin, sessionId, "guess", { phase: "reveal" });
-  if (!claimed) return;
-
   const word = await loadWord(admin, round.word_id);
   const target = word?.word ?? "";
   const hit = guessText ? guessMatches(guessText, target) : false;
-  const { error } = await admin
-    .from("code_switch_rounds")
-    .update({
+  const { error } = await admin.rpc("commit_code_switch_transition", {
+    p_session_id: sessionId, p_round_id: round.id,
+    p_expected_phase: "guess", p_next_phase: "reveal",
+    p_round_patch: {
       guess_text: guessText,
       is_hit: hit,
       ended_at: new Date().toISOString(),
       end_reason: reason,
-    })
-    .eq("id", round.id);
-  if (error) throw new Error(error.message);
-
-  await patchSession(admin, sessionId, {
-    phase: "reveal",
-    team_score: hit ? cs.team_score + 1 : cs.team_score,
+    },
+    p_clues: null, p_score_delta: hit ? 1 : 0, p_extra: {},
   });
-  await poke(admin, sessionId, "reveal");
+  if (error) throw new Error(error.message);
 }
 
 async function abandonRound(
@@ -244,19 +170,19 @@ async function abandonRound(
   sessionId: string,
   round: CodeSwitchRoundRow
 ): Promise<void> {
-  const { error } = await admin
-    .from("code_switch_rounds")
-    .update({
+  const current = await loadCodeSwitchSession(admin, sessionId);
+  if (!current || (current.phase !== "write" && current.phase !== "guess")) return;
+  const { error } = await admin.rpc("commit_code_switch_transition", {
+    p_session_id: sessionId, p_round_id: round.id,
+    p_expected_phase: current.phase, p_next_phase: "reveal",
+    p_round_patch: {
       ended_at: new Date().toISOString(),
       end_reason: "abandoned",
       filtered_clues_json: [],
-    })
-    .eq("id", round.id)
-    .is("ended_at", null);
+    },
+    p_clues: null, p_score_delta: 0, p_extra: { abandoned: true },
+  });
   if (error) throw new Error(error.message);
-
-  await patchSession(admin, sessionId, { phase: "reveal" });
-  await poke(admin, sessionId, "reveal", { abandoned: true });
 }
 
 export async function expireIfNeeded(
@@ -275,7 +201,7 @@ export async function expireIfNeeded(
     return;
   }
   if (cs.phase === "guess" && timerHasExpired(round.guess_started_at, now, GUESS_SECONDS)) {
-    await resolveGuess(admin, sessionId, cs, round, round.guess_text, "timer");
+    await resolveGuess(admin, sessionId, round, round.guess_text, "timer");
   }
 }
 
@@ -330,36 +256,48 @@ export async function dispatchCodeSwitchAction(input: {
   const round = cs.current_round_id ? await loadRound(admin, cs.current_round_id) : null;
   const roster = await loadRoster(admin, sessionId);
 
+  if (action.roundId !== undefined &&
+    (!round || action.roundId !== round.id)) return fail(409, "This input belongs to an earlier round and was not applied to this round.");
+
   if (action.type === "lockClue") {
-    if (!round || cs.phase !== "write") return fail(400, "Clues are not open.");
+    if (!round || typeof action.text !== "string") return fail(400, "Clues are not open.");
     if (participantId === round.guesser_id) {
       return fail(403, "The guesser cannot write a clue.");
     }
+    const existing = (await loadClues(admin, round.id)).find((clue) => clue.participant_id === participantId);
+    if (existing) {
+      if (existing.raw_text !== action.text.trim()) return fail(409, "A different clue was already locked in.");
+      if (cs.phase === "write") await maybeAdvanceWrite(admin, sessionId, round, roster);
+      return { ok: true };
+    }
+    if (cs.phase !== "write") return fail(409, "Clues have closed. Your saved clue was not accepted.");
     const word = await loadWord(admin, round.word_id);
     if (!word) return fail(500, "The word is missing.");
     const valid = validateClue(action.text, word.word);
     if (!valid.ok) return fail(400, valid.error);
-    const { error } = await admin.from("code_switch_clues").insert({
-      round_id: round.id,
-      participant_id: participantId,
-      raw_text: action.text.trim(),
-      normalized: valid.normalized,
+    const { data, error } = await admin.rpc("lock_code_switch_clue", {
+      p_session_id: sessionId, p_round_id: round.id,
+      p_participant_id: participantId, p_raw_text: action.text.trim(), p_normalized: valid.normalized,
     });
-    if (error && error.code !== "23505") {
+    if (error) {
       return fail(500, error.message);
     }
+    if (data !== true) return fail(409, "Clues are no longer open.");
     await maybeAdvanceWrite(admin, sessionId, round, roster);
-    const after = await loadCodeSwitchSession(admin, sessionId);
-    await poke(admin, sessionId, after?.phase ?? "write");
     return { ok: true };
   }
 
   if (action.type === "lockGuess") {
-    if (!round || cs.phase !== "guess") return fail(400, "Guessing is not open.");
+    if (!round || typeof action.text !== "string") return fail(400, "Guessing is not open.");
     if (participantId !== round.guesser_id) {
       return fail(403, "Only the guesser can lock a guess.");
     }
-    await resolveGuess(admin, sessionId, cs, round, action.text, "guessed");
+    if (round.end_reason === "guessed") return round.guess_text === action.text
+      ? { ok: true } : fail(409, "A different guess was already locked in.");
+    if (cs.phase !== "guess") return fail(409, "Guessing has closed. Your saved guess was not accepted.");
+    await resolveGuess(admin, sessionId, round, action.text, "guessed");
+    const saved = await loadRound(admin, round.id);
+    if (saved?.guess_text !== action.text) return fail(409, "The round changed before your guess was accepted.");
     return { ok: true };
   }
 
@@ -384,20 +322,21 @@ export async function dispatchCodeSwitchAction(input: {
   if (action.type === "wrap") {
     if (!isLead) return fail(403, "Only the facilitator can wrap.");
     if (cs.phase !== "reveal") return fail(400, "Wait for the reveal.");
-    await patchSession(admin, sessionId, { phase: "scoreboard" });
-    await poke(admin, sessionId, "scoreboard");
-    return { ok: true };
+    const { data, error } = await admin.rpc("finish_code_switch_phase", {
+      p_session_id: sessionId, p_expected_round_id: round?.id ?? null, p_complete: false,
+    });
+    if (error) return fail(500, error.message);
+    return data === true ? { ok: true } : fail(409, "The workshop changed before wrapping.");
   }
 
   if (action.type === "advanceRecap") {
     if (!isLead) return fail(403, "Only the facilitator can continue.");
     if (cs.phase !== "scoreboard") return fail(400, "Scores are not up yet.");
-    await admin
-      .from("sessions")
-      .update({ status: "completed", completed_at: new Date().toISOString() })
-      .eq("id", sessionId);
-    await poke(admin, sessionId, "scoreboard", { recapAdvanced: true });
-    return { ok: true };
+    const { data, error } = await admin.rpc("finish_code_switch_phase", {
+      p_session_id: sessionId, p_expected_round_id: round?.id ?? null, p_complete: true,
+    });
+    if (error) return fail(500, error.message);
+    return data === true ? { ok: true } : fail(409, "The workshop changed before completion.");
   }
 
   return fail(400, "Unknown action.");

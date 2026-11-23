@@ -205,6 +205,8 @@ export async function buildSayLessPlayState(input: {
   return {
     phase: row.phase,
     round: row.round,
+    turnId: row.current_turn_id,
+    version: row.version,
     isLead,
     isDisplay,
     participantId,
