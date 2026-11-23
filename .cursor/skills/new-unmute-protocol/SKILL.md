@@ -144,15 +144,18 @@ Rules:
 
 Pass `sendAction` down to child views as a prop (see `the-truth-is/components/SubmissionView.tsx`).
 
-### Step 6: Wire the action route
+### Step 6: Wire actions through the workshop transaction
 
-If the protocol has an engine, add a case in `app-platform/app/api/session/[id]/action/route.ts`:
+Read `app-platform/docs/workshop-reliability.md` first. Every write must commit atomically, and a retry must never score twice. Follow `the-truth-is/actions.ts` and `play-state.ts`:
 
-1. Import engine reduce function and type guards
-2. Add lead-only action sets if the spec restricts certain actions to Lead
-3. Call `reduce[Protocol]State(currentState, action)` and persist result
+1. Wrap the action dispatcher in `withWorkshopAction` (from `@/lib/session/workshop-transaction`). It gives the action a stable operation ID, checks the round context, and records a receipt in the same commit.
+2. Wrap start and reset in `withWorkshopTransaction` with mode `"start"` or `"reset"`, and expiry and catch-up with mode `"action"`. Build the play read inside mode `"view"` and return `workshopActionContext` and `workshopSnapshotRevision` with the state.
+3. For any timed input, call `requireWorkshopDeadline` with the deadline from the engine, so the database rechecks it after taking its locks.
+4. Declare the protocol's tables in `workshop_transaction_tables` (a new migration replacing the function from `037`). An undeclared table fails every write.
+5. On the client, use `useWorkshopPlay` (`@/hooks/useWorkshopPlay`) instead of a hand-rolled fetch hook, and add the protocol's input action names to its `INPUTS` set so they survive refresh.
+6. Add lead-only checks if the spec restricts certain actions to the Lead.
 
-Follow the existing `the-truth-is` and `draw-it-by-ear` branches in that file.
+Never write protocol tables with a raw Supabase call outside the transaction.
 
 ### Step 7: Migrations + production verification
 
@@ -167,7 +170,8 @@ Before opening a PR:
 3. Engine liveness test passes: from every timed phase, repeated expire reaches the next facilitator hold with no player actions
 4. Role visibility constraints enforced server-side, not just hidden in UI
 5. Join codes remain 6-char uppercase alphanumeric (session shell, not protocol)
-6. Run `/review-bugbot` on branch changes
+6. `npm run test:reliability` and `npm run test:browser` pass, with the new Moment added to the workshop simulations
+7. Run `/review-bugbot` on branch changes
 
 Before merging to `main` or demoing on production:
 
