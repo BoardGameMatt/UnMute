@@ -1,5 +1,6 @@
 # Compile the product the same way Vercel does: committed files only.
 # Catches missing @/ imports before unmute-app production can fail.
+# Also runs the engine, reliability (disposable Postgres), and browser recovery suites.
 name: App build
 
 on:
@@ -32,3 +33,37 @@ jobs:
           cache-dependency-path: app-platform/package-lock.json
       - run: npm ci
       - run: npm run build
+
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app-platform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app-platform/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit --incremental false
+      - run: npm test
+      - run: npm run test:reliability
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app-platform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: app-platform/package-lock.json
+      - run: npm ci
+      - run: npm run test:browser

@@ -150,6 +150,14 @@ All files live in `app-platform/supabase/migrations/`. Production must have **ev
 | 030 | `030_airtime.sql` | Airtime protocol row + `airtime_*` tables |
 | 031 | `031_on_the_same_page.sql` | On the Same Page |
 | 032 | `032_say_less.sql` | Say Less protocol, Pack A (75 cards), live tables |
+| 033 | `033_atomic_workshop_transitions.sql` | Workshop reliability: atomic SwitchCode / Say Less commits |
+| 034 | `034_browser_input_recovery.sql` | Workshop reliability: Say Less card receipts |
+| 035 | `035_session_snapshot_revision.sql` | Workshop reliability: `session_state.revision` |
+| 036 | `036_workshop_lifecycle.sql` | Workshop reliability: atomic start / reset, `sessions.lifecycle_version` |
+| 037 | `037_remaining_workshop_transactions.sql` | Workshop reliability: shared transaction and action receipts for every other Moment |
+| 038 | `038_json_and_pair_workshop_guards.sql` | Workshop reliability: Draw It By Ear and Wrong Answers Only guards |
+
+Migrations 033–038 ship together. The app code that uses them has no fallback, so apply all six, in order, before merging. See `app-platform/docs/transactional-reliability-release.md`.
 
 When adding migration `021+`, update this table, `verify-schema.sql`, and `scripts/verify-prod-schema.ts`.
 

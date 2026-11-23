@@ -148,6 +148,7 @@ Subtle only. Use shadow-sm as default for cards. On hover, transition to shadow-
 - All state transitions in protocols go through sendAction() API — never mutate state client-side
 - Timers display client-side but are server-authoritative for phase transitions
 - Nothing hangs the room: the play read and every action advance overdue state first, clients re-read on an interval while a deadline is pending, and facilitator controls sit only on states the server reaches by itself (docs/protocols/moment-conventions.md §3.1)
+- Workshop reliability: every protocol write goes through one atomic commit with operation IDs, server-checked deadlines, and clients that recover from refresh and missed updates. Read app-platform/docs/workshop-reliability.md before changing actions, persistence, timers, lifecycle, or client sync. Never bypass the transaction with a raw Supabase write
 - Images in "Draw It By Ear" must NEVER be sent to Drawer clients — role-check before serving
 - Join codes are 6 characters, uppercase alphanumeric
 - Mobile-first for all participant-facing screens
