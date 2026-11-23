@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { usePersistedDraft } from "@/hooks/usePersistedDraft";
 import { SessionProgressBar } from "@/components/ui/SessionProgressBar";
 import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoPlayTimer";
 import { roundTypeChrome, roundTypeLabel, roundTypeRule } from "../engine";
@@ -91,13 +92,12 @@ export function CodeSwitchViews({
   pinDisplay,
 }: Props) {
   const router = useRouter();
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = usePersistedDraft(
+    `unmute:draft:code-switch:${sessionId}:${state.participantId}:${state.roundId}:${state.phase}`
+  );
   const [wrapConfirm, setWrapConfirm] = useState(false);
   const showLead = state.isLead && !isDisplay;
 
-  useEffect(() => {
-    setDraft("");
-  }, [state.roundIndex, state.phase, state.writeStartedAt, state.guessStartedAt]);
   const showTimer =
     (state.phase === "write" && state.writeStartedAt) ||
     (state.phase === "guess" && state.guessStartedAt);

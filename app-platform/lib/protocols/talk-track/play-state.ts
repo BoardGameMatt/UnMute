@@ -1,3 +1,4 @@
+import { isWorkshopTransaction, withWorkshopTransaction, workshopActionContext, workshopSnapshotRevision } from "@/lib/session/workshop-transaction";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TALK_TRACK_DEMO_WORDS, isDemoTurn, slotPoints, wordsForViewer } from "./engine";
@@ -37,6 +38,10 @@ export async function buildTalkTrackPlayState(input: {
   isLead: boolean;
   skipMaintenance?: boolean;
 }): Promise<TalkTrackPlayState> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopTransaction(input.admin, input.sessionId, "view", async client => {
+    const state = await buildTalkTrackPlayState({ ...input, admin: client });
+    return state ? { ...state, workshopContext: workshopActionContext(client), workshopRevision: workshopSnapshotRevision(client) } : state;
+  });
   const { admin, sessionId, participantId, isLead, skipMaintenance } = input;
 
   if (!skipMaintenance) {

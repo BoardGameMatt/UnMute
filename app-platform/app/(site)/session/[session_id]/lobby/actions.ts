@@ -9,16 +9,17 @@ import { resetAirtimeToLobby, startAirtime } from "@/lib/protocols/airtime/actio
 import { AIRTIME_CONFIG } from "@/lib/protocols/airtime/config";
 import { OTSP } from "@/lib/protocols/on-the-same-page/config";
 import { resetOnTheSamePageToLobby, startOnTheSamePage } from "@/lib/protocols/on-the-same-page/actions";
-import { resetSayLessToLobby, startSayLess } from "@/lib/protocols/say-less/actions";
+import { startSayLess } from "@/lib/protocols/say-less/actions";
 import { resetRankAndFileToLobby, startRankAndFile } from "@/lib/protocols/rank-and-file/actions";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
-import { resetCodeSwitchToLobby, startCodeSwitch } from "@/lib/protocols/code-switch/actions";
+import { startCodeSwitch } from "@/lib/protocols/code-switch/actions";
 import { resetIkwymToLobby, startIkwym } from "@/lib/protocols/i-know-what-you-meme/actions";
 import { resetTruthIsToLobby, startTruthIs } from "@/lib/protocols/the-truth-is/actions";
 import { resetTalkTrackToLobby, startTalkTrack } from "@/lib/protocols/talk-track/actions";
 import { resetZoningRightsToLobby, startZoningRights } from "@/lib/protocols/zoning-rights/actions";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { withWorkshopTransaction } from "@/lib/session/workshop-transaction";
 
 async function requireLead(
   sessionId: string
@@ -72,7 +73,7 @@ async function resetSessionStateToPreInit(
 }
 
 export async function startSessionAction(
-  sessionId: string
+  sessionId: string, expectedVersion?: number
 ): Promise<{ error?: string } | void> {
   const auth = await requireLead(sessionId);
   if ("error" in auth) {
@@ -84,7 +85,7 @@ export async function startSessionAction(
   // The reset below is destructive, so it must never run against a session that is already active.
   const { data: sessionRow, error: statusErr } = await supabase
     .from("sessions")
-    .select("status")
+    .select("status, lifecycle_version")
     .eq("id", sessionId)
     .maybeSingle();
 
@@ -292,138 +293,42 @@ export async function startSessionAction(
     }
   }
 
-  // Start always begins from clean state, so a prior aborted Start cannot leave a stale roster in state_json.
+  if (["code-switch", "say-less", "draw-it-by-ear", "wrong-answers-only"].includes(protocolSlug ?? "")) {
+    const admin = createServiceClient();
+    const generation = expectedVersion ?? sessionRow.lifecycle_version as number;
+    try {
+      const result = protocolSlug === "code-switch" ? await startCodeSwitch(admin, sessionId, generation)
+        : protocolSlug === "say-less" ? await startSayLess(admin, sessionId, generation)
+        : await admin.rpc("start_workshop_session", { p_session_id: sessionId,
+          p_protocol: protocolSlug, p_expected_version: generation, p_init: {} }).then(({ data, error }) =>
+            error || data !== true ? { ok: false as const, error: error?.message ?? "The workshop changed before Start." } : { ok: true as const });
+      if (!result.ok) return { error: result.error };
+    } catch (error) { return { error: error instanceof Error ? error.message : "Could not start the workshop." }; }
+    await writeSessionEvent(admin, { sessionId, type: "session_started", actorKind: "participant", actorId: auth.participantId });
+    redirect(`/session/${sessionId}`);
+  }
+
+  const tabularStarters: Record<string, typeof startAirtime> = {
+    "talk-track": startTalkTrack, "zoning-rights": startZoningRights,
+    "i-know-what-you-meme": startIkwym, "rank-and-file": startRankAndFile,
+    "the-truth-is": startTruthIs, airtime: startAirtime, "on-the-same-page": startOnTheSamePage,
+  };
+  if (protocolSlug && (tabularStarters[protocolSlug] || protocolSlug === "cover-story")) {
+    const admin = createServiceClient();
+    try {
+      const started = await withWorkshopTransaction(admin, sessionId, "start", client =>
+        tabularStarters[protocolSlug] ? tabularStarters[protocolSlug](client, sessionId) : Promise.resolve({ ok: true as const }),
+        expectedVersion ?? sessionRow.lifecycle_version as number);
+      if (!started.ok) return { error: started.error };
+    } catch (error) { return { error: error instanceof Error ? error.message : "Could not start the workshop." }; }
+    await writeSessionEvent(admin, { sessionId, type: "session_started", actorKind: "participant", actorId: auth.participantId });
+    redirect(`/session/${sessionId}`);
+  }
+
+  // Fallback for an unregistered protocol; known protocol initializers above are atomic.
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
     return { error: resetErr.message };
-  }
-
-  // Talk Track must finish formation while the session is still lobby. Flipping
-  // status first left a stuck "already started" room when startTalkTrack failed.
-  if (protocolSlug === "talk-track") {
-    try {
-      const admin = createServiceClient();
-      const started = await startTalkTrack(admin, sessionId);
-      if (!started.ok) {
-        return { error: started.error };
-      }
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not start Talk Track.",
-      };
-    }
-  }
-
-  if (protocolSlug === "zoning-rights") {
-    try {
-      const admin = createServiceClient();
-      const started = await startZoningRights(admin, sessionId);
-      if (!started.ok) {
-        return { error: started.error };
-      }
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not start Zoning Rights.",
-      };
-    }
-  }
-
-  if (protocolSlug === "i-know-what-you-meme") {
-    try {
-      const admin = createServiceClient();
-      const started = await startIkwym(admin, sessionId);
-      if (!started.ok) {
-        return { error: started.error };
-      }
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not start I Know What You Meme.",
-      };
-    }
-  }
-
-  if (protocolSlug === "code-switch") {
-    try {
-      const admin = createServiceClient();
-      const started = await startCodeSwitch(admin, sessionId);
-      if (!started.ok) {
-        return { error: started.error };
-      }
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not start SwitchCode.",
-      };
-    }
-  }
-
-  if (protocolSlug === "rank-and-file") {
-    try {
-      const admin = createServiceClient();
-      const started = await startRankAndFile(admin, sessionId);
-      if (!started.ok) {
-        return { error: started.error };
-      }
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not start Rank and File.",
-      };
-    }
-  }
-
-  if (protocolSlug === "the-truth-is") {
-    try {
-      const admin = createServiceClient();
-      const started = await startTruthIs(admin, sessionId);
-      if (!started.ok) {
-        return { error: started.error };
-      }
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not start The Truth Is.",
-      };
-    }
-  }
-
-  if (protocolSlug === "airtime") {
-    try {
-      const admin = createServiceClient();
-      const started = await startAirtime(admin, sessionId);
-      if (!started.ok) {
-        return { error: started.error };
-      }
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not start Airtime.",
-      };
-    }
-  }
-
-  if (protocolSlug === "on-the-same-page") {
-    try {
-      const admin = createServiceClient();
-      const started = await startOnTheSamePage(admin, sessionId);
-      if (!started.ok) {
-        return { error: started.error };
-      }
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not start On the Same Page.",
-      };
-    }
-  }
-
-  if (protocolSlug === "say-less") {
-    try {
-      const admin = createServiceClient();
-      const started = await startSayLess(admin, sessionId);
-      if (!started.ok) {
-        return { error: started.error };
-      }
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not start Say Less.",
-      };
-    }
   }
 
   const { data: activated, error: upErr } = await supabase
@@ -461,12 +366,11 @@ export async function startSessionAction(
 /**
  * Send an already-started session back to the lobby.
  *
- * Order matters: clear session_state first, then flip status. A session left
- * active with intact state is recoverable; one with cleared state and active
- * status is not, so a failed reset leaves sessions untouched.
+ * Migrated protocols reset state, protocol rows and status in one transaction.
+ * Registered protocols commit the complete reset in the same transaction.
  */
 export async function returnToLobbyAction(
-  sessionId: string
+  sessionId: string, expectedVersion?: number
 ): Promise<{ error?: string; ok?: boolean }> {
   const auth = await requireLead(sessionId);
   if ("error" in auth) {
@@ -474,6 +378,32 @@ export async function returnToLobbyAction(
   }
 
   const supabase = createClient();
+
+  const { data: lifecycle, error: lifecycleError } = await supabase.from("sessions")
+    .select("status, lifecycle_version, protocols ( slug )").eq("id", sessionId).maybeSingle();
+  if (lifecycleError || !lifecycle) return { error: "Could not load the workshop." };
+  const embedded = lifecycle.protocols as { slug: string } | { slug: string }[] | null;
+  const slug = Array.isArray(embedded) ? embedded[0]?.slug : embedded?.slug;
+  if (["code-switch", "say-less", "draw-it-by-ear", "wrong-answers-only"].includes(slug ?? "")) {
+    const { data, error } = await createServiceClient().rpc("reset_workshop_session", {
+      p_session_id: sessionId, p_expected_version: expectedVersion ?? lifecycle.lifecycle_version,
+    });
+    return error || data !== true ? { error: error?.message ?? "The workshop changed. Refresh before resetting." } : { ok: true };
+  }
+
+  const tabularResetters: Record<string, typeof resetAirtimeToLobby> = {
+    "talk-track": resetTalkTrackToLobby, "zoning-rights": resetZoningRightsToLobby,
+    "i-know-what-you-meme": resetIkwymToLobby, "rank-and-file": resetRankAndFileToLobby,
+    "the-truth-is": resetTruthIsToLobby, airtime: resetAirtimeToLobby,
+    "on-the-same-page": resetOnTheSamePageToLobby, "cover-story": resetCoverStorySessionToLobby,
+  };
+  if (slug && tabularResetters[slug]) {
+    try {
+      await withWorkshopTransaction(createServiceClient(), sessionId, "reset", client => tabularResetters[slug](client, sessionId),
+        expectedVersion ?? lifecycle.lifecycle_version as number);
+      return { ok: true };
+    } catch (error) { return { error: error instanceof Error ? error.message : "Could not reset the workshop." }; }
+  }
 
   const resetErr = await resetSessionStateToPreInit(supabase, sessionId);
   if (resetErr) {
@@ -490,130 +420,6 @@ export async function returnToLobbyAction(
 
   if (upErr) {
     return { error: upErr.message };
-  }
-
-  const { data: sessionMeta } = await supabase
-    .from("sessions")
-    .select("protocols ( slug )")
-    .eq("id", sessionId)
-    .maybeSingle();
-  const protocolEmbed = sessionMeta?.protocols as
-    | { slug?: string }
-    | { slug?: string }[]
-    | null
-    | undefined;
-  const protocolSlug = Array.isArray(protocolEmbed)
-    ? protocolEmbed[0]?.slug
-    : protocolEmbed?.slug;
-
-  if (protocolSlug === "cover-story") {
-    try {
-      const admin = createServiceClient();
-      await resetCoverStorySessionToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset Cover Story.",
-      };
-    }
-  }
-
-  if (protocolSlug === "talk-track") {
-    try {
-      const admin = createServiceClient();
-      await resetTalkTrackToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset Talk Track.",
-      };
-    }
-  }
-
-  if (protocolSlug === "zoning-rights") {
-    try {
-      const admin = createServiceClient();
-      await resetZoningRightsToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset Zoning Rights.",
-      };
-    }
-  }
-
-  if (protocolSlug === "i-know-what-you-meme") {
-    try {
-      const admin = createServiceClient();
-      await resetIkwymToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset I Know What You Meme.",
-      };
-    }
-  }
-
-  if (protocolSlug === "code-switch") {
-    try {
-      const admin = createServiceClient();
-      await resetCodeSwitchToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset SwitchCode.",
-      };
-    }
-  }
-
-  if (protocolSlug === "rank-and-file") {
-    try {
-      const admin = createServiceClient();
-      await resetRankAndFileToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset Rank and File.",
-      };
-    }
-  }
-
-  if (protocolSlug === "the-truth-is") {
-    try {
-      const admin = createServiceClient();
-      await resetTruthIsToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset The Truth Is.",
-      };
-    }
-  }
-
-  if (protocolSlug === "airtime") {
-    try {
-      const admin = createServiceClient();
-      await resetAirtimeToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset Airtime.",
-      };
-    }
-  }
-
-  if (protocolSlug === "on-the-same-page") {
-    try {
-      const admin = createServiceClient();
-      await resetOnTheSamePageToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset On the Same Page.",
-      };
-    }
-  }
-
-  if (protocolSlug === "say-less") {
-    try {
-      const admin = createServiceClient();
-      await resetSayLessToLobby(admin, sessionId);
-    } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : "Could not reset Say Less.",
-      };
-    }
   }
 
   return { ok: true };

@@ -2,18 +2,19 @@ import type { SayLessCategoryId, SayLessEndReason, SayLessPhase, SayLessTeamLabe
 
 export type SayLessViewerRole = "clue" | "guess" | "listen";
 
-export type SayLessAction =
+export type SayLessAction = (
   | { type: "setCategories"; categories: [SayLessCategoryId, SayLessCategoryId] }
   | { type: "swapPlayers"; a: string; b: string }
   | { type: "confirmTeams" }
   | { type: "startRound" }
-  | { type: "cardAction"; outcome: "got_it" | "pass"; cardId: string }
+  | { type: "cardAction"; outcome: "got_it" | "pass"; cardId: string; operationId?: string; turnId?: string | null; expectedVersion?: number }
   | { type: "skipTurn" }
   | { type: "pauseHold" }
   | { type: "resumeHold" }
   | { type: "endRound" }
   | { type: "advance" }
-  | { type: "complete" };
+  | { type: "complete" }
+) & { expectedVersion?: number; turnId?: string | null };
 
 export type SayLessMemberView = {
   id: string;
@@ -43,6 +44,8 @@ export type SayLessTeamScore = {
 export type SayLessPlayState = {
   phase: SayLessPhase;
   round: 1 | 2;
+  turnId: string | null;
+  version: number;
   isLead: boolean;
   /** The laptop. Timer and room state only. Never a card. */
   isDisplay: boolean;

@@ -1,7 +1,9 @@
 "use client";
+import { useDibeTimerRecovery } from "./hooks/useDibeTimerRecovery";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { withActionTimeout } from "@/lib/session/action-timeout";
 import { useCallback, useEffect, useState } from "react";
 import { returnToLobbyAction } from "@/app/(site)/session/[session_id]/lobby/actions";
 import { SessionProgressBar } from "@/components/ui/SessionProgressBar";
@@ -77,17 +79,20 @@ const ReturnToLobbyButton = ({
 }: ReturnToLobbyButtonProps) => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const { session } = useSessionContext();
 
   const handleClick = async () => {
     setError(null);
     onReturning(true);
-    const result = await returnToLobbyAction(sessionId);
-    if (result.ok) {
-      router.push(`/session/${sessionId}/lobby`);
-      return;
+    try {
+      const result = await withActionTimeout(() => returnToLobbyAction(sessionId, session.lifecycle_version));
+      if (result.ok) { router.push(`/session/${sessionId}/lobby`); return; }
+      setError(result.error ?? "Could not return to the lobby.");
+    } catch {
+      setError("Reset was not confirmed. Check the workshop and try again.");
+    } finally {
+      onReturning(false);
     }
-    onReturning(false);
-    setError(result.error ?? "Could not return to the lobby.");
   };
 
   return (
@@ -115,7 +120,8 @@ const DrawItByEarProtocol = ({
   role,
 }: SessionProtocolProps) => {
   const { sendAction, currentParticipant, roleInSession } = useSessionContext();
-  const { stateJson, isLoading } = useGameState();
+  const { stateJson, isLoading, sessionStatus } = useGameState();
+  useDibeTimerRecovery(stateJson, sendAction, sessionStatus === "active");
   const [initError, setInitError] = useState<string | null>(null);
   const [waitingForPlayers, setWaitingForPlayers] = useState(false);
   const [rosterCount, setRosterCount] = useState(0);

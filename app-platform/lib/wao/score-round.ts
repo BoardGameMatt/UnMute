@@ -1,3 +1,4 @@
+import { isWorkshopTransaction, withWorkshopTransaction } from "@/lib/session/workshop-transaction";
 /**
  * Persist pair scores after a round locks. Idempotent under double-close.
  */
@@ -24,6 +25,11 @@ export async function ensureRoundScored(args: {
   round: WaoRound;
   waoSession: WaoSession;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!isWorkshopTransaction(args.admin)) return withWorkshopTransaction(args.admin, args.waoSession.session_id, "action", async client => {
+    const { data: round } = await client.from("wao_rounds").select("*").eq("id", args.round.id).maybeSingle();
+    if (!round) return { ok: false as const, error: "The round no longer exists." };
+    return ensureRoundScored({ ...args, admin: client, round: round as WaoRound });
+  });
   const { admin, round, waoSession } = args;
 
   if (!round.locked_at) {

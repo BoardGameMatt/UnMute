@@ -16,6 +16,15 @@ function emptyHistory(): PairHistory {
   return { pairs: [], sitOuts: [] };
 }
 
+it("pairs 20 and 24 people across four rounds without enumerating all optimal matchings", { timeout: 5000 }, () => {
+  for (const count of [20,24]) {
+    const roster=ids(count);
+    const {assignments}=playRounds(roster,4,seededRandom(count));
+    for(const assignment of assignments) assertRosterCovered(roster,assignment);
+    assertNoRepeatPairs(assignments);
+  }
+});
+
 /** Deterministic RNG for reproducible tests (mulberry32). */
 function seededRandom(seed: number): () => number {
   let t = seed >>> 0;
@@ -208,7 +217,7 @@ describe("assignPairs", () => {
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     const values = Array.from(counts.values());
-    assert.equal(counts.size, 6, `expected all 6 edges, got ${[...counts.keys()]}`);
+    assert.equal(counts.size, 6, `expected all 6 edges, got ${Array.from(counts.keys())}`);
     const min = Math.min(...values);
     const max = Math.max(...values);
     assert.equal(min, 2);

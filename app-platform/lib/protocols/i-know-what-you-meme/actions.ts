@@ -1,4 +1,5 @@
 import "server-only";
+import { isWorkshopTransaction, withWorkshopTransaction, withWorkshopAction, requireWorkshopDeadline, assertWorkshopActionContext } from "@/lib/session/workshop-transaction";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Json } from "@/lib/types/database";
 import {
@@ -69,6 +70,7 @@ async function patchSessionIfPhase(
 }
 
 export async function resetIkwymToLobby(admin: SupabaseClient, sessionId: string): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "reset", client => resetIkwymToLobby(client, sessionId));
   await admin
     .from("ikwym_sessions")
     .update({ current_reveal_item_id: null })
@@ -82,6 +84,7 @@ export async function startIkwym(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<IkwymActionResult> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "start", client => startIkwym(client, sessionId));
   const roster = await loadRoster(admin, sessionId);
   if (roster.length < MIN_PLAYERS) {
     return fail(400, "Need 3 to start.");
@@ -264,6 +267,7 @@ async function maybeResolveGuesses(
 }
 
 export async function expireIfNeeded(admin: SupabaseClient, sessionId: string): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => expireIfNeeded(client, sessionId));
   const ikwym = await loadIkwymSession(admin, sessionId);
   if (!ikwym || ikwym.phase !== "REVEAL_GUESS" || !ikwym.current_reveal_item_id) return;
   if (!timerHasExpired(ikwym.guess_started_at, Date.now(), GUESS_SECONDS)) return;
@@ -277,9 +281,11 @@ export async function dispatchIkwymAction(input: {
   isLead: boolean;
   action: IkwymAction;
 }): Promise<IkwymActionResult> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopAction(input.admin, input.sessionId, input.participantId, input.action, client => dispatchIkwymAction({ ...input, admin: client }));
   const { admin, sessionId, participantId, isLead, action } = input;
   await expireIfNeeded(admin, sessionId);
 
+  if (action.type !== "timerExpired") assertWorkshopActionContext(admin);
   const ikwym = await loadIkwymSession(admin, sessionId);
   if (!ikwym) return fail(404, "I Know What You Meme has not started.");
   const roster = await loadRoster(admin, sessionId);
@@ -349,6 +355,7 @@ export async function dispatchIkwymAction(input: {
     if (ikwym.phase !== "REVEAL_GUESS" || !ikwym.current_reveal_item_id) {
       return fail(400, "Guessing is not open.");
     }
+    requireWorkshopDeadline(admin, Date.parse(ikwym.guess_started_at ?? "") + GUESS_SECONDS * 1000);
     const items = await loadRevealItems(admin, sessionId);
     const current = items.find((row) => row.id === ikwym.current_reveal_item_id);
     if (!current) return fail(400, "No GIF is up.");

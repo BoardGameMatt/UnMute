@@ -1,4 +1,5 @@
 import "server-only";
+import { isWorkshopTransaction, withWorkshopAction, withWorkshopTransaction, requireWorkshopDeadline } from "@/lib/session/workshop-transaction";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CoverStoryAgency,
@@ -79,6 +80,7 @@ export async function dispatchCoverStoryAction(input: {
   isLead: boolean;
   action: CoverStoryAction;
 }): Promise<ActionResult> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopAction(input.admin, input.sessionId, input.participantId, input.action, client => dispatchCoverStoryAction({ ...input, admin: client }));
   try {
     await ensureCoverStorySession(input.admin, input.sessionId);
     await handleAction(input);
@@ -375,6 +377,7 @@ export async function expireGuessIfNeeded(
   sessionId: string,
   cs: CoverStorySession
 ): Promise<CoverStorySession> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", async client => expireGuessIfNeeded(client, sessionId, await requireCs(client, sessionId)));
   if (cs.phase !== "reveal" || cs.reveal_subphase !== "guess") return cs;
   if (!guessWindowExpired(cs)) return cs;
   await patchCs(admin, cs.id, { reveal_subphase: "gallery" });
@@ -412,6 +415,7 @@ export async function lockAgencyForParticipant(
   participantId: string,
   agencyId: number
 ): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => lockAgencyForParticipant(client, sessionId, participantId, agencyId));
   await lockAgency(admin, sessionId, participantId, agencyId);
 }
 
@@ -668,6 +672,7 @@ async function submitGuess(
     await expireGuessIfNeeded(admin, sessionId, cs);
     throw new Error("Time is up.");
   }
+  requireWorkshopDeadline(admin, Date.parse(cs.guess_started_at ?? "") + (cs.guess_duration_seconds || COVER_STORY_GUESS_SECONDS) * 1000);
   const targetId = cs.reveal_order[cs.reveal_index];
   if (!targetId) throw new Error("No one is on the board.");
   if (targetId === participantId) throw new Error("You do not guess for yourself.");

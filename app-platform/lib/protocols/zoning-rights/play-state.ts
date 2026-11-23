@@ -1,3 +1,4 @@
+import { isWorkshopTransaction, withWorkshopTransaction, workshopActionContext, workshopSnapshotRevision } from "@/lib/session/workshop-transaction";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { expireIfNeeded } from "./actions";
@@ -120,6 +121,10 @@ export async function buildZoningRightsPlayState(input: {
   isLead: boolean;
   skipMaintenance?: boolean;
 }): Promise<ZoningRightsPlayState> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopTransaction(input.admin, input.sessionId, "view", async client => {
+    const state = await buildZoningRightsPlayState({ ...input, admin: client });
+    return state ? { ...state, workshopContext: workshopActionContext(client), workshopRevision: workshopSnapshotRevision(client) } : state;
+  });
   const { admin, sessionId, participantId, isLead, skipMaintenance } = input;
   if (!skipMaintenance) {
     await expireIfNeeded(admin, sessionId);

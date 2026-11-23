@@ -1,7 +1,9 @@
 import "server-only";
+import { isWorkshopTransaction, withWorkshopTransaction, withWorkshopAction, requireWorkshopDeadline, assertWorkshopActionContext } from "@/lib/session/workshop-transaction";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   TALK_TRACK_HOLD_SECONDS,
+  TALK_TRACK_TURN_SECONDS,
   TALK_TRACK_MANDATORY_CYCLES,
   TALK_TRACK_MIN_PLAYERS,
   formTeams,
@@ -88,6 +90,7 @@ export async function startTalkTrack(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<TalkTrackActionResult> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "start", client => startTalkTrack(client, sessionId));
   const roster = await loadRoster(admin, sessionId);
   if (roster.length < TALK_TRACK_MIN_PLAYERS) {
     return fail(400, "Talk Track needs at least 4 people in the room.");
@@ -144,6 +147,7 @@ export async function resetTalkTrackToLobby(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "reset", client => resetTalkTrackToLobby(client, sessionId));
   await admin.from("talk_track_score_nudges").delete().eq("session_id", sessionId);
   await admin.from("talk_track_turns").delete().eq("session_id", sessionId);
   await admin.from("talk_track_teams").delete().eq("session_id", sessionId);
@@ -448,6 +452,7 @@ export async function expireTurnIfNeeded(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => expireTurnIfNeeded(client, sessionId));
   const tt = await loadTalkTrackSession(admin, sessionId);
   if (!tt || tt.phase !== "turn" || !tt.current_turn_id) return;
   const turn = await loadTurn(admin, tt.current_turn_id);
@@ -463,6 +468,7 @@ export async function abandonIfGuesserGone(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => abandonIfGuesserGone(client, sessionId));
   const tt = await loadTalkTrackSession(admin, sessionId);
   if (!tt || tt.phase !== "turn" || !tt.current_turn_id) return;
   const turn = await loadTurn(admin, tt.current_turn_id);
@@ -487,6 +493,7 @@ export async function pruneDisconnectedTrain(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => pruneDisconnectedTrain(client, sessionId));
   const tt = await loadTalkTrackSession(admin, sessionId);
   if (!tt || tt.phase !== "turn" || !tt.current_turn_id) return;
   const turn = await loadTurn(admin, tt.current_turn_id);
@@ -517,16 +524,20 @@ export async function dispatchTalkTrackAction(input: {
   isLead: boolean;
   action: TalkTrackAction;
 }): Promise<TalkTrackActionResult> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopAction(input.admin, input.sessionId, input.participantId, input.action, client => dispatchTalkTrackAction({ ...input, admin: client }));
   const { admin, sessionId, participantId, isLead, action } = input;
 
   await expireTurnIfNeeded(admin, sessionId);
   await abandonIfGuesserGone(admin, sessionId);
   await pruneDisconnectedTrain(admin, sessionId);
 
+  if (action.type !== "timerExpired") assertWorkshopActionContext(admin);
   const tt = await loadTalkTrackSession(admin, sessionId);
   if (!tt) return fail(404, "Talk Track has not started.");
   const teams = await loadTeams(admin, sessionId);
   const turn = tt.current_turn_id ? await loadTurn(admin, tt.current_turn_id) : null;
+
+  if (turn?.started_at && (action.type === "stop" || action.type === "resolve")) requireWorkshopDeadline(admin, Date.parse(turn.started_at) + TALK_TRACK_TURN_SECONDS * 1000);
 
   switch (action.type) {
     case "pauseHold": {

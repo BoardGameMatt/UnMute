@@ -7,13 +7,14 @@ export type CodeSwitchPhase = "lobby" | "write" | "guess" | "reveal" | "scoreboa
 
 export type CodeSwitchEndReason = "guessed" | "timer" | "abandoned";
 
-export type CodeSwitchAction =
-  | { type: "lockClue"; text: string }
-  | { type: "lockGuess"; text: string }
+export type CodeSwitchAction = (
+  | { type: "lockClue"; text: string; roundId?: string | null }
+  | { type: "lockGuess"; text: string; roundId?: string | null }
   | { type: "timerExpired" }
   | { type: "anotherRound" }
   | { type: "wrap" }
-  | { type: "advanceRecap" };
+  | { type: "advanceRecap" }
+) & { roundId?: string | null };
 
 export type ViewerRole = "guesser" | "clueGiver" | "display";
 
@@ -41,6 +42,7 @@ export type CodeSwitchPlayState = {
   persistentInstruction: string;
   progress: number;
   roundIndex: number;
+  roundId: string | null;
   teamScore: number;
   guesserName: string;
   lockedCount: number;

@@ -1,4 +1,6 @@
 "use client";
+import { usePersistedDraft } from "@/hooks/usePersistedDraft";
+import { useSessionContext } from "@/components/providers/SessionProvider";
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -132,8 +134,10 @@ const CollectionForm = ({
   pending: boolean;
   send: (action: IkwymAction) => Promise<boolean>;
 }) => {
-  const [checkin, setCheckin] = useState("");
-  const [stimulus, setStimulus] = useState("");
+  const { session, currentParticipant } = useSessionContext();
+  const draftKey = `unmute:draft:ikwym:${session.id}:${session.lifecycle_version}:${currentParticipant.id}:${state.round}`;
+  const [checkin, setCheckin] = usePersistedDraft(`${draftKey}:checkin`);
+  const [stimulus, setStimulus] = usePersistedDraft(`${draftKey}:stimulus`);
   const [gifs, setGifs] = useState<GiphyGif[] | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [nextOffset, setNextOffset] = useState(0);

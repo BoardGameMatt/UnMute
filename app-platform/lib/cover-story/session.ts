@@ -1,3 +1,4 @@
+import { isWorkshopTransaction, withWorkshopTransaction } from "@/lib/session/workshop-transaction";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
@@ -80,6 +81,7 @@ export async function resetCoverStorySessionToLobby(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "reset", client => resetCoverStorySessionToLobby(client, sessionId));
   const cs = await loadCoverStorySession(admin, sessionId);
   if (!cs) return;
 

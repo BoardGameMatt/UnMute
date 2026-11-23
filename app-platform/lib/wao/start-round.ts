@@ -1,3 +1,4 @@
+import { isWorkshopTransaction, withWorkshopTransaction } from "@/lib/session/workshop-transaction";
 /**
  * Create (or reuse) wao_session, draw a question, open a round, assign pairs.
  * Facilitator-only — call after authorizeSessionLead.
@@ -33,6 +34,7 @@ export async function startWaoRound(args: {
   sessionId: string;
   includeInactive?: boolean;
 }): Promise<StartRoundResult> {
+  if (!isWorkshopTransaction(args.admin)) return withWorkshopTransaction(args.admin, args.sessionId, "action", client => startWaoRound({ ...args, admin: client }));
   const includeInactiveRequested = args.includeInactive === true;
   const includedInactive = mayDrawInactiveQuestions(includeInactiveRequested);
 

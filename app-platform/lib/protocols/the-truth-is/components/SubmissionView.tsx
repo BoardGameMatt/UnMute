@@ -5,6 +5,9 @@ import { WaoPlayTimer } from "@/lib/protocols/wrong-answers-only/components/WaoP
 import type { TruthIsClientAction, TruthIsPlayState } from "../types";
 import { useServerClockOffset } from "../use-server-clock";
 
+import { usePersistedDraft } from "@/hooks/usePersistedDraft";
+import { useSessionContext } from "@/components/providers/SessionProvider";
+
 const MAX_LEN = 300;
 
 type SubmissionViewProps = {
@@ -16,14 +19,15 @@ type SubmissionViewProps = {
 export const SubmissionView = ({ state, pending, send }: SubmissionViewProps) => {
   const round = state.submissionRound ?? 1;
   const clockOffsetMs = useServerClockOffset(state.serverNow);
-  const [text, setText] = useState(state.mySubmittedText ?? "");
+  const { session, currentParticipant } = useSessionContext();
+  const [draft, setText] = usePersistedDraft(`unmute:draft:truth:${session.id}:${session.lifecycle_version}:${currentParticipant.id}:${round}`);
+  const text = state.mySubmittedText ?? draft;
   const textRef = useRef(text);
   textRef.current = text;
   const [submitted, setSubmitted] = useState(state.mySubmissionDone);
 
   // The same view stays mounted for both prompts. Clear round 1's draft when round 2 opens.
   useEffect(() => {
-    setText(state.mySubmittedText ?? "");
     setSubmitted(state.mySubmissionDone);
     // The draft must survive later polls of this same prompt.
     // eslint-disable-next-line react-hooks/exhaustive-deps

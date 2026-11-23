@@ -1,4 +1,5 @@
 import "server-only";
+import { isWorkshopTransaction, withWorkshopTransaction, withWorkshopAction, requireWorkshopDeadline, assertWorkshopActionContext } from "@/lib/session/workshop-transaction";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Json } from "@/lib/types/database";
 import {
@@ -82,6 +83,7 @@ export async function resetRankAndFileToLobby(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "reset", client => resetRankAndFileToLobby(client, sessionId));
   await admin
     .from("rank_and_file_sessions")
     .update({ current_round_id: null })
@@ -94,6 +96,7 @@ export async function startRankAndFile(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<RankAndFileActionResult> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "start", client => startRankAndFile(client, sessionId));
   const roster = await loadRoster(admin, sessionId);
   const players = roster.filter((row) => !isSharedScreenName(row.displayName));
   if (players.length < MIN_PLAYERS) {
@@ -289,6 +292,7 @@ export async function expireIfNeeded(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => expireIfNeeded(client, sessionId));
   const rf = await loadRankAndFileSession(admin, sessionId);
   if (!rf?.current_round_id) return;
   const round = await loadRound(admin, rf.current_round_id);
@@ -306,10 +310,12 @@ export async function dispatchRankAndFileAction(input: {
   isDisplay: boolean;
   action: RankAndFileAction;
 }): Promise<RankAndFileActionResult> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopAction(input.admin, input.sessionId, input.participantId, input.action, client => dispatchRankAndFileAction({ ...input, admin: client }));
   const { admin, sessionId, participantId, isLead, isDisplay, action } = input;
 
   await expireIfNeeded(admin, sessionId);
 
+  if (action.type !== "timerExpired") assertWorkshopActionContext(admin);
   const rf = await loadRankAndFileSession(admin, sessionId);
   if (!rf) return fail(404, "Rank and File has not started.");
   const round = rf.current_round_id ? await loadRound(admin, rf.current_round_id) : null;
@@ -318,6 +324,7 @@ export async function dispatchRankAndFileAction(input: {
   if (action.type === "lockClue") {
     if (isDisplay) return fail(403, "Write your example on your phone.");
     if (!round || rf.phase !== "write") return fail(400, "Clues are not open.");
+    requireWorkshopDeadline(admin, Date.parse(round.write_started_at ?? "") + WRITE_SECONDS * 1000);
     const deals = await loadDeals(admin, round.id);
     const mine = deals.find((deal) => deal.participant_id === participantId);
     if (!mine) return fail(403, "You are ranking this round.");

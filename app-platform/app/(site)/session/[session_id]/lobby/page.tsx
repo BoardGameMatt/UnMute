@@ -39,7 +39,7 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
 
   const { data: session, error: sessionErr } = await supabase
     .from("sessions")
-    .select("id, join_code, status, protocols ( slug, name )")
+    .select("id, join_code, status, lifecycle_version, protocols ( slug, name )")
     .eq("id", sessionId)
     .maybeSingle();
 
@@ -49,6 +49,7 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
 
   const sessionRecord = session as {
     join_code: string;
+    lifecycle_version: number;
     status: string;
     protocols: ProtocolEmbed | ProtocolEmbed[] | null;
   };
@@ -126,6 +127,7 @@ export default async function SessionLobbyPage({ params }: SessionLobbyPageProps
     <main className="min-h-screen bg-warm-white">
       <SessionLobbyView
         sessionId={sessionId}
+        lifecycleVersion={sessionRecord.lifecycle_version}
         protocolName={protocolName}
         protocolSlug={protocolSlug}
         minPlayers={protocolDef?.minPlayers}

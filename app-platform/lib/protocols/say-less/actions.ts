@@ -1,5 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { loadLifecycle } from "@/lib/session/lifecycle";
+import type { Json } from "@/lib/types/database";
 import {
   SAY_LESS_HOLD_SECONDS,
   SAY_LESS_MAX_PLAYERS,
@@ -36,7 +38,6 @@ import {
   loadTurn,
   loadTurns,
   resolvePackId,
-  syncPublicState,
   type SayLessSessionRow,
   type SayLessTeamRow,
 } from "./store";
@@ -50,72 +51,42 @@ function fail(status: number, error: string): ActionErr {
   return { ok: false, status, error };
 }
 
-async function poke(
-  admin: SupabaseClient,
-  sessionId: string,
-  phase: SayLessSessionRow["phase"]
-): Promise<void> {
-  await syncPublicState(admin, sessionId, phase);
+async function commitSetup(
+  admin: SupabaseClient, sessionId: string, row: SayLessSessionRow,
+  patch: Record<string, unknown>, teams: { id: string; memberIds: string[] }[] | null = null,
+  previews: { participantId: string; cardIds: string[] }[] | null = null,
+  turn: { teamId: string; giverId: string; startedAt: string } | null = null
+): Promise<SayLessActionResult> {
+  const { data, error } = await admin.rpc("commit_say_less_setup", {
+    p_session_id: sessionId, p_expected_version: row.version, p_expected_phase: row.phase,
+    p_patch: patch, p_teams: teams, p_previews: previews, p_turn: turn,
+  });
+  if (error) return fail(500, error.message);
+  return data === true ? { ok: true } : fail(409, "The workshop just changed. Refresh and try again.");
 }
 
-async function claimPatch(
-  admin: SupabaseClient,
-  sessionId: string,
-  version: number,
-  patch: Record<string, unknown>
-): Promise<boolean> {
-  const { data, error } = await admin
-    .from("say_less_sessions")
-    .update({ ...patch, version: version + 1 })
-    .eq("session_id", sessionId)
-    .eq("version", version)
-    .select("session_id")
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return Boolean(data);
+async function claimPatch(admin: SupabaseClient, sessionId: string, version: number, patch: Record<string, unknown>): Promise<boolean> {
+  const row = await loadSayLessSession(admin, sessionId);
+  if (!row || row.version !== version) return false;
+  const result = await commitSetup(admin, sessionId, row, patch);
+  if (!result.ok && result.status !== 409) throw new Error(result.error);
+  return result.ok;
 }
 
-async function resetPlayRows(admin: SupabaseClient, sessionId: string): Promise<void> {
-  await admin.from("say_less_turns").delete().eq("session_id", sessionId);
-  await admin.from("say_less_previews").delete().eq("session_id", sessionId);
-  await admin.from("say_less_teams").delete().eq("session_id", sessionId);
-}
-
-export async function resetSayLessToLobby(
-  admin: SupabaseClient,
-  sessionId: string
-): Promise<void> {
-  const existing = await loadSayLessSession(admin, sessionId);
-  await resetPlayRows(admin, sessionId);
-  if (!existing) return;
-  await admin
-    .from("say_less_sessions")
-    .update({
-      phase: "lobby",
-      deck_card_ids: [],
-      pile_card_ids: [],
-      round: 1,
-      first_team: "A",
-      next_team: "A",
-      cursor_a: 0,
-      cursor_b: 0,
-      current_turn_id: null,
-      phase_deadline: null,
-      hold_started_at: null,
-      paused: false,
-      last_turn_got_it: null,
-      last_turn_end_reason: null,
-      round_1_ended_early: false,
-      round_2_ended_early: false,
-      version: existing.version + 1,
-    })
-    .eq("session_id", sessionId);
+export async function resetSayLessToLobby(admin: SupabaseClient, sessionId: string): Promise<void> {
+  const lifecycle = await loadLifecycle(admin, sessionId);
+  const { data, error } = await admin.rpc("reset_workshop_session", {
+    p_session_id: sessionId, p_expected_version: lifecycle.lifecycle_version,
+  });
+  if (error || data !== true) throw new Error(error?.message ?? "The workshop changed. Refresh before resetting.");
 }
 
 export async function startSayLess(
   admin: SupabaseClient,
-  sessionId: string
+  sessionId: string, expectedVersion?: number
 ): Promise<SayLessActionResult> {
+  const lifecycle = await loadLifecycle(admin, sessionId);
+  if (lifecycle.status !== "lobby") return fail(409, "This workshop has already started or ended.");
   const roster = await loadRoster(admin, sessionId);
   if (roster.length < SAY_LESS_MIN_PLAYERS) {
     return fail(400, "Say Less needs at least 4 people in the room.");
@@ -133,7 +104,6 @@ export async function startSayLess(
   ) {
     return fail(400, "Pick two different categories before starting.");
   }
-  await resetPlayRows(admin, sessionId);
 
   const cards = await loadActiveCards(admin, packId);
   let deck: string[];
@@ -145,33 +115,13 @@ export async function startSayLess(
 
   const formed = splitTeams(roster.map((row) => row.participantId));
   const firstTeam: SayLessTeamLabel = Math.random() < 0.5 ? "A" : "B";
-  const { error: teamErr } = await admin.from("say_less_teams").insert([
-    { session_id: sessionId, label: "A", member_ids: formed.A },
-    { session_id: sessionId, label: "B", member_ids: formed.B },
-  ]);
-  if (teamErr) return fail(500, teamErr.message);
-
-  const claimed = await claimPatch(admin, sessionId, lobby.version, {
-    phase: "teams",
-    deck_card_ids: deck,
-    pile_card_ids: deck,
-    round: 1,
-    first_team: firstTeam,
-    next_team: firstTeam,
-    cursor_a: 0,
-    cursor_b: 0,
-    current_turn_id: null,
-    phase_deadline: null,
-    hold_started_at: null,
-    paused: false,
-    last_turn_got_it: null,
-    last_turn_end_reason: null,
-    round_1_ended_early: false,
-    round_2_ended_early: false,
+  const { data, error } = await admin.rpc("start_workshop_session", {
+    p_session_id: sessionId, p_protocol: "say-less",
+    p_expected_version: expectedVersion ?? lifecycle.lifecycle_version,
+    p_init: { version: lobby.version, deck, teamA: formed.A, teamB: formed.B, firstTeam },
   });
-  if (!claimed) return fail(409, "Someone else started this session.");
-  await poke(admin, sessionId, "teams");
-  return { ok: true };
+  if (error) return fail(500, error.message);
+  return data === true ? { ok: true } : fail(409, "The workshop changed before Start. Refresh and try again.");
 }
 
 async function countedTurnsThisRound(
@@ -192,9 +142,10 @@ async function beginTurn(
   admin: SupabaseClient,
   sessionId: string,
   row: SayLessSessionRow,
-  teams: SayLessTeamRow[]
+  teams: SayLessTeamRow[], roundPatch: Partial<SayLessSessionRow> = {}
 ): Promise<SayLessActionResult> {
-  if (row.pile_card_ids.length === 0) {
+  const nextRow = { ...row, ...roundPatch };
+  if (nextRow.pile_card_ids.length === 0) {
     return closeRound(admin, sessionId, row, "pile_empty");
   }
 
@@ -216,47 +167,81 @@ async function beginTurn(
     if (nextTeam === "A") cursorA = pick.nextCursor;
     else cursorB = pick.nextCursor;
 
-    const { data: turn, error: turnErr } = await admin
-      .from("say_less_turns")
-      .insert({
-        session_id: sessionId,
-        round: row.round,
-        team_id: team.id,
-        clue_giver_id: pick.giverId,
-        started_at: new Date().toISOString(),
-      })
-      .select("id")
-      .single();
-    if (turnErr || !turn) {
-      return fail(500, turnErr?.message ?? "Could not start the turn.");
-    }
-
-    const claimed = await claimPatch(admin, sessionId, row.version, {
-      phase: "turn",
-      next_team: otherTeam(nextTeam),
-      cursor_a: cursorA,
-      cursor_b: cursorB,
-      current_turn_id: turn.id as string,
-      phase_deadline: deadlineFromNow(SAY_LESS_TURN_SECONDS),
-      hold_started_at: null,
-      paused: false,
-    });
-    if (!claimed) {
-      await admin.from("say_less_turns").delete().eq("id", turn.id as string);
-      return { ok: true };
-    }
-    await poke(admin, sessionId, "turn");
-    return { ok: true };
+    const startedAt = new Date().toISOString();
+    return commitSetup(admin, sessionId, row, {
+      ...roundPatch, phase: "turn", next_team: otherTeam(nextTeam), cursor_a: cursorA, cursor_b: cursorB,
+      phase_deadline: deadlineFromNow(SAY_LESS_TURN_SECONDS), hold_started_at: null, paused: false,
+    }, null, null, { teamId: team.id, giverId: pick.giverId, startedAt });
   }
 
-  const claimed = await claimPatch(admin, sessionId, row.version, {
-    phase: "hold",
-    paused: true,
-    phase_deadline: null,
-    hold_started_at: new Date().toISOString(),
+  return commitSetup(admin, sessionId, row, { ...roundPatch, phase: "hold", paused: true,
+    phase_deadline: null, hold_started_at: new Date().toISOString() });
+}
+
+function roundClosePatch(
+  row: SayLessSessionRow,
+  reason: SayLessEndReason
+): Record<string, Json> {
+  return {
+    phase: row.round === 1 ? "round_break" : "final_scores",
+    current_turn_id: null, phase_deadline: null, hold_started_at: null, paused: false,
+    last_turn_end_reason: reason,
+    pile_card_ids: row.round === 1 ? row.pile_card_ids : [],
+    round_1_ended_early: row.round === 1 && reason === "round_ended" ? true : row.round_1_ended_early,
+    round_2_ended_early: row.round === 2 && reason === "round_ended" ? true : row.round_2_ended_early,
+  };
+}
+
+type PendingCardEvent = {
+  cardId: string;
+  outcome: "got_it" | "pass" | "oops" | "expired";
+  operationId?: string;
+  expectedVersion?: number;
+};
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The event is the durable receipt. It is written in the same RPC as the pile
+ * and score, so a response lost after commit can be retried after refresh.
+ */
+async function replayCardInput(
+  admin: SupabaseClient, sessionId: string, participantId: string,
+  action: Extract<SayLessAction, { type: "cardAction" }>
+): Promise<SayLessActionResult | null> {
+  if (action.operationId === undefined) return null; // Older clients remain supported.
+  if (typeof action.operationId !== "string" || !UUID.test(action.operationId) ||
+    typeof action.turnId !== "string" || !UUID.test(action.turnId) ||
+    !Number.isInteger(action.expectedVersion) || (action.expectedVersion ?? -1) < 0) {
+    return fail(400, "Invalid saved card input.");
+  }
+  const turn = await loadTurn(admin, action.turnId);
+  if (!turn || turn.session_id !== sessionId || turn.clue_giver_id !== participantId) {
+    return fail(403, "This saved input does not belong to your turn.");
+  }
+  const { data, error } = await admin.from("say_less_card_events")
+    .select("turn_id, card_id, outcome, operation_version").eq("operation_id", action.operationId).maybeSingle();
+  if (error) return fail(500, error.message);
+  if (!data) return null;
+  return data.turn_id === action.turnId && data.card_id === action.cardId &&
+    data.outcome === action.outcome && data.operation_version === action.expectedVersion
+    ? { ok: true } : fail(409, "This saved input conflicts with a previously accepted action.");
+}
+
+async function commitTurnPatch(
+  admin: SupabaseClient,
+  sessionId: string,
+  row: SayLessSessionRow,
+  patch: Record<string, Json>,
+  pending?: PendingCardEvent,
+  endReason?: SayLessEndReason
+): Promise<SayLessActionResult> {
+  const { data, error } = await admin.rpc("commit_say_less_turn", {
+    p_session_id: sessionId, p_expected_version: row.version,
+    p_turn_id: row.current_turn_id, p_patch: patch,
+    p_event: pending ?? null, p_end_reason: endReason ?? null,
   });
-  if (!claimed) return { ok: true };
-  await poke(admin, sessionId, "hold");
+  if (error) return fail(500, error.message);
+  if (data !== true) return fail(409, "The turn just changed. Refresh and try again.");
   return { ok: true };
 }
 
@@ -265,60 +250,8 @@ async function closeRound(
   sessionId: string,
   row: SayLessSessionRow,
   reason: SayLessEndReason
-): Promise<SayLessActionResult & { claimed?: boolean }> {
-  const nextPhase = row.round === 1 ? "round_break" : "final_scores";
-  const claimed = await claimPatch(admin, sessionId, row.version, {
-    phase: nextPhase,
-    current_turn_id: null,
-    phase_deadline: null,
-    hold_started_at: null,
-    paused: false,
-    last_turn_end_reason: reason,
-    pile_card_ids: row.round === 1 ? row.pile_card_ids : [],
-    round_1_ended_early: row.round === 1 && reason === "round_ended" ? true : row.round_1_ended_early,
-    round_2_ended_early: row.round === 2 && reason === "round_ended" ? true : row.round_2_ended_early,
-  });
-  if (!claimed) return { ok: true, claimed: false };
-  await poke(admin, sessionId, nextPhase);
-  return { ok: true, claimed: true };
-}
-
-type PendingCardEvent = {
-  cardId: string;
-  outcome: "got_it" | "pass" | "oops" | "expired";
-};
-
-async function writePendingEvent(
-  admin: SupabaseClient,
-  turnId: string | null,
-  pending: PendingCardEvent | undefined
-): Promise<void> {
-  if (!turnId || !pending) return;
-  let lastError: string | null = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const { error } = await admin.from("say_less_card_events").insert({
-      turn_id: turnId,
-      card_id: pending.cardId,
-      outcome: pending.outcome,
-    });
-    if (!error) return;
-    lastError = error.message;
-  }
-  throw new Error(lastError ?? "Could not record the card.");
-}
-
-async function closeCurrentTurn(
-  admin: SupabaseClient,
-  turnId: string | null,
-  reason: SayLessEndReason
-): Promise<void> {
-  if (!turnId) return;
-  const { error } = await admin
-    .from("say_less_turns")
-    .update({ ended_at: new Date().toISOString(), end_reason: reason })
-    .eq("id", turnId)
-    .is("ended_at", null);
-  if (error) throw new Error(error.message);
+): Promise<SayLessActionResult> {
+  return commitTurnPatch(admin, sessionId, row, roundClosePatch(row, reason));
 }
 
 async function finishTurn(
@@ -334,46 +267,17 @@ async function finishTurn(
   const existingGotIt = row.current_turn_id ? await gotItThisTurn(admin, row.current_turn_id) : 0;
   const gotIt = existingGotIt + (pending?.outcome === "got_it" ? 1 : 0);
   const empty = pile.length === 0 || reason === "pile_empty";
-
   if (empty) {
-    const closed = await closeRound(
-      admin,
-      sessionId,
-      { ...row, pile_card_ids: pile },
-      reason === "pile_empty" ? "pile_empty" : reason
-    );
-    if (!closed.ok) return closed;
-    if (!closed.claimed) return { ok: true };
-    try {
-      await closeCurrentTurn(admin, row.current_turn_id, reason);
-      await writePendingEvent(admin, row.current_turn_id, pending);
-    } catch {
-      /* public phase already moved */
-    }
-    return { ok: true };
+    return commitTurnPatch(admin, sessionId, row,
+      roundClosePatch({ ...row, pile_card_ids: pile }, reason), pending, reason);
   }
-
   const pause = shouldPauseAfterTurns(counted);
-  const now = new Date().toISOString();
-  const claimed = await claimPatch(admin, sessionId, row.version, {
-    phase: "hold",
-    pile_card_ids: pile,
-    current_turn_id: null,
+  return commitTurnPatch(admin, sessionId, row, {
+    phase: "hold", pile_card_ids: pile, current_turn_id: null,
     phase_deadline: pause ? null : deadlineFromNow(SAY_LESS_HOLD_SECONDS),
-    hold_started_at: now,
-    paused: pause,
-    last_turn_got_it: gotIt,
-    last_turn_end_reason: reason,
-  });
-  if (!claimed) return { ok: true };
-  await poke(admin, sessionId, "hold");
-  try {
-    await closeCurrentTurn(admin, row.current_turn_id, reason);
-    await writePendingEvent(admin, row.current_turn_id, pending);
-  } catch {
-    /* public phase already moved */
-  }
-  return { ok: true };
+    hold_started_at: new Date().toISOString(), paused: pause,
+    last_turn_got_it: gotIt, last_turn_end_reason: reason,
+  }, pending, reason);
 }
 
 function pendingTopCard(
@@ -405,14 +309,14 @@ export async function advanceIfDue(
         phase_deadline: null,
       });
       if (!claimed) continue;
-      await poke(admin, sessionId, "ready");
+
       continue;
     }
 
     if (row.phase === "turn") {
       const { pile, pending } = pendingTopCard(row, "expired");
       const result = await finishTurn(admin, sessionId, row, "timer", pile, pending);
-      if (!result.ok) continue;
+      if (!result.ok && result.status !== 409) throw new Error(result.error);
       continue;
     }
 
@@ -435,6 +339,10 @@ export async function dispatchSayLessAction(input: {
   action: SayLessAction;
 }): Promise<SayLessActionResult> {
   const { admin, sessionId, participantId, isLead, action } = input;
+  if (action.type === "cardAction") {
+    const replay = await replayCardInput(admin, sessionId, participantId, action);
+    if (replay) return replay;
+  }
   await advanceIfDue(admin, sessionId);
 
   if (action.type === "setCategories") {
@@ -449,13 +357,17 @@ export async function dispatchSayLessAction(input: {
       category_a: a,
       category_b: b,
     });
-    if (!claimed) return { ok: true };
-    await poke(admin, sessionId, "lobby");
+    if (!claimed) return fail(409, "The workshop changed before this control was accepted.");
+
     return { ok: true };
   }
 
   const row = await loadSayLessSession(admin, sessionId);
   if (!row) return fail(404, "Say Less has not started.");
+  if (action.type !== "cardAction" && action.type !== "advance" && action.expectedVersion !== undefined &&
+    (action.expectedVersion !== row.version || action.turnId !== row.current_turn_id)) {
+    return fail(409, "This control belongs to an earlier turn. Check the current workshop.");
+  }
   const teams = await loadTeams(admin, sessionId);
 
   switch (action.type) {
@@ -473,50 +385,19 @@ export async function dispatchSayLessAction(input: {
       };
       const moved = swapPlayers(current, action.a, action.b);
       if (!moved.ok) return fail(400, moved.error);
-      const claimed = await claimPatch(admin, sessionId, row.version, {});
-      if (!claimed) return fail(409, "Teams just changed. Try that switch again.");
-      for (const label of ["A", "B"] as const) {
-        const team = teams.find((item) => item.label === label);
-        if (!team) continue;
-        const { error } = await admin
-          .from("say_less_teams")
-          .update({ member_ids: moved.teams[label] })
-          .eq("id", team.id);
-        if (error) return fail(500, error.message);
-      }
-      await poke(admin, sessionId, "teams");
-      return { ok: true };
+      return commitSetup(admin, sessionId, row, {}, teams.map(team => ({ id: team.id,
+        memberIds: moved.teams[team.label] })));
     }
     case "confirmTeams": {
       if (!isLead) return fail(403, "Only the facilitator can confirm teams.");
       if (row.phase !== "teams") return fail(409, "Teams are already confirmed.");
       const roster = await loadRoster(admin, sessionId);
       const playerIds = roster.map((member) => member.participantId);
-      for (const team of teams) {
-        const shuffled = shuffleCopy(team.member_ids);
-        const { error } = await admin
-          .from("say_less_teams")
-          .update({ member_ids: shuffled })
-          .eq("id", team.id);
-        if (error) return fail(500, error.message);
-      }
       const dealt = dealPreviews(row.deck_card_ids, playerIds);
-      const previewRows = playerIds.map((id) => ({
-        session_id: sessionId,
-        participant_id: id,
-        card_ids: dealt[id] ?? [row.deck_card_ids[0], row.deck_card_ids[1]],
-      }));
-      await admin.from("say_less_previews").delete().eq("session_id", sessionId);
-      const { error: previewErr } = await admin.from("say_less_previews").insert(previewRows);
-      if (previewErr) return fail(500, previewErr.message);
-      const claimed = await claimPatch(admin, sessionId, row.version, {
-        phase: "preview",
-        phase_deadline: deadlineFromNow(SAY_LESS_PREVIEW_SECONDS),
-        paused: false,
-      });
-      if (!claimed) return { ok: true };
-      await poke(admin, sessionId, "preview");
-      return { ok: true };
+      return commitSetup(admin, sessionId, row, { phase: "preview",
+        phase_deadline: deadlineFromNow(SAY_LESS_PREVIEW_SECONDS), paused: false },
+        teams.map(team => ({ id: team.id, memberIds: shuffleCopy(team.member_ids) })),
+        playerIds.map(id => ({ participantId: id, cardIds: dealt[id] ?? [row.deck_card_ids[0], row.deck_card_ids[1]] })));
     }
     case "startRound": {
       if (!isLead) return fail(403, "Only the facilitator can start the round.");
@@ -525,20 +406,19 @@ export async function dispatchSayLessAction(input: {
       }
       if (row.phase === "round_break") {
         const pile = shuffleCopy(row.deck_card_ids);
-        const claimed = await claimPatch(admin, sessionId, row.version, {
-          round: 2,
-          pile_card_ids: pile,
-          last_turn_got_it: null,
-          last_turn_end_reason: null,
-        });
-        if (!claimed) return { ok: true };
-        const next = await loadSayLessSession(admin, sessionId);
-        if (!next) return fail(500, "Could not start round 2.");
-        return beginTurn(admin, sessionId, next, teams);
+        return beginTurn(admin, sessionId, row, teams, { round: 2, pile_card_ids: pile,
+          last_turn_got_it: null, last_turn_end_reason: null });
       }
       return fail(409, "Not time to start a round.");
     }
     case "cardAction": {
+      if (action.operationId !== undefined &&
+        (action.turnId !== row.current_turn_id || action.expectedVersion !== row.version)) {
+        // A duplicate can commit after the initial receipt lookup but before
+        // this session read. Recheck its exact receipt before rejecting it.
+        const replay = await replayCardInput(admin, sessionId, participantId, action);
+        return replay ?? fail(409, "The turn changed before this saved card input was accepted. Check the current card.");
+      }
       if (row.phase !== "turn" || !row.current_turn_id) {
         return fail(409, "No card is in play.");
       }
@@ -559,24 +439,15 @@ export async function dispatchSayLessAction(input: {
       }
       if (deadlinePassed(row.phase_deadline, Date.now())) {
         await advanceIfDue(admin, sessionId);
-        return { ok: true };
+        return fail(409, "Time is up. This card input was not accepted.");
       }
       const pile = applyPileOutcome(row.pile_card_ids, action.outcome);
-      const pending: PendingCardEvent = { cardId: top, outcome: action.outcome };
+      const pending: PendingCardEvent = { cardId: top, outcome: action.outcome,
+        ...(action.operationId ? { operationId: action.operationId, expectedVersion: action.expectedVersion } : {}) };
       if (pile.length === 0) {
         return finishTurn(admin, sessionId, row, "pile_empty", pile, pending);
       }
-      const claimed = await claimPatch(admin, sessionId, row.version, {
-        pile_card_ids: pile,
-      });
-      if (!claimed) return { ok: true };
-      await poke(admin, sessionId, "turn");
-      try {
-        await writePendingEvent(admin, turn.id, pending);
-      } catch {
-        /* pile already moved */
-      }
-      return { ok: true };
+      return commitTurnPatch(admin, sessionId, row, { pile_card_ids: pile }, pending);
     }
     case "skipTurn": {
       if (row.phase !== "turn" || !row.current_turn_id) {
@@ -597,8 +468,8 @@ export async function dispatchSayLessAction(input: {
         paused: true,
         phase_deadline: null,
       });
-      if (!claimed) return { ok: true };
-      await poke(admin, sessionId, "hold");
+      if (!claimed) return fail(409, "The workshop changed before this control was accepted.");
+
       return { ok: true };
     }
     case "resumeHold": {
@@ -609,8 +480,8 @@ export async function dispatchSayLessAction(input: {
         phase_deadline: deadlineFromNow(SAY_LESS_HOLD_SECONDS),
         hold_started_at: new Date().toISOString(),
       });
-      if (!claimed) return { ok: true };
-      await poke(admin, sessionId, "hold");
+      if (!claimed) return fail(409, "The workshop changed before this control was accepted.");
+
       return { ok: true };
     }
     case "endRound": {
@@ -621,16 +492,11 @@ export async function dispatchSayLessAction(input: {
     case "complete": {
       if (!isLead) return fail(403, "Only the facilitator can end the session.");
       if (row.phase !== "final_scores") return fail(409, "Finish scoring first.");
-      const { error } = await admin
-        .from("sessions")
-        .update({
-          status: "completed",
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", sessionId);
+      const { data, error } = await admin.rpc("complete_say_less_session", {
+        p_session_id: sessionId, p_expected_version: row.version,
+      });
       if (error) return fail(500, error.message);
-      await poke(admin, sessionId, "final_scores");
-      return { ok: true };
+      return data === true ? { ok: true } : fail(409, "The workshop changed before completion.");
     }
     default:
       return fail(400, "Unknown action.");

@@ -48,14 +48,14 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     const result =
       action === "complete"
-        ? await finishOnTheSamePage({ admin: auth.admin, sessionId: auth.sessionId, canControl: isDisplay })
+        ? await finishOnTheSamePage({ admin: auth.admin, sessionId: auth.sessionId, canControl: isDisplay, participantId: auth.participantId, action: body })
         : await dispatchOtspAction({
             admin: auth.admin,
             sessionId: auth.sessionId,
             participantId: auth.participantId,
             canControl: isDisplay,
             isDisplay,
-            action,
+            action: { ...body, ...action },
           });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
     if (action === "complete") return NextResponse.json({ ok: true, state: null });

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { TraneReportDocument } from "./report-document";
 import type { TraneReportPayload } from "./report-data";
@@ -59,7 +58,7 @@ const payload: TraneReportPayload = {
 describe("TraneReportDocument", () => {
   it("renders a two-page PDF for a mixed cohort", async () => {
     const buffer = await renderToBuffer(
-      React.createElement(TraneReportDocument, { payload, logoSrc: "" })
+      TraneReportDocument({ payload, logoSrc: "" })
     );
     assert.ok(buffer.byteLength > 1000);
     const text = buffer.toString("latin1");

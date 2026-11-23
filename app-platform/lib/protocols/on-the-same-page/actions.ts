@@ -1,4 +1,5 @@
 import "server-only";
+import { isWorkshopTransaction, withWorkshopTransaction, withWorkshopAction, requireWorkshopDeadline, assertWorkshopActionContext } from "@/lib/session/workshop-transaction";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { OTSP } from "./config";
 import { createGame, reduceFor, undrawnIds } from "./engine";
@@ -58,6 +59,7 @@ export async function advanceIfDue(
   stored: StoredGame,
   catalog: readonly Picture[]
 ): Promise<StoredGame | null> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => advanceIfDue(client, sessionId, stored, catalog));
   let game = stored.game;
   const events: EngineEvent[] = [];
   let steps = 0;
@@ -80,10 +82,12 @@ export async function advanceIfDue(
 }
 
 export async function resetOnTheSamePageToLobby(admin: SupabaseClient, sessionId: string): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "reset", client => resetOnTheSamePageToLobby(client, sessionId));
   await resetOnTheSamePageRows(admin, sessionId);
 }
 
 export async function startOnTheSamePage(admin: SupabaseClient, sessionId: string): Promise<OtspActionResult> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "start", client => startOnTheSamePage(client, sessionId));
   const players = playersOf(await loadRoster(admin, sessionId));
   if (players.length < OTSP.minPlayers) return fail(400, "Need 8 to start.");
   if (players.length > OTSP.maxPlayers) return fail(400, "On the Same Page holds 16 players at most.");
@@ -130,6 +134,7 @@ export async function dispatchOtspAction(input: {
   isDisplay: boolean;
   action: ActorAction;
 }): Promise<OtspActionResult> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopAction(input.admin, input.sessionId, input.participantId, input.action, client => dispatchOtspAction({ ...input, admin: client }));
   const { admin, sessionId, canControl, isDisplay, action } = input;
   if ((action.type === "anotherRound" || action.type === "scoreboard") && !canControl) {
     return fail(403, "The shared screen runs the round.");
@@ -145,9 +150,11 @@ export async function dispatchOtspAction(input: {
   const current = await advanceIfDue(admin, sessionId, stored, catalog);
   if (!current) return fail(409, "The room moved. Try again.");
 
+  if (action.type !== "expire") assertWorkshopActionContext(admin);
   const now = Date.now();
   if (action.type === "expire" && !due(current.game, now)) return { ok: true };
 
+  if (["preview", "place", "guess", "pin", "react"].includes(action.type)) requireWorkshopDeadline(admin, current.game.round.phaseEndsAt + (current.game.phase === "build" ? OTSP.graceMs : 0));
   const result = reduceFor(current.game, { ...action, actorId: input.participantId }, now, catalog);
   if (!result.ok) return fail(400, result.error);
 
@@ -164,7 +171,11 @@ export async function finishOnTheSamePage(input: {
   admin: SupabaseClient;
   sessionId: string;
   canControl: boolean;
+  participantId?: string;
+  action?: unknown;
 }): Promise<OtspActionResult> {
+  if (!isWorkshopTransaction(input.admin) && input.participantId && input.action) return withWorkshopAction(input.admin, input.sessionId, input.participantId, input.action, client => finishOnTheSamePage({ ...input, admin: client }));
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopTransaction(input.admin, input.sessionId, "action", client => finishOnTheSamePage({ ...input, admin: client }));
   if (!input.canControl) return fail(403, "The shared screen ends the Moment.");
   const stored = await loadStoredGame(input.admin, input.sessionId);
   if (!stored) return fail(404, "On the Same Page has not started.");

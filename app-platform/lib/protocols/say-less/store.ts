@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveSessionContentPackId } from "@/lib/content-packs/session-pack";
 import { isSharedScreenName } from "@/lib/protocols/rank-and-file/engine";
 import type { Json } from "@/lib/types/database";
 import type {
@@ -223,31 +224,9 @@ export async function resolvePackId(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<string> {
-  const { data: session, error } = await admin
-    .from("sessions")
-    .select("content_pack_id, protocol_id")
-    .eq("id", sessionId)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!session) throw new Error("Session not found.");
-  if (session.content_pack_id) return session.content_pack_id as string;
-
-  const { data: pack, error: packErr } = await admin
-    .from("content_packs")
-    .select("id")
-    .eq("protocol_id", session.protocol_id)
-    .eq("slug", "a")
-    .eq("status", "active")
-    .maybeSingle();
-  if (packErr) throw new Error(packErr.message);
-  if (!pack) throw new Error("Say Less Pack A is not installed.");
-
-  const { error: upErr } = await admin
-    .from("sessions")
-    .update({ content_pack_id: pack.id })
-    .eq("id", sessionId);
-  if (upErr) throw new Error(upErr.message);
-  return pack.id as string;
+  const result = await resolveSessionContentPackId(admin, sessionId);
+  if (!result.ok) throw new Error(result.error);
+  return result.contentPackId;
 }
 
 export async function ensureLobbyRow(

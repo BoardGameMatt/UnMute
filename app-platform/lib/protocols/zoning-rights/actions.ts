@@ -1,4 +1,5 @@
 import "server-only";
+import { isWorkshopTransaction, withWorkshopTransaction, withWorkshopAction, requireWorkshopDeadline, assertWorkshopActionContext } from "@/lib/session/workshop-transaction";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Json } from "@/lib/types/database";
 import {
@@ -204,6 +205,7 @@ export async function resetZoningRightsToLobby(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "reset", client => resetZoningRightsToLobby(client, sessionId));
   await admin.from("zoning_rights_sessions").update({ current_round_id: null }).eq("session_id", sessionId);
   await admin.from("zoning_rights_rounds").delete().eq("session_id", sessionId);
   await admin.from("zoning_rights_sessions").delete().eq("session_id", sessionId);
@@ -244,6 +246,7 @@ export async function startZoningRights(
   admin: SupabaseClient,
   sessionId: string
 ): Promise<ZoningRightsActionResult> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "start", client => startZoningRights(client, sessionId));
   const roster = await loadRoster(admin, sessionId);
   if (roster.length < 3) {
     return fail(400, "Need 3 to start.");
@@ -412,6 +415,7 @@ async function completeSession(admin: SupabaseClient, sessionId: string): Promis
 }
 
 export async function expireIfNeeded(admin: SupabaseClient, sessionId: string): Promise<void> {
+  if (!isWorkshopTransaction(admin)) return withWorkshopTransaction(admin, sessionId, "action", client => expireIfNeeded(client, sessionId));
   const zr = await loadZoningSession(admin, sessionId);
   if (!zr?.current_round_id) return;
   const round = await loadRound(admin, zr.current_round_id);
@@ -489,9 +493,11 @@ export async function dispatchZoningRightsAction(input: {
   isLead: boolean;
   action: ZoningRightsAction;
 }): Promise<ZoningRightsActionResult> {
+  if (!isWorkshopTransaction(input.admin)) return withWorkshopAction(input.admin, input.sessionId, input.participantId, input.action, client => dispatchZoningRightsAction({ ...input, admin: client }));
   const { admin, sessionId, participantId, isLead, action } = input;
   await expireIfNeeded(admin, sessionId);
 
+  if (action.type !== "timerExpired") assertWorkshopActionContext(admin);
   const zr = await loadZoningSession(admin, sessionId);
   if (!zr) return fail(404, "Zoning Rights is not started.");
   const roster = await loadRoster(admin, sessionId);
@@ -634,6 +640,7 @@ export async function dispatchZoningRightsAction(input: {
     if (participantId === liveRound.zm_id) {
       return fail(403, "The Zoning Manager does not guess.");
     }
+    requireWorkshopDeadline(admin, Date.parse(liveRound.guess_started_at ?? "") + GUESS_SECONDS * 1000);
     const existing = (await loadGuesses(admin, liveRound.id)).find(
       (g) => g.participant_id === participantId
     );
@@ -685,6 +692,7 @@ export async function dispatchZoningRightsAction(input: {
     if (zr.phase !== "TEAM_DISCUSS" && zr.phase !== "TEAM_LOCK") {
       return fail(400, "Team placement is not open.");
     }
+    if (zr.phase === "TEAM_DISCUSS") requireWorkshopDeadline(admin, Date.parse(liveRound.discuss_started_at ?? "") + TEAM_DISCUSS_SECONDS * 1000);
     if (participantId !== liveRound.lead_developer_id) {
       return fail(403, "Only the Lead Developer can place the team's choice.");
     }
